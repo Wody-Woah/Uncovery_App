@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function LoginPage() {
@@ -35,23 +34,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative -mx-4 -mt-10 min-h-screen h-screen flex items-center justify-center px-4 py-16">
-
-      {/* Background image */}
-      <Image
-        src="/login-hero.jpg"
-        alt=""
-        fill
-        sizes="(max-width: 700px) 100vw, 700px"
-        className="object-cover"
-        priority
-      />
-
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/50" />
-
-      {/* Form content */}
-      <div className="relative z-10 w-full max-w-sm">
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-white">Welcome back</h1>
           <p className="text-sm text-white/70 mt-1">Sign in to your account</p>
@@ -113,7 +97,6 @@ export default function LoginPage() {
           </Link>
         </p>
       </div>
-
     </div>
   )
 }
