@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET } from '@/lib/getTodayET'
+import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -85,6 +86,7 @@ export default function DashboardPage() {
   const [devotion, setDevotion] = useState<DevotionPreview>(null)
   const [theme, setTheme] = useState<MonthTheme>(null)
   const [streaks, setStreaks] = useState<Streaks>({ current: 0, longest: 0, total: 0 })
+  const [readDates, setReadDates] = useState<string[]>([])
 
   const { month, day, year } = getTodayET()
   const todayStr = `${year}-${pad(month)}-${pad(day)}`
@@ -125,6 +127,7 @@ export default function DashboardPage() {
       if (themeRes.data) setTheme(themeRes.data)
       if (readsRes.data) {
         const dates = readsRes.data.map((r: { read_on: string }) => r.read_on)
+        setReadDates(dates)
         setStreaks(computeStreaks(dates, todayStr, yesterdayStr))
       }
     }
@@ -163,6 +166,14 @@ export default function DashboardPage() {
               <p className="text-[11px] text-muted mt-0.5 leading-tight">{label}</p>
             </div>
           ))}
+        </div>
+
+        <div className="border-t border-steel/10 pt-4">
+          <MonthlyStreakGrid
+            currentMonth={month}
+            currentYear={year}
+            readDates={readDates}
+          />
         </div>
       </div>
 
