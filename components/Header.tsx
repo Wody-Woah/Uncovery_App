@@ -67,7 +67,7 @@ export default function Header() {
       <div className="mx-auto max-w-reading px-4 py-4 flex items-center justify-between">
         {/* Brand */}
         <Link
-          href="/today"
+          href="/dashboard"
           className="text-steel font-semibold tracking-widest text-xs uppercase"
         >
           The Uncovery
@@ -77,6 +77,7 @@ export default function Header() {
         <nav className="flex items-center gap-6">
           {navLink('/today', 'Today')}
           {navLink('/browse', 'Browse')}
+          {navLink('/search', 'Search')}
           {isAdmin && navLink('/admin', 'Admin')}
 
           {user ? (

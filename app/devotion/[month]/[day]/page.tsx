@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import DevotionNotes from '@/components/DevotionNotes'
 
 type Devotion = {
   id: string
@@ -30,12 +31,44 @@ export default function DevotionPage() {
   const [devotion, setDevotion] = useState<Devotion | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarking, setBookmarking] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.push('/login')
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.push('/login'); return }
+      setUserId(user.id)
+      const { data } = await supabase
+        .from('bookmarks')
+        .select('month')
+        .eq('user_id', user.id)
+        .eq('month', month)
+        .eq('day', day)
+        .maybeSingle()
+      if (data) setBookmarked(true)
     })
-  }, [router])
+  }, [router, month, day])
+
+  async function handleBookmarkToggle() {
+    if (!userId || bookmarking) return
+    setBookmarking(true)
+    if (bookmarked) {
+      await supabase
+        .from('bookmarks')
+        .delete()
+        .eq('user_id', userId)
+        .eq('month', month)
+        .eq('day', day)
+      setBookmarked(false)
+    } else {
+      const { error } = await supabase
+        .from('bookmarks')
+        .insert({ user_id: userId, month, day })
+      if (!error || error.code === '23505') setBookmarked(true)
+    }
+    setBookmarking(false)
+  }
 
   useEffect(() => {
     if (isNaN(month) || isNaN(day)) {
@@ -128,6 +161,24 @@ export default function DevotionPage() {
               {devotion.prayer}
             </p>
           </div>
+        )}
+
+        {/* Bookmark */}
+        <button
+          onClick={handleBookmarkToggle}
+          disabled={bookmarking}
+          className={`w-full rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-default ${
+            bookmarked
+              ? 'border-steel bg-steel text-white hover:bg-steel/90'
+              : 'border-steel/20 bg-canvas text-steel hover:bg-steel/5'
+          }`}
+        >
+          {bookmarking ? 'Saving…' : bookmarked ? 'Saved ✓' : 'Save'}
+        </button>
+
+        {/* Notes */}
+        {userId && (
+          <DevotionNotes userId={userId} month={month} day={day} />
         )}
       </div>
     </div>

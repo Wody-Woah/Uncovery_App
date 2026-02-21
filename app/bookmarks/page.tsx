@@ -1,24 +1,109 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+
+const MONTHS = [
+  '', 'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+type BookmarkCard = {
+  month: number
+  day: number
+  created_at: string
+  title: string
+  verse_reference: string
+}
 
 export default function BookmarksPage() {
   const router = useRouter()
+  const [ready, setReady] = useState(false)
+  const [bookmarks, setBookmarks] = useState<BookmarkCard[]>([])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.push('/login')
-    })
+    async function init() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+      setReady(true)
+
+      // Fetch bookmarks ordered by most recent
+      const { data: bms } = await supabase
+        .from('bookmarks')
+        .select('month, day, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (!bms || bms.length === 0) return
+
+      // Fetch all bookmarked devotions in one query using composite OR filter
+      const filter = bms
+        .map((b) => `and(month.eq.${b.month},day.eq.${b.day})`)
+        .join(',')
+      const { data: devs } = await supabase
+        .from('devotions')
+        .select('month, day, title, verse_reference')
+        .or(filter)
+
+      const devMap = new Map(
+        (devs ?? []).map((d) => [`${d.month}-${d.day}`, d])
+      )
+
+      setBookmarks(
+        bms.map((b) => ({
+          ...b,
+          title: devMap.get(`${b.month}-${b.day}`)?.title ?? '',
+          verse_reference: devMap.get(`${b.month}-${b.day}`)?.verse_reference ?? '',
+        }))
+      )
+    }
+
+    init()
   }, [router])
 
+  if (!ready) {
+    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+  }
+
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="text-center space-y-2">
-        <p className="text-charcoal font-medium">Bookmarks</p>
-        <p className="text-sm text-muted">Coming soon.</p>
-      </div>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold text-charcoal">Bookmarks</h1>
+
+      {bookmarks.length === 0 ? (
+        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
+          <p className="text-muted text-sm">No bookmarks yet.</p>
+          <p className="text-muted text-xs mt-1">
+            Save a devotion while reading to find it here.
+          </p>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {bookmarks.map((b) => (
+            <li
+              key={`${b.month}-${b.day}`}
+              className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-center justify-between gap-4"
+            >
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-widest text-steel mb-1">
+                  {MONTHS[b.month]} {b.day}
+                </p>
+                <p className="text-base font-semibold text-charcoal truncate">{b.title}</p>
+                <p className="text-sm text-muted mt-0.5 truncate">{b.verse_reference}</p>
+              </div>
+              <Link
+                href={`/devotion/${b.month}/${b.day}`}
+                className="shrink-0 rounded-lg border border-steel/20 px-3 py-1.5 text-sm font-medium text-steel hover:bg-canvas transition-colors"
+              >
+                Open
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

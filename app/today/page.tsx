@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
+import DevotionNotes from '@/components/DevotionNotes'
 
 type Devotion = {
   id: string
@@ -32,6 +33,8 @@ export default function TodayPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [marked, setMarked] = useState(false)
   const [marking, setMarking] = useState(false)
+  const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarking, setBookmarking] = useState(false)
 
   const { month, day } = getTodayET()
   const todayStr = getETDateString()
@@ -47,17 +50,47 @@ export default function TodayPage() {
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
 
-      // Check if already read today
-      const { data } = await supabase
-        .from('devotion_reads')
-        .select('read_on')
-        .eq('user_id', user.id)
-        .eq('read_on', todayStr)
-        .maybeSingle()
-      if (data) setMarked(true)
+      // Check read + bookmark status in parallel
+      const [readRes, bmRes] = await Promise.all([
+        supabase
+          .from('devotion_reads')
+          .select('read_on')
+          .eq('user_id', user.id)
+          .eq('read_on', todayStr)
+          .maybeSingle(),
+        supabase
+          .from('bookmarks')
+          .select('month')
+          .eq('user_id', user.id)
+          .eq('month', month)
+          .eq('day', day)
+          .maybeSingle(),
+      ])
+      if (readRes.data) setMarked(true)
+      if (bmRes.data) setBookmarked(true)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
+
+  async function handleBookmarkToggle() {
+    if (!userId || bookmarking) return
+    setBookmarking(true)
+    if (bookmarked) {
+      await supabase
+        .from('bookmarks')
+        .delete()
+        .eq('user_id', userId)
+        .eq('month', month)
+        .eq('day', day)
+      setBookmarked(false)
+    } else {
+      const { error } = await supabase
+        .from('bookmarks')
+        .insert({ user_id: userId, month, day })
+      if (!error || error.code === '23505') setBookmarked(true)
+    }
+    setBookmarking(false)
+  }
 
   async function handleMarkRead() {
     if (!userId || marked || marking) return
@@ -154,14 +187,32 @@ export default function TodayPage() {
             </div>
           )}
 
-          {/* Mark as Read */}
-          <button
-            onClick={handleMarkRead}
-            disabled={marked || marking}
-            className="w-full rounded-xl border border-steel/20 bg-canvas px-4 py-2.5 text-sm font-medium text-steel transition-colors hover:bg-steel/5 disabled:opacity-60 disabled:cursor-default"
-          >
-            {marked ? 'Read today ✓' : marking ? 'Saving…' : 'Mark as Read'}
-          </button>
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={handleMarkRead}
+              disabled={marked || marking}
+              className="rounded-xl border border-steel/20 bg-canvas px-4 py-2.5 text-sm font-medium text-steel transition-colors hover:bg-steel/5 disabled:opacity-60 disabled:cursor-default"
+            >
+              {marked ? 'Read today ✓' : marking ? 'Saving…' : 'Mark as Read'}
+            </button>
+            <button
+              onClick={handleBookmarkToggle}
+              disabled={bookmarking}
+              className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-default ${
+                bookmarked
+                  ? 'border-steel bg-steel text-white hover:bg-steel/90'
+                  : 'border-steel/20 bg-canvas text-steel hover:bg-steel/5'
+              }`}
+            >
+              {bookmarking ? 'Saving…' : bookmarked ? 'Saved ✓' : 'Save'}
+            </button>
+          </div>
+
+          {/* Notes */}
+          {userId && (
+            <DevotionNotes userId={userId} month={month} day={day} />
+          )}
         </div>
       ) : (
         <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
