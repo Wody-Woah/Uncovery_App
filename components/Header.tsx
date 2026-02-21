@@ -70,7 +70,7 @@ export default function Header() {
           href="/dashboard"
           className="text-steel font-semibold tracking-widest text-xs uppercase"
         >
-          The Uncovery
+          The Uncovery Devotional
         </Link>
 
         {/* Nav — hidden on mobile (BottomNav handles mobile navigation) */}

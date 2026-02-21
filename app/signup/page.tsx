@@ -38,8 +38,12 @@ export default function SignupPage() {
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-charcoal">Create an account</h1>
-          <p className="text-sm text-muted mt-1">Start your devotional journey</p>
+          <h1 className="text-2xl font-semibold text-white">
+            Create an account
+          </h1>
+          <p className="text-sm text-white/70 mt-1">
+            Start your devotional journey
+          </p>
         </div>
 
         <form
@@ -94,19 +98,22 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full rounded-lg bg-steel px-4 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors disabled:opacity-60"
           >
-            {loading ? 'Creating account…' : 'Create account'}
+            {loading ? "Creating account…" : "Create account"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted mt-6">
-          Already have an account?{' '}
-          <Link href="/login" className="text-steel hover:underline">
+        <p className="text-center text-sm text-white/90 mt-6">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
             Sign in
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 function friendlyError(msg: string): string {

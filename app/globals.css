@@ -4,10 +4,10 @@
 
 @layer base {
   html {
-    @apply bg-canvas text-charcoal antialiased;
+    @apply text-charcoal antialiased;
   }
 
   body {
-    @apply bg-canvas text-charcoal;
+    @apply text-charcoal;
   }
 }

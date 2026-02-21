@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function LoginPage() {
@@ -34,11 +35,26 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="w-full max-w-sm">
+    <div className="relative -mx-4 -mt-10 min-h-screen h-screen flex items-center justify-center px-4 py-16">
+
+      {/* Background image */}
+      <Image
+        src="/login-hero.jpg"
+        alt=""
+        fill
+        sizes="(max-width: 700px) 100vw, 700px"
+        className="object-cover"
+        priority
+      />
+
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* Form content */}
+      <div className="relative z-10 w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-charcoal">Welcome back</h1>
-          <p className="text-sm text-muted mt-1">Sign in to your account</p>
+          <h1 className="text-2xl font-semibold text-white">Welcome back</h1>
+          <p className="text-sm text-white/70 mt-1">Sign in to your account</p>
         </div>
 
         <form
@@ -90,13 +106,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted mt-6">
+        <p className="text-center text-sm text-white/90 mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-steel hover:underline">
+          <Link href="/signup" className="text-blue-400 hover:text-blue-300 transition-colors">
             Sign up
           </Link>
         </p>
       </div>
+
     </div>
   )
 }
