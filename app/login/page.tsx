@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.push('/today')
+      if (user) router.push('/dashboard')
     })
   }, [router])
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
       setError(friendlyError(error.message))
       setLoading(false)
     } else {
-      router.push('/today')
+      router.push('/dashboard')
     }
   }
 
