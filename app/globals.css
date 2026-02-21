@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-canvas text-charcoal antialiased;
+  }
+
+  body {
+    @apply bg-canvas text-charcoal;
+  }
+}
