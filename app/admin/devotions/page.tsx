@@ -8,6 +8,8 @@ import { isAdmin } from '@/lib/isAdmin'
 
 type Status = 'loading' | 'unauthorized' | 'ready'
 
+const PAGE_SIZE = 25
+
 type Devotion = {
   id: string
   month: number
@@ -29,6 +31,7 @@ export default function ManageDevotionsPage() {
 
   const [monthFilter, setMonthFilter] = useState(0) // 0 = All
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     async function init() {
@@ -64,6 +67,12 @@ export default function ManageDevotionsPage() {
       return false
     return true
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages - 1)
+  const paginated = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
+  const rangeStart = filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1
+  const rangeEnd = Math.min((safePage + 1) * PAGE_SIZE, filtered.length)
 
   if (status === 'loading') {
     return <div className="py-20 text-center text-muted text-sm">Checking access…</div>
@@ -109,7 +118,7 @@ export default function ManageDevotionsPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <select
           value={monthFilter}
-          onChange={(e) => setMonthFilter(Number(e.target.value))}
+          onChange={(e) => { setMonthFilter(Number(e.target.value)); setPage(0) }}
           className={controlClass}
         >
           <option value={0}>All months</option>
@@ -122,7 +131,7 @@ export default function ManageDevotionsPage() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by title…"
           className={`${controlClass} flex-1`}
         />
@@ -150,7 +159,7 @@ export default function ManageDevotionsPage() {
 
             {/* Rows */}
             <ul className="divide-y divide-steel/10">
-              {filtered.map((d) => (
+              {paginated.map((d) => (
                 <li
                   key={d.id}
                   className="grid grid-cols-[80px_1fr_100px_48px] gap-4 items-center px-5 py-3.5 hover:bg-canvas/60 transition-colors"
@@ -188,12 +197,37 @@ export default function ManageDevotionsPage() {
         )}
       </div>
 
-      {/* Result count */}
-      {!fetching && devotions.length > 0 && (
-        <p className="text-xs text-muted text-right">
-          Showing {filtered.length} of {devotions.length} devotion
-          {devotions.length !== 1 ? 's' : ''}
-        </p>
+      {/* Pagination */}
+      {!fetching && filtered.length > 0 && (
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-xs text-muted">
+            {rangeStart}–{rangeEnd} of {filtered.length} devotion
+            {filtered.length !== 1 ? 's' : ''}
+            {filtered.length !== devotions.length && (
+              <span> (filtered from {devotions.length})</span>
+            )}
+          </p>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={safePage === 0}
+              className="rounded-lg border border-steel/20 bg-white px-3 py-1.5 text-sm text-charcoal hover:bg-canvas transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              ←
+            </button>
+            <span className="px-3 py-1.5 text-sm text-muted tabular-nums">
+              {safePage + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={safePage === totalPages - 1}
+              className="rounded-lg border border-steel/20 bg-white px-3 py-1.5 text-sm text-charcoal hover:bg-canvas transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              →
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -29,3 +29,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# devotion data files (keep only the example)
+data/*.json
+!data/example.json
