@@ -73,8 +73,8 @@ export default function Header() {
           The Uncovery
         </Link>
 
-        {/* Nav */}
-        <nav className="flex items-center gap-6">
+        {/* Nav — hidden on mobile (BottomNav handles mobile navigation) */}
+        <nav className="hidden md:flex items-center gap-6">
           {navLink('/today', 'Today')}
           {navLink('/browse', 'Browse')}
           {navLink('/search', 'Search')}

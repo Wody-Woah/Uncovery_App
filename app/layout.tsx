@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
+import BottomNav from '@/components/BottomNav'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,9 +21,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className="min-h-screen bg-canvas">
           <Header />
-          <main className="mx-auto max-w-reading px-4 py-10">
+          <main className="mx-auto max-w-reading px-4 pt-10 pb-24 md:pb-10">
             {children}
           </main>
+          <BottomNav />
         </div>
       </body>
     </html>
