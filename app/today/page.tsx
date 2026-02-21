@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { getTodayET, getETDateString } from '@/lib/getTodayET'
 
 type Devotion = {
   id: string
@@ -28,22 +29,46 @@ export default function TodayPage() {
   const [devotion, setDevotion] = useState<Devotion | null>(null)
   const [theme, setTheme] = useState<MonthTheme | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [marked, setMarked] = useState(false)
+  const [marking, setMarking] = useState(false)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.push('/login')
-    })
-  }, [router])
+  const { month, day } = getTodayET()
+  const todayStr = getETDateString()
 
-  const now = new Date()
-  const month = now.getMonth() + 1
-  const day = now.getDate()
-
-  const dateLabel = now.toLocaleDateString('en-US', {
+  const dateLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
   })
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.push('/login'); return }
+      setUserId(user.id)
+
+      // Check if already read today
+      const { data } = await supabase
+        .from('devotion_reads')
+        .select('read_on')
+        .eq('user_id', user.id)
+        .eq('read_on', todayStr)
+        .maybeSingle()
+      if (data) setMarked(true)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router])
+
+  async function handleMarkRead() {
+    if (!userId || marked || marking) return
+    setMarking(true)
+    const { error } = await supabase
+      .from('devotion_reads')
+      .insert({ user_id: userId, month, day, read_on: todayStr })
+    // Treat duplicate (23505) or no error both as success
+    if (!error || error.code === '23505') setMarked(true)
+    setMarking(false)
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -128,6 +153,15 @@ export default function TodayPage() {
               </p>
             </div>
           )}
+
+          {/* Mark as Read */}
+          <button
+            onClick={handleMarkRead}
+            disabled={marked || marking}
+            className="w-full rounded-xl border border-steel/20 bg-canvas px-4 py-2.5 text-sm font-medium text-steel transition-colors hover:bg-steel/5 disabled:opacity-60 disabled:cursor-default"
+          >
+            {marked ? 'Read today ✓' : marking ? 'Saving…' : 'Mark as Read'}
+          </button>
         </div>
       ) : (
         <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
