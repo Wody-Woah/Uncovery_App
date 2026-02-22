@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
-import DevotionNotes from '@/components/DevotionNotes'
+import DevotionCard from '@/components/DevotionCard'
 
 type Devotion = {
   id: string
@@ -132,55 +132,13 @@ export default function DevotionPage() {
       </div>
 
       {/* Devotion Card */}
-      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-semibold text-charcoal mb-1">{devotion.title}</h1>
-          <p className="text-sm text-muted">{devotion.verse_reference}</p>
-        </div>
-
-        {/* Verse */}
-        {devotion.verse_text && (
-          <div className="border-l-2 border-steel/40 pl-4 py-1">
-            <p className="font-serif italic text-charcoal/80 text-base leading-relaxed">
-              {devotion.verse_text}
-            </p>
-          </div>
-        )}
-
-        {/* Body */}
-        <div className="font-serif text-charcoal leading-[1.85] whitespace-pre-wrap text-[1.0625rem]">
-          {devotion.body}
-        </div>
-
-        {/* Prayer */}
-        {devotion.prayer && (
-          <div className="rounded-xl bg-canvas border border-steel/10 p-5">
-            <p className="text-xs uppercase tracking-widest text-steel mb-3">Prayer</p>
-            <p className="font-serif italic text-charcoal/90 leading-[1.85]">
-              {devotion.prayer}
-            </p>
-          </div>
-        )}
-
-        {/* Bookmark */}
-        <button
-          onClick={handleBookmarkToggle}
-          disabled={bookmarking}
-          className={`w-full rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-default ${
-            bookmarked
-              ? 'border-steel bg-steel text-white hover:bg-steel/90'
-              : 'border-steel/20 bg-canvas text-steel hover:bg-steel/5'
-          }`}
-        >
-          {bookmarking ? 'Saving…' : bookmarked ? 'Saved ✓' : 'Save'}
-        </button>
-
-        {/* Notes */}
-        {userId && (
-          <DevotionNotes userId={userId} month={month} day={day} />
-        )}
-      </div>
+      <DevotionCard
+        devotion={devotion}
+        userId={userId}
+        bookmarked={bookmarked}
+        bookmarking={bookmarking}
+        onBookmarkToggle={handleBookmarkToggle}
+      />
     </div>
   )
 }
