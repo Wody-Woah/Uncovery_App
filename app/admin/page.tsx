@@ -30,7 +30,7 @@ export default function AdminPage() {
 
   if (status === 'loading') {
     return (
-      <div className="py-20 text-center text-muted text-sm">Checking access…</div>
+      <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Checking access…</div>
     )
   }
 
@@ -38,7 +38,7 @@ export default function AdminPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-charcoal font-medium">You need to be signed in to view this page.</p>
+          <p className="text-white font-semibold text-shadow-hero">You need to be signed in to view this page.</p>
           <Link
             href="/login"
             className="inline-block rounded-lg bg-steel px-5 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors"
@@ -54,8 +54,8 @@ export default function AdminPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-2">
-          <p className="text-charcoal font-medium">Not authorized.</p>
-          <p className="text-sm text-muted">You don&apos;t have admin access.</p>
+          <p className="text-white font-semibold text-shadow-hero">Not authorized.</p>
+          <p className="text-sm text-white/80 text-shadow-hero">You don&apos;t have admin access.</p>
         </div>
       </div>
     )
@@ -65,9 +65,9 @@ export default function AdminPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <p className="text-xs uppercase tracking-widest text-steel mb-1">Admin</p>
-        <h1 className="text-2xl font-semibold text-charcoal">Dashboard</h1>
-        <p className="text-sm text-muted mt-1">Manage devotions and content.</p>
+        <p className="text-xs uppercase tracking-widest text-white text-shadow-hero mb-1">Admin</p>
+        <h1 className="text-2xl font-semibold text-white text-shadow-hero">Dashboard</h1>
+        <p className="text-sm text-white/80 text-shadow-hero mt-1">Manage devotions and content.</p>
       </div>
 
       {/* Action cards */}

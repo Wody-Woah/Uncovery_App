@@ -43,8 +43,8 @@ export default function BrowsePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal">Browse Devotions</h1>
-        <p className="text-sm text-muted mt-1">
+        <h1 className="text-2xl font-semibold text-white text-shadow-hero">Browse Devotions</h1>
+        <p className="text-sm text-white/80 text-shadow-hero mt-1">
           Select a month and day to read a devotion.
         </p>
       </div>

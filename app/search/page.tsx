@@ -66,14 +66,14 @@ export default function SearchPage() {
   }, [query])
 
   if (!ready) {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-charcoal mb-4">Search</h1>
+        <h1 className="text-2xl font-semibold text-white text-shadow-hero mb-4">Search</h1>
         <input
           type="search"
           value={query}
@@ -86,11 +86,11 @@ export default function SearchPage() {
 
       {/* States */}
       {query.length < 2 ? (
-        <p className="text-center text-muted text-sm pt-4">Type to search…</p>
+        <p className="text-center text-white/80 font-semibold text-sm pt-4 text-shadow-hero">Type to search…</p>
       ) : searching ? (
-        <p className="text-center text-muted text-sm pt-4">Searching…</p>
+        <p className="text-center text-white/80 font-semibold text-sm pt-4 text-shadow-hero">Searching…</p>
       ) : results.length === 0 ? (
-        <p className="text-center text-muted text-sm pt-4">
+        <p className="text-center text-white/80 font-semibold text-sm pt-4 text-shadow-hero">
           No results for &ldquo;{query}&rdquo;
         </p>
       ) : (

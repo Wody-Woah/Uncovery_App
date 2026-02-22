@@ -129,14 +129,14 @@ export default function TodayPage() {
 
   if (loading) {
     return (
-      <div className="py-20 text-center text-muted text-sm">Loading today&apos;s devotion…</div>
+      <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading today&apos;s devotion…</div>
     )
   }
 
   return (
     <div className="space-y-8">
       {/* Date label */}
-      <p className="text-xs uppercase tracking-widest text-muted">{dateLabel}</p>
+      <p className="text-xs uppercase tracking-widest text-white text-shadow-hero">{dateLabel}</p>
 
       {/* Month Theme Card */}
       {theme && (
