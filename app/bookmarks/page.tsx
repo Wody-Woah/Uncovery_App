@@ -66,12 +66,12 @@ export default function BookmarksPage() {
   }, [router])
 
   if (!ready) {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-charcoal">Bookmarks</h1>
+      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Bookmarks</h1>
 
       {bookmarks.length === 0 ? (
         <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">

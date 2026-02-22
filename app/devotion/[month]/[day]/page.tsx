@@ -98,7 +98,7 @@ export default function DevotionPage() {
   }, [month, day])
 
   if (loading) {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
   }
 
   const monthName = MONTH_NAMES[month] ?? ''
@@ -106,7 +106,7 @@ export default function DevotionPage() {
   if (notFound || !devotion) {
     return (
       <div className="space-y-6">
-        <Link href="/browse" className="text-sm text-steel hover:underline">
+        <Link href="/browse" className="text-sm text-brand-blue hover:underline text-shadow-hero">
           ← Back to Browse
         </Link>
         <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
@@ -122,11 +122,11 @@ export default function DevotionPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <Link href="/browse" className="text-steel hover:underline">
+        <Link href="/browse" className="text-brand-blue hover:underline text-shadow-hero">
           ← Browse
         </Link>
-        <span className="text-muted">/</span>
-        <span className="text-muted">
+        <span className="text-white text-shadow-hero">/</span>
+        <span className="text-white text-shadow-hero">
           {monthName} {day}
         </span>
       </div>
