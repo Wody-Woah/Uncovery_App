@@ -8,7 +8,7 @@ import BottomNav from '@/components/BottomNav'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'The Uncovery',
+  title: 'The Uncovery Devotional',
   description: 'A daily devotional — one word, one truth, every day.',
 }
 
