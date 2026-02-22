@@ -136,7 +136,7 @@ export default function TodayPage() {
   return (
     <div className="space-y-8">
       {/* Date label */}
-      <p className="text-xs uppercase tracking-widest text-white text-shadow-hero">{dateLabel}</p>
+      <p className="text-xs uppercase tracking-widest text-brand-blue text-shadow-hero">{dateLabel}</p>
 
       {/* Month Theme Card */}
       {theme && (

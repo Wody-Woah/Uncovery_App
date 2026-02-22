@@ -75,15 +75,15 @@ export default function ManageDevotionsPage() {
   const rangeEnd = Math.min((safePage + 1) * PAGE_SIZE, filtered.length)
 
   if (status === 'loading') {
-    return <div className="py-20 text-center text-muted text-sm">Checking access…</div>
+    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Checking access…</div>
   }
 
   if (status === 'unauthorized') {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-2">
-          <p className="text-charcoal font-medium">Not authorized.</p>
-          <p className="text-sm text-muted">You don&apos;t have admin access.</p>
+          <p className="text-white font-semibold text-shadow-hero">Not authorized.</p>
+          <p className="text-sm text-white/80 text-shadow-hero">You don&apos;t have admin access.</p>
         </div>
       </div>
     )
@@ -98,13 +98,13 @@ export default function ManageDevotionsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link href="/admin" className="text-sm text-steel hover:underline">
+            <Link href="/admin" className="text-sm text-blue-300 hover:underline text-shadow-hero">
               Admin
             </Link>
-            <span className="text-sm text-muted">/</span>
-            <span className="text-sm text-muted">All Devotions</span>
+            <span className="text-sm text-white text-shadow-hero">/</span>
+            <span className="text-sm text-white text-shadow-hero">All Devotions</span>
           </div>
-          <h1 className="text-2xl font-semibold text-charcoal">All Devotions</h1>
+          <h1 className="text-2xl font-semibold text-white text-shadow-hero">All Devotions</h1>
         </div>
         <Link
           href="/admin/devotions/new"
@@ -200,7 +200,7 @@ export default function ManageDevotionsPage() {
       {/* Pagination */}
       {!fetching && filtered.length > 0 && (
         <div className="flex items-center justify-between gap-4">
-          <p className="text-xs text-muted">
+          <p className="text-xs text-white text-shadow-hero">
             {rangeStart}–{rangeEnd} of {filtered.length} devotion
             {filtered.length !== 1 ? 's' : ''}
             {filtered.length !== devotions.length && (
@@ -216,7 +216,7 @@ export default function ManageDevotionsPage() {
             >
               ←
             </button>
-            <span className="px-3 py-1.5 text-sm text-muted tabular-nums">
+            <span className="px-3 py-1.5 text-sm text-white tabular-nums text-shadow-hero">
               {safePage + 1} / {totalPages}
             </span>
             <button

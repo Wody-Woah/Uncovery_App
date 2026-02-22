@@ -131,15 +131,15 @@ export default function EditDevotionPage() {
   // ── Access / loading states ──────────────────────────────────────
 
   if (pageStatus === 'loading') {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
   }
 
   if (pageStatus === 'unauthorized') {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-2">
-          <p className="text-charcoal font-medium">Not authorized.</p>
-          <p className="text-sm text-muted">You don&apos;t have admin access.</p>
+          <p className="text-white font-semibold text-shadow-hero">Not authorized.</p>
+          <p className="text-sm text-white/80 text-shadow-hero">You don&apos;t have admin access.</p>
         </div>
       </div>
     )
@@ -149,11 +149,11 @@ export default function EditDevotionPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-charcoal font-medium">Devotion not found.</p>
-          <p className="text-sm text-muted">It may have been deleted or the link is incorrect.</p>
+          <p className="text-white font-semibold text-shadow-hero">Devotion not found.</p>
+          <p className="text-sm text-white/80 text-shadow-hero">It may have been deleted or the link is incorrect.</p>
           <Link
             href="/admin/devotions"
-            className="inline-block text-sm text-steel hover:underline"
+            className="inline-block text-sm text-blue-300 hover:underline text-shadow-hero"
           >
             ← Back to All Devotions
           </Link>
@@ -211,17 +211,17 @@ export default function EditDevotionPage() {
       {/* Breadcrumb + heading */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Link href="/admin" className="text-sm text-steel hover:underline">
+          <Link href="/admin" className="text-sm text-blue-300 hover:underline text-shadow-hero">
             Admin
           </Link>
-          <span className="text-sm text-muted">/</span>
-          <Link href="/admin/devotions" className="text-sm text-steel hover:underline">
+          <span className="text-sm text-white text-shadow-hero">/</span>
+          <Link href="/admin/devotions" className="text-sm text-blue-300 hover:underline text-shadow-hero">
             All Devotions
           </Link>
-          <span className="text-sm text-muted">/</span>
-          <span className="text-sm text-muted">Edit</span>
+          <span className="text-sm text-white text-shadow-hero">/</span>
+          <span className="text-sm text-white text-shadow-hero">Edit</span>
         </div>
-        <h1 className="text-2xl font-semibold text-charcoal">Edit Devotion</h1>
+        <h1 className="text-2xl font-semibold text-white text-shadow-hero">Edit Devotion</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -388,7 +388,7 @@ export default function EditDevotionPage() {
           </button>
           <Link
             href="/admin/devotions"
-            className="text-sm text-muted hover:text-charcoal transition-colors"
+            className="text-sm text-white text-shadow-hero hover:text-white/70 transition-colors"
           >
             ← All Devotions
           </Link>

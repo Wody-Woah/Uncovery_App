@@ -65,9 +65,9 @@ export default function AdminPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <p className="text-xs uppercase tracking-widest text-white text-shadow-hero mb-1">Admin</p>
+        <p className="text-xs uppercase tracking-widest text-brand-blue text-shadow-hero mb-1">Admin</p>
         <h1 className="text-2xl font-semibold text-white text-shadow-hero">Dashboard</h1>
-        <p className="text-sm text-white/80 text-shadow-hero mt-1">Manage devotions and content.</p>
+        <p className="text-sm text-brand-blue text-shadow-hero mt-1">Manage devotions and content.</p>
       </div>
 
       {/* Action cards */}
