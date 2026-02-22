@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import { isAdmin } from '@/lib/isAdmin'
 import { getTodayET } from '@/lib/getTodayET'
 import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
 
@@ -14,6 +15,18 @@ import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
 type DevotionPreview = { title: string; verse_reference: string } | null
 type MonthTheme = { theme_title: string; theme_scripture_reference: string } | null
 type Streaks = { current: number; longest: number; total: number }
+type AuthorUpdate = {
+  id: string
+  title: string
+  body: string
+  published_at: string | null
+  created_at: string
+}
+
+function updatePreview(body: string, max = 150): string {
+  const clean = body.replace(/\n+/g, ' ').trim()
+  return clean.length > max ? clean.slice(0, max).trimEnd() + '…' : clean
+}
 
 // ---------------------------------------------------------------------------
 // Streak helpers
@@ -87,6 +100,7 @@ export default function DashboardPage() {
   const [theme, setTheme] = useState<MonthTheme>(null)
   const [streaks, setStreaks] = useState<Streaks>({ current: 0, longest: 0, total: 0 })
   const [readDates, setReadDates] = useState<string[]>([])
+  const [updates, setUpdates] = useState<AuthorUpdate[]>([])
 
   const { month, day, year } = getTodayET()
   const todayStr = `${year}-${pad(month)}-${pad(day)}`
@@ -102,7 +116,7 @@ export default function DashboardPage() {
       if (!user) { router.push('/login'); return }
       setReady(true)
 
-      const [devotionRes, themeRes, readsRes] = await Promise.all([
+      const [devotionRes, themeRes, readsRes, adminResult] = await Promise.all([
         supabase
           .from('devotions')
           .select('title, verse_reference')
@@ -121,6 +135,7 @@ export default function DashboardPage() {
           .eq('user_id', user.id)
           .order('read_on', { ascending: false })
           .limit(60),
+        isAdmin(),
       ])
 
       if (devotionRes.data) setDevotion(devotionRes.data)
@@ -130,6 +145,18 @@ export default function DashboardPage() {
         setReadDates(dates)
         setStreaks(computeStreaks(dates, todayStr, yesterdayStr))
       }
+
+      // Fetch author updates (admin sees all, others see published only)
+      let updatesQuery = supabase
+        .from('author_updates')
+        .select('id, title, body, published_at, created_at')
+        .order('pinned', { ascending: false })
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(3)
+      if (!adminResult) updatesQuery = updatesQuery.eq('published', true)
+      const updatesRes = await updatesQuery
+      if (updatesRes.data) setUpdates(updatesRes.data)
     }
 
     init()
@@ -207,6 +234,40 @@ export default function DashboardPage() {
           </>
         ) : (
           <p className="text-sm text-muted">No devotion for today yet.</p>
+        )}
+      </div>
+
+      {/* From the Author card */}
+      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-4">
+        <div>
+          <h2 className="text-xs uppercase tracking-widest text-steel">From the Author</h2>
+          <p className="text-xs text-muted mt-0.5">New reflections and recent messages.</p>
+        </div>
+
+        {updates.length === 0 ? (
+          <p className="text-sm text-muted">No messages yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {updates.map((u) => (
+              <li key={u.id} className="border-t border-steel/10 pt-4 first:border-0 first:pt-0">
+                <p className="text-base font-semibold text-charcoal">{u.title}</p>
+                <p className="text-xs text-muted mt-0.5">
+                  {new Date(u.published_at ?? u.created_at).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric',
+                  })}
+                </p>
+                <p className="text-sm text-charcoal/70 mt-1 leading-relaxed">
+                  {updatePreview(u.body)}
+                </p>
+                <Link
+                  href={`/updates/${u.id}`}
+                  className="inline-block mt-2 text-xs font-medium text-steel hover:underline"
+                >
+                  Read more →
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

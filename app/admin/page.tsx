@@ -93,6 +93,17 @@ export default function AdminPage() {
           </h2>
           <p className="text-sm text-muted mt-1">View, edit, or unpublish existing devotions.</p>
         </Link>
+
+        <Link
+          href="/admin/updates"
+          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+        >
+          <p className="text-xs uppercase tracking-widest text-steel mb-2">Author</p>
+          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+            From the Author
+          </h2>
+          <p className="text-sm text-muted mt-1">Create and manage author updates.</p>
+        </Link>
       </div>
     </div>
   )
