@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import DevotionCard from '@/components/DevotionCard'
 
@@ -106,9 +105,9 @@ export default function DevotionPage() {
   if (notFound || !devotion) {
     return (
       <div className="space-y-6">
-        <Link href="/browse" className="text-sm text-brand-blue hover:underline text-shadow-hero">
-          ← Back to Browse
-        </Link>
+        <button onClick={() => router.back()} className="text-sm text-brand-blue hover:underline text-shadow-hero">
+          ← Back
+        </button>
         <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
           <p className="text-muted text-sm">
             No devotion found for {monthName} {day}.
@@ -122,9 +121,9 @@ export default function DevotionPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <Link href="/browse" className="text-brand-blue hover:underline text-shadow-hero">
-          ← Browse
-        </Link>
+        <button onClick={() => router.back()} className="text-brand-blue hover:underline text-shadow-hero">
+          ← Back
+        </button>
         <span className="text-white text-shadow-hero">/</span>
         <span className="text-white text-shadow-hero">
           {monthName} {day}
