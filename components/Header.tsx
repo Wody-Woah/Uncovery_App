@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
@@ -13,6 +13,8 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -35,13 +37,28 @@ export default function Header() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // ESC closes both the sign-out modal and the user menu
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setShowSignOutModal(false)
+      if (e.key === 'Escape') {
+        setShowSignOutModal(false)
+        setShowUserMenu(false)
+      }
     }
-    if (showSignOutModal) document.addEventListener('keydown', handleKeyDown)
+    if (showSignOutModal || showUserMenu) document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [showSignOutModal])
+  }, [showSignOutModal, showUserMenu])
+
+  // Click outside closes the user menu
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+    if (showUserMenu) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showUserMenu])
 
   async function checkAdmin(userId: string) {
     const { data } = await supabase
@@ -124,12 +141,32 @@ export default function Header() {
             {isAdmin && navLink('/admin', 'Admin')}
 
             {user ? (
-              <button
-                onClick={() => setShowSignOutModal(true)}
-                className="text-sm text-black hover:text-steel transition-colors"
-              >
-                Sign out
-              </button>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu((v) => !v)}
+                  className="text-sm text-black hover:text-steel transition-colors"
+                >
+                  User
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-steel/20 bg-white shadow-lg py-1 z-20">
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={() => { setShowUserMenu(false); setShowSignOutModal(true) }}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link
                 href="/login"

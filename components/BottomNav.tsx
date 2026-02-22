@@ -75,6 +75,16 @@ function JournalIcon() {
   )
 }
 
+function ProfileIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="9" r="3" />
+      <path d="M6.5 19.5a6 6 0 0111 0" />
+    </svg>
+  )
+}
+
 function AdminIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -180,6 +190,14 @@ export default function BottomNav() {
               >
                 <span className="text-muted"><JournalIcon /></span>
                 Journal
+              </Link>
+              <Link
+                href="/profile"
+                onClick={() => setShowMore(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
+              >
+                <span className="text-muted"><ProfileIcon /></span>
+                Profile
               </Link>
               {isAdmin && (
                 <Link
