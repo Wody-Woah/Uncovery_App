@@ -96,6 +96,7 @@ const QUICK_ACTIONS = [
 export default function DashboardPage() {
   const router = useRouter()
   const [ready, setReady] = useState(false)
+  const [displayName, setDisplayName] = useState('')
   const [devotion, setDevotion] = useState<DevotionPreview>(null)
   const [theme, setTheme] = useState<MonthTheme>(null)
   const [streaks, setStreaks] = useState<Streaks>({ current: 0, longest: 0, total: 0 })
@@ -116,7 +117,7 @@ export default function DashboardPage() {
       if (!user) { router.push('/login'); return }
       setReady(true)
 
-      const [devotionRes, themeRes, readsRes, adminResult] = await Promise.all([
+      const [devotionRes, themeRes, readsRes, adminResult, profileRes] = await Promise.all([
         supabase
           .from('devotions')
           .select('title, verse_reference')
@@ -136,10 +137,16 @@ export default function DashboardPage() {
           .order('read_on', { ascending: false })
           .limit(60),
         isAdmin(),
+        supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single(),
       ])
 
       if (devotionRes.data) setDevotion(devotionRes.data)
       if (themeRes.data) setTheme(themeRes.data)
+      if (profileRes.data?.display_name) setDisplayName(profileRes.data.display_name)
       if (readsRes.data) {
         const dates = readsRes.data.map((r: { read_on: string }) => r.read_on)
         setReadDates(dates)
@@ -173,7 +180,9 @@ export default function DashboardPage() {
       {/* Welcome card */}
       <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm">
         <p className="text-xs uppercase tracking-widest text-steel mb-1">{dateLabel}</p>
-        <h1 className="text-2xl font-semibold text-charcoal">Welcome back</h1>
+        <h1 className="text-2xl font-semibold text-charcoal">
+          Welcome back{displayName ? `, ${displayName}` : ''}
+        </h1>
       </div>
 
       {/* Journey card */}
