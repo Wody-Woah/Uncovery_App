@@ -115,6 +115,18 @@ export default function DashboardPage() {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+
+      // Welcome gate: redirect first-time users before showing the dashboard
+      const { data: flags } = await supabase
+        .from('user_flags')
+        .select('has_seen_welcome')
+        .eq('user_id', user.id)
+        .single()
+      if (!flags || !flags.has_seen_welcome) {
+        router.push('/welcome')
+        return
+      }
+
       setReady(true)
 
       const [devotionRes, themeRes, readsRes, adminResult, profileRes] = await Promise.all([

@@ -158,6 +158,13 @@ export default function Header() {
                     >
                       Profile
                     </Link>
+                    <Link
+                      href="/book"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
+                    >
+                      Book
+                    </Link>
                     <button
                       onClick={() => { setShowUserMenu(false); setShowSignOutModal(true) }}
                       className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
