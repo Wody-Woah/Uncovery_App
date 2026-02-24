@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ George`
 // Animation variants
 // ---------------------------------------------------------------------------
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: {},
   visible: {
     transition: {
@@ -76,7 +76,7 @@ const containerVariants = {
   },
 }
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
@@ -175,12 +175,15 @@ export default function WelcomePage() {
         className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm flex flex-col items-center gap-4"
       >
         <p className="text-xs uppercase tracking-widest text-steel">The Uncovery Devotional</p>
-        <div className="relative w-40 h-56 rounded-xl overflow-hidden shadow-md">
+        <div className="w-full max-w-xs mx-auto">
           <Image
             src="/book.jpg"
             alt="The Uncovery Devotional book cover"
-            fill
-            className="object-cover"
+            width={970}
+            height={600}
+            priority
+            sizes="(max-width: 768px) 90vw, 320px"
+            className="w-full h-auto rounded-xl shadow-md"
           />
         </div>
       </motion.div>

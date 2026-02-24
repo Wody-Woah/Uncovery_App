@@ -30,15 +30,15 @@ export default function BookPage() {
           <h1 className="text-2xl font-semibold text-charcoal">Get the Book</h1>
         </div>
 
-        <div className="flex justify-center">
-          <div className="relative w-44 h-64 rounded-xl overflow-hidden shadow-md">
-            <Image
-              src="/book.jpg"
-              alt="The Uncovery Devotional book cover"
-              fill
-              className="object-cover"
-            />
-          </div>
+        <div className="w-full max-w-xs mx-auto">
+          <Image
+            src="/book.jpg"
+            alt="The Uncovery Devotional book cover"
+            width={970}
+            height={600}
+            sizes="(max-width: 768px) 90vw, 320px"
+            className="w-full h-auto rounded-xl shadow-md"
+          />
         </div>
 
         <a
