@@ -9,7 +9,20 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'The Uncovery Devotional',
-  description: 'A daily devotional — one word, one truth, every day.',
+  description: 'Daily devotionals designed for reflection, recovery, and spiritual growth.',
+  openGraph: {
+    title: 'The Uncovery Devotional',
+    description: 'Daily devotionals designed for reflection, recovery, and spiritual growth.',
+    url: 'https://uncoverydevotional.com',
+    type: 'website',
+    images: [
+      {
+        url: 'https://uncoverydevotional.com/og-image.jpg',
+        width: 1200,
+        height: 630,
+      },
+    ],
+  },
 }
 
 export default function RootLayout({
