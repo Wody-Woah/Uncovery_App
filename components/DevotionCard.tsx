@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import DevotionNotes from '@/components/DevotionNotes'
 
 type Devotion = {
@@ -48,9 +49,30 @@ export default function DevotionCard({
   bookmarking,
   onBookmarkToggle,
   marked,
-  marking,
   onMarkRead,
 }: Props) {
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!onMarkRead || marked) return
+    const el = sentinelRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onMarkRead()
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.5 }
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marked])
+
   return (
     <div className="relative rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-6">
 
@@ -96,15 +118,15 @@ export default function DevotionCard({
         </div>
       )}
 
-      {/* Mark as Read — full width, only on Today page */}
+      {/* Sentinel — triggers auto mark-as-read when scrolled into view */}
       {onMarkRead && (
-        <button
-          onClick={onMarkRead}
-          disabled={marked || marking}
-          className="w-full rounded-xl border border-steel/20 bg-canvas px-4 py-2.5 text-sm font-medium text-steel transition-colors hover:bg-steel/5 disabled:opacity-60 disabled:cursor-default"
-        >
-          {marked ? 'Read today ✓' : marking ? 'Saving…' : 'Mark as Read'}
-        </button>
+        <div ref={sentinelRef} className="flex items-center justify-center gap-2 py-1">
+          {marked ? (
+            <p className="text-xs text-steel/70">Read today ✓</p>
+          ) : (
+            <p className="text-xs text-muted/50">Scroll to the end to mark as read</p>
+          )}
+        </div>
       )}
 
       {/* Notes — contains the full-width "+ Add Note" button */}

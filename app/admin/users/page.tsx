@@ -27,6 +27,17 @@ function formatDate(ts: string | null) {
   return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function TrashIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </svg>
+  )
+}
+
 export default function AdminUsersPage() {
   const router = useRouter()
   const [status, setStatus] = useState<Status>('loading')
@@ -37,6 +48,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState<AppUser | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [toggleTarget, setToggleTarget] = useState<AppUser | null>(null)
   const [togglingAdmin, setTogglingAdmin] = useState<string | null>(null)
 
   useEffect(() => {
@@ -74,8 +86,10 @@ export default function AdminUsersPage() {
   const rangeStart = sorted.length === 0 ? 0 : safePage * PAGE_SIZE + 1
   const rangeEnd = Math.min((safePage + 1) * PAGE_SIZE, sorted.length)
 
-  async function handleToggleAdmin(u: AppUser) {
-    if (togglingAdmin) return
+  async function handleToggleAdmin() {
+    if (!toggleTarget || togglingAdmin) return
+    const u = toggleTarget
+    setToggleTarget(null)
     setTogglingAdmin(u.id)
     setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, is_admin: !x.is_admin } : x))
     const { error } = await supabase.rpc('admin_toggle_admin', { target_user_id: u.id })
@@ -110,6 +124,13 @@ export default function AdminUsersPage() {
   const controlClass =
     'rounded-lg border border-steel/20 bg-canvas px-3 py-2 text-sm text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30'
 
+  const roleButtonClass = (isAdminUser: boolean) =>
+    `inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50 ${
+      isAdminUser
+        ? 'bg-steel/10 text-steel hover:bg-steel/20'
+        : 'border border-steel/15 text-muted hover:bg-canvas'
+    }`
+
   return (
     <div className="space-y-8">
 
@@ -141,6 +162,46 @@ export default function AdminUsersPage() {
               </button>
               <button
                 onClick={() => setDeleteTarget(null)}
+                className="text-sm text-muted hover:text-charcoal transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role toggle confirmation modal */}
+      {toggleTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 px-4"
+          onClick={() => setToggleTarget(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white p-6 shadow-lg space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h2 className="text-base font-semibold text-charcoal">
+                {toggleTarget.is_admin ? 'Remove admin access?' : 'Grant admin access?'}
+              </h2>
+              <p className="text-sm font-medium text-charcoal mt-2">{toggleTarget.display_name}</p>
+              <p className="text-sm text-muted">{toggleTarget.email}</p>
+              <p className="text-sm text-muted mt-2">
+                {toggleTarget.is_admin
+                  ? 'This user will lose access to the admin dashboard.'
+                  : 'This user will gain full access to the admin dashboard.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={handleToggleAdmin}
+                className="rounded-lg bg-steel px-4 py-2 text-white text-sm font-medium hover:bg-steel/90 transition-colors"
+              >
+                {toggleTarget.is_admin ? 'Remove Admin' : 'Make Admin'}
+              </button>
+              <button
+                onClick={() => setToggleTarget(null)}
                 className="text-sm text-muted hover:text-charcoal transition-colors"
               >
                 Cancel
@@ -186,7 +247,7 @@ export default function AdminUsersPage() {
         </select>
       </div>
 
-      {/* Table */}
+      {/* User list */}
       <div className="rounded-2xl border border-steel/20 bg-white shadow-sm overflow-hidden">
         {fetching ? (
           <div className="py-16 text-center text-muted text-sm">Loading users…</div>
@@ -196,51 +257,80 @@ export default function AdminUsersPage() {
           </div>
         ) : (
           <>
-            {/* Column headers */}
-            <div className="grid grid-cols-[1fr_56px_64px_40px] sm:grid-cols-[1fr_1fr_90px_100px_56px_64px_40px] gap-4 px-5 py-3 border-b border-steel/10 bg-canvas">
+            {/* Desktop column headers — hidden on mobile */}
+            <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_90px_100px_56px_64px_44px] gap-4 px-5 py-3 border-b border-steel/10 bg-canvas">
               <span className="text-xs uppercase tracking-widest text-steel">Name</span>
-              <span className="hidden sm:block text-xs uppercase tracking-widest text-steel">Email</span>
-              <span className="hidden sm:block text-xs uppercase tracking-widest text-steel">Joined</span>
-              <span className="hidden sm:block text-xs uppercase tracking-widest text-steel">Last Active</span>
+              <span className="text-xs uppercase tracking-widest text-steel">Email</span>
+              <span className="text-xs uppercase tracking-widest text-steel">Joined</span>
+              <span className="text-xs uppercase tracking-widest text-steel">Last Active</span>
               <span className="text-xs uppercase tracking-widest text-steel">Reads</span>
               <span className="text-xs uppercase tracking-widest text-steel">Role</span>
               <span />
             </div>
 
-            {/* Rows */}
             <ul className="divide-y divide-steel/10">
               {paginated.map((u) => (
-                <li
-                  key={u.id}
-                  className="grid grid-cols-[1fr_56px_64px_40px] sm:grid-cols-[1fr_1fr_90px_100px_56px_64px_40px] gap-4 items-center px-5 py-3.5 hover:bg-canvas/60 transition-colors"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm text-charcoal truncate">{u.display_name}</p>
-                    <p className="text-xs text-muted truncate sm:hidden">{u.email}</p>
+                <li key={u.id} className="hover:bg-canvas/60 transition-colors">
+
+                  {/* Mobile card — hidden on sm+ */}
+                  <div className="sm:hidden px-5 py-4 space-y-2.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-charcoal truncate">{u.display_name}</p>
+                        <p className="text-xs text-muted truncate">{u.email}</p>
+                      </div>
+                      <button
+                        onClick={() => setDeleteTarget(u)}
+                        className="flex-shrink-0 text-sunrise/70 hover:text-sunrise transition-colors mt-0.5"
+                        title="Delete user"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted">
+                      <span>Joined {formatDate(u.created_at)}</span>
+                      <span>·</span>
+                      <span>Active {formatDate(u.last_sign_in_at)}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-charcoal tabular-nums">{u.total_reads} reads</span>
+                      <button
+                        onClick={() => setToggleTarget(u)}
+                        disabled={togglingAdmin === u.id}
+                        className={roleButtonClass(u.is_admin)}
+                      >
+                        {u.is_admin ? 'Admin' : 'User'}
+                      </button>
+                    </div>
                   </div>
-                  <span className="hidden sm:block text-sm text-muted truncate">{u.email}</span>
-                  <span className="hidden sm:block text-sm text-muted whitespace-nowrap">{formatDate(u.created_at)}</span>
-                  <span className="hidden sm:block text-sm text-muted whitespace-nowrap">{formatDate(u.last_sign_in_at)}</span>
-                  <span className="text-sm text-charcoal tabular-nums">{u.total_reads}</span>
-                  <button
-                    onClick={() => handleToggleAdmin(u)}
-                    disabled={togglingAdmin === u.id}
-                    className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50 ${
-                      u.is_admin
-                        ? 'bg-steel/10 text-steel hover:bg-steel/20'
-                        : 'border border-steel/15 text-muted hover:bg-canvas'
-                    }`}
-                  >
-                    {u.is_admin ? 'Admin' : 'User'}
-                  </button>
-                  <div className="flex justify-end">
+
+                  {/* Desktop row — hidden on mobile */}
+                  <div className="hidden sm:grid sm:grid-cols-[1fr_1fr_90px_100px_56px_64px_44px] gap-4 items-center px-5 py-3.5">
+                    <div className="min-w-0">
+                      <p className="text-sm text-charcoal truncate">{u.display_name}</p>
+                    </div>
+                    <span className="text-sm text-muted truncate">{u.email}</span>
+                    <span className="text-sm text-muted whitespace-nowrap">{formatDate(u.created_at)}</span>
+                    <span className="text-sm text-muted whitespace-nowrap">{formatDate(u.last_sign_in_at)}</span>
+                    <span className="text-sm text-charcoal tabular-nums">{u.total_reads}</span>
                     <button
-                      onClick={() => setDeleteTarget(u)}
-                      className="text-muted hover:text-sunrise transition-colors text-sm leading-none"
+                      onClick={() => setToggleTarget(u)}
+                      disabled={togglingAdmin === u.id}
+                      className={roleButtonClass(u.is_admin)}
                     >
-                      ✕
+                      {u.is_admin ? 'Admin' : 'User'}
                     </button>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => setDeleteTarget(u)}
+                        className="text-sunrise/70 hover:text-sunrise transition-colors"
+                        title="Delete user"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
                   </div>
+
                 </li>
               ))}
             </ul>
