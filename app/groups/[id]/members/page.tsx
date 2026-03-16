@@ -27,6 +27,8 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [leaving, setLeaving] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -81,6 +83,13 @@ export default function MembersPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  async function handleDelete() {
+    if (!userId || deleting) return
+    setDeleting(true)
+    await supabase.from('groups').delete().eq('id', id)
+    router.push('/groups')
+  }
+
   async function handleLeave() {
     if (!userId || leaving) return
     setLeaving(true)
@@ -100,6 +109,41 @@ export default function MembersPage() {
 
   return (
     <div className="space-y-6">
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 px-4"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white p-6 shadow-lg space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h2 className="text-base font-semibold text-charcoal">Delete &quot;{group?.name}&quot;?</h2>
+              <p className="text-sm text-muted mt-1">
+                This will permanently delete the group, all messages, and remove all members. This cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="rounded-lg bg-sunrise px-4 py-2 text-white text-sm font-medium hover:bg-sunrise/90 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete Group'}
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-sm text-muted hover:text-charcoal transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div>
         <Link
           href={`/groups/${id}`}
@@ -161,6 +205,16 @@ export default function MembersPage() {
           className="w-full rounded-xl border border-sunrise/30 px-4 py-3 text-sm font-medium text-sunrise hover:bg-sunrise/5 transition-colors disabled:opacity-50"
         >
           {leaving ? 'Leaving…' : 'Leave Group'}
+        </button>
+      )}
+
+      {/* Delete group — only shown to the group creator */}
+      {userId === group?.created_by && (
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          className="w-full rounded-xl border border-sunrise/30 px-4 py-3 text-sm font-medium text-sunrise hover:bg-sunrise/5 transition-colors"
+        >
+          Delete Group
         </button>
       )}
     </div>
