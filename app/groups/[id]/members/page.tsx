@@ -124,7 +124,7 @@ export default function MembersPage() {
             {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        <p className="text-xs text-muted">Share this code with anyone you'd like to invite.</p>
+        <p className="text-xs text-muted">Share this code with anyone you&apos;d like to invite.</p>
       </div>
 
       {/* Member list */}

@@ -213,7 +213,7 @@ export default function GroupChatPage() {
           href={`/devotion/${devotion.month}/${devotion.day}`}
           className="rounded-2xl border border-steel/20 bg-white p-4 shadow-sm block hover:border-steel/40 transition-colors"
         >
-          <p className="text-xs uppercase tracking-widest text-steel mb-1">Today's Devotion</p>
+          <p className="text-xs uppercase tracking-widest text-steel mb-1">Today&apos;s Devotion</p>
           <p className="font-medium text-charcoal text-sm">{devotion.title}</p>
           <p className="text-xs text-muted mt-0.5">{devotion.verse_reference}</p>
         </Link>

@@ -60,7 +60,7 @@ export default function NewGroupPage() {
         </Link>
         <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero mt-1">Create a Group</h1>
         <p className="text-sm text-white/80 text-shadow-hero mt-1">
-          You'll get an invite code to share after creating.
+          You&apos;ll get an invite code to share after creating.
         </p>
       </div>
 
