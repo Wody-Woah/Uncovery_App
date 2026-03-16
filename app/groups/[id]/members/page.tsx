@@ -93,11 +93,15 @@ export default function MembersPage() {
   async function handleLeave() {
     if (!userId || leaving) return
     setLeaving(true)
-    await supabase
+    const { error } = await supabase
       .from('group_members')
       .delete()
       .eq('group_id', id)
       .eq('user_id', userId)
+    if (error) {
+      setLeaving(false)
+      return
+    }
     router.push('/groups')
   }
 
@@ -202,7 +206,7 @@ export default function MembersPage() {
         <button
           onClick={handleLeave}
           disabled={leaving}
-          className="w-full rounded-xl border border-sunrise/30 px-4 py-3 text-sm font-medium text-sunrise hover:bg-sunrise/5 transition-colors disabled:opacity-50"
+          className="w-full rounded-xl bg-sunrise px-4 py-3 text-sm font-medium text-white hover:bg-sunrise/90 transition-colors disabled:opacity-50"
         >
           {leaving ? 'Leaving…' : 'Leave Group'}
         </button>
@@ -212,7 +216,7 @@ export default function MembersPage() {
       {userId === group?.created_by && (
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="w-full rounded-xl border border-sunrise/30 px-4 py-3 text-sm font-medium text-sunrise hover:bg-sunrise/5 transition-colors"
+          className="w-full rounded-xl bg-sunrise px-4 py-3 text-sm font-medium text-white hover:bg-sunrise/90 transition-colors"
         >
           Delete Group
         </button>
