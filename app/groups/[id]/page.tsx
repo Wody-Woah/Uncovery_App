@@ -266,14 +266,12 @@ export default function GroupChatPage() {
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/groups" className="text-xs text-white/60 text-shadow-hero hover:text-white/80 transition-colors">
-            ← Groups
-          </Link>
-          <h1 className="text-xl font-semibold text-brand-blue text-shadow-hero mt-0.5">{group?.name}</h1>
-        </div>
-        <Link href={`/groups/${id}/members`} className="text-xs text-white/70 text-shadow-hero hover:text-white transition-colors">
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+        <Link href="/groups" className="text-xs text-white/60 text-shadow-hero hover:text-white/80 transition-colors whitespace-nowrap">
+          ← Groups
+        </Link>
+        <h1 className="text-xl font-semibold text-brand-blue text-shadow-hero text-center">{group?.name}</h1>
+        <Link href={`/groups/${id}/members`} className="text-xs text-white/70 text-shadow-hero hover:text-white transition-colors whitespace-nowrap">
           Members →
         </Link>
       </div>
