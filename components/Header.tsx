@@ -136,7 +136,7 @@ export default function Header() {
           {/* Nav — hidden on mobile (BottomNav handles mobile navigation) */}
           <nav className="hidden md:flex items-center gap-6">
             {navLink('/today', 'Today')}
-            {navLink('/browse', 'Browse')}
+            {navLink('/groups', 'Groups')}
             {navLink('/search', 'Search')}
             {isAdmin && navLink('/admin', 'Admin')}
 
