@@ -104,6 +104,10 @@ export default function TodayPage() {
   }
 
   useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  useEffect(() => {
     async function fetchData() {
       const [{ data: dev }, { data: thm }] = await Promise.all([
         supabase
