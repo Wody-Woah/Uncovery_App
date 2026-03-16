@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.uncoverydevotional.twa",
+      "sha256_cert_fingerprints": [
+        "77:FE:3B:69:00:2A:3D:AA:4F:49:73:6A:88:1B:AC:B5:7D:13:93:27:52:43:9E:FF:58:83:E5:74:40:98:21:1A"
+      ]
+    }
+  }
+]
