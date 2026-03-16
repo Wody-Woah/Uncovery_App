@@ -210,12 +210,12 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-semibold text-charcoal">Small Groups</h2>
               </div>
               <div className="font-serif text-[15px] text-charcoal leading-[1.85] space-y-3">
-                <p>One of the things I've learned in recovery is that we were never meant to do this alone.</p>
-                <p>That's why I'm excited to share something new with you — <span className="font-semibold not-italic">Small Groups</span>.</p>
-                <p>You can now create or join a small group right here in the app. Each day, your group will have a space to reflect together on that day's devotion. To ask questions. To share what's stirring. To remind each other that someone else is in it with you.</p>
+                <p>One of the things I&apos;ve learned in recovery is that we were never meant to do this alone.</p>
+                <p>That&apos;s why I&apos;m excited to share something new with you — <span className="font-semibold not-italic">Small Groups</span>.</p>
+                <p>You can now create or join a small group right here in the app. Each day, your group will have a space to reflect together on that day&apos;s devotion. To ask questions. To share what&apos;s stirring. To remind each other that someone else is in it with you.</p>
                 <p>The opposite of addiction is connection — and this is one more way to build it.</p>
                 <p>To get started, tap the <span className="font-semibold not-italic">Groups</span> tab in the navigation.</p>
-                <p>I'm glad you're here. Now let's do this together.</p>
+                <p>I&apos;m glad you&apos;re here. Now let&apos;s do this together.</p>
                 <p className="text-muted text-sm">— George</p>
               </div>
             </div>
