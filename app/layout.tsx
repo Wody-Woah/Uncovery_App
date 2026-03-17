@@ -45,6 +45,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body className={inter.className}>
         <div className="relative min-h-screen">
           {/* Fixed background: image + overlay sit behind all content */}
