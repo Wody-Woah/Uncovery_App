@@ -53,13 +53,11 @@ export default function MembersPage() {
 
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
       const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, display_name')
-        .in('id', memberIds)
+        .rpc('get_member_display_names', { member_ids: memberIds })
 
       const nameMap: Record<string, string> = {}
-      profilesData?.forEach((p: { id: string; display_name: string }) => {
-        nameMap[p.id] = p.display_name
+      profilesData?.forEach((p: { id: string; name: string }) => {
+        nameMap[p.id] = p.name
       })
 
       const mapped: Member[] = (membersRes.data ?? []).map((m: { user_id: string; role: string }) => ({

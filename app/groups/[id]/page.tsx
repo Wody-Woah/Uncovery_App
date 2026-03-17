@@ -101,11 +101,11 @@ export default function GroupChatPage() {
 
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
       const { data: profilesData } = await supabase
-        .from('profiles').select('id, display_name').in('id', memberIds)
+        .rpc('get_member_display_names', { member_ids: memberIds })
 
       const nameMap: Record<string, string> = {}
-      profilesData?.forEach((p: { id: string; display_name: string }) => {
-        nameMap[p.id] = p.display_name
+      profilesData?.forEach((p: { id: string; name: string }) => {
+        nameMap[p.id] = p.name
       })
       setNames(nameMap)
       namesRef.current = nameMap
@@ -149,8 +149,8 @@ export default function GroupChatPage() {
           const msg = payload.new as { id: string; user_id: string; content: string; created_at: string }
           let display_name = namesRef.current[msg.user_id]
           if (!display_name) {
-            const { data } = await supabase.from('profiles').select('display_name').eq('id', msg.user_id).single()
-            display_name = data?.display_name ?? 'Unknown'
+            const { data } = await supabase.rpc('get_member_display_names', { member_ids: [msg.user_id] })
+            display_name = data?.[0]?.name || 'Unknown'
             setNames((prev) => ({ ...prev, [msg.user_id]: display_name }))
           }
           setMessages((prev) => {

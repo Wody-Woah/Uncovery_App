@@ -11,7 +11,6 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
   const [profileLoading, setProfileLoading] = useState(true)
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
@@ -32,14 +31,13 @@ export default function ProfilePage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, display_name, bio, avatar_url')
+        .select('id, display_name, bio')
         .eq('id', user.id)
         .single()
 
       if (profile) {
         setDisplayName(profile.display_name ?? '')
         setBio(profile.bio ?? '')
-        setAvatarUrl(profile.avatar_url ?? '')
       } else {
         const defaultName = user.email?.split('@')[0] ?? 'User'
         await supabase.from('profiles').upsert({
@@ -67,7 +65,6 @@ export default function ProfilePage() {
       .update({
         display_name: displayName.trim(),
         bio: bio.trim() || null,
-        avatar_url: avatarUrl.trim() || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
@@ -159,17 +156,6 @@ export default function ProfilePage() {
               rows={3}
               placeholder="A little about you…"
               className={`${inputClass} resize-none leading-relaxed`}
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Avatar URL</label>
-            <input
-              type="url"
-              value={avatarUrl}
-              onChange={(e) => { setAvatarUrl(e.target.value); setProfileSuccess(false) }}
-              placeholder="https://…"
-              className={inputClass}
             />
           </div>
 

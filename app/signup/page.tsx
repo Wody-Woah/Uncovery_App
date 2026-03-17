@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabaseClient'
 
 export default function SignupPage() {
   const router = useRouter()
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -19,16 +21,26 @@ export default function SignupPage() {
     setNotice(null)
     setLoading(true)
 
+    const displayName = `${firstName.trim()} ${lastName.trim()}`.trim()
+
     const { data, error } = await supabase.auth.signUp({ email, password })
 
     if (error) {
       setError(friendlyError(error.message))
       setLoading(false)
-    } else if (data.session) {
-      // Signed in immediately (email confirmation disabled)
+      return
+    }
+
+    const userId = data.user?.id
+    if (userId) {
+      await supabase
+        .from('profiles')
+        .upsert({ id: userId, display_name: displayName }, { onConflict: 'id' })
+    }
+
+    if (data.session) {
       router.push('/today')
     } else {
-      // Email confirmation required
       setNotice('Check your email for a confirmation link, then sign in.')
       setLoading(false)
     }
@@ -61,6 +73,37 @@ export default function SignupPage() {
               {notice}
             </div>
           )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-steel mb-2">
+                First Name
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                autoComplete="given-name"
+                placeholder="John"
+                className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30"
+              />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-steel mb-2">
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                autoComplete="family-name"
+                placeholder="Smith"
+                className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30"
+              />
+            </div>
+          </div>
 
           <div>
             <label className="block text-xs uppercase tracking-widest text-steel mb-2">
@@ -113,7 +156,7 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
-  );
+  )
 }
 
 function friendlyError(msg: string): string {
