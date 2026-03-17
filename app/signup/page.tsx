@@ -39,7 +39,7 @@ export default function SignupPage() {
     }
 
     if (data.session) {
-      router.push('/today')
+      window.location.href = '/today'
     } else {
       setNotice('Check your email for a confirmation link, then sign in.')
       setLoading(false)

@@ -130,7 +130,7 @@ export default function WelcomePage() {
     await supabase
       .from('user_flags')
       .upsert({ user_id: userId, has_seen_welcome: true }, { onConflict: 'user_id' })
-    router.push('/dashboard')
+    window.location.href = '/dashboard'
   }
 
   if (!ready) {

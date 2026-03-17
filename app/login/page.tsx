@@ -29,7 +29,7 @@ export default function LoginPage() {
       setError(friendlyError(error.message))
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      window.location.href = '/dashboard'
     }
   }
 
