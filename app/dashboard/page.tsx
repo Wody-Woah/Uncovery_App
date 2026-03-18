@@ -209,8 +209,8 @@ export default function DashboardPage() {
       {/* Groups feature announcement modal */}
       {showGroupsAnnouncement && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-charcoal/40 px-4 pb-6 sm:pb-0">
-          <div className="w-full max-w-sm rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden">
-            <div className="pt-8 px-6 pb-6 space-y-4 max-h-[80vh] overflow-y-auto">
+          <div className="w-full max-w-sm rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden flex flex-col max-h-[75vh]">
+            <div className="pt-8 px-6 pb-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <p className="text-xs uppercase tracking-widest text-steel mb-1">Something New Is Here</p>
                 <h2 className="text-lg font-semibold text-charcoal">Small Groups</h2>
