@@ -129,7 +129,9 @@ export default function DashboardPage() {
       }
 
       const announcementCount = flags.groups_announcement_count ?? 0
-      if (announcementCount < 3) {
+      const sessionKey = 'groups_announcement_shown'
+      if (announcementCount < 3 && !sessionStorage.getItem(sessionKey)) {
+        sessionStorage.setItem(sessionKey, '1')
         setShowGroupsAnnouncement(true)
         supabase
           .from('user_flags')
