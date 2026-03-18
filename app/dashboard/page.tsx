@@ -112,6 +112,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function init() {
+      try {
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -139,8 +140,6 @@ export default function DashboardPage() {
           .eq('user_id', user.id)
           .then(() => {})
       }
-
-      setReady(true)
 
       const [devotionRes, themeRes, readsRes, adminResult, profileRes] = await Promise.all([
         supabase
@@ -189,6 +188,11 @@ export default function DashboardPage() {
       if (!adminResult) updatesQuery = updatesQuery.eq('published', true)
       const updatesRes = await updatesQuery
       if (updatesRes.data) setUpdates(updatesRes.data)
+      } catch {
+        // fall through and show whatever loaded
+      } finally {
+        setReady(true)
+      }
     }
 
     init()

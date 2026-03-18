@@ -46,44 +46,51 @@ export default function TodayPage() {
   })
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { router.push('/login'); return }
-      setUserId(user.id)
+    async function load() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { router.push('/login'); return }
+        setUserId(user.id)
 
-      // Fetch devotion, theme, read status, and bookmark status together after auth
-      const [{ data: dev }, { data: thm }, readRes, bmRes] = await Promise.all([
-        supabase
-          .from('devotions')
-          .select('*')
-          .eq('month', month)
-          .eq('day', day)
-          .eq('published', true)
-          .single(),
-        supabase
-          .from('month_themes')
-          .select('*')
-          .eq('month', month)
-          .single(),
-        supabase
-          .from('devotion_reads')
-          .select('read_on')
-          .eq('user_id', user.id)
-          .eq('read_on', todayStr)
-          .maybeSingle(),
-        supabase
-          .from('bookmarks')
-          .select('month')
-          .eq('user_id', user.id)
-          .eq('month', month)
-          .eq('day', day)
-          .maybeSingle(),
-      ])
-      setDevotion(dev)
-      setTheme(thm)
-      if (readRes.data) setMarked(true)
-      if (bmRes.data) setBookmarked(true)
-      setLoading(false)
-    })
+        // Fetch devotion, theme, read status, and bookmark status together after auth
+        const [{ data: dev }, { data: thm }, readRes, bmRes] = await Promise.all([
+          supabase
+            .from('devotions')
+            .select('*')
+            .eq('month', month)
+            .eq('day', day)
+            .eq('published', true)
+            .single(),
+          supabase
+            .from('month_themes')
+            .select('*')
+            .eq('month', month)
+            .single(),
+          supabase
+            .from('devotion_reads')
+            .select('read_on')
+            .eq('user_id', user.id)
+            .eq('read_on', todayStr)
+            .maybeSingle(),
+          supabase
+            .from('bookmarks')
+            .select('month')
+            .eq('user_id', user.id)
+            .eq('month', month)
+            .eq('day', day)
+            .maybeSingle(),
+        ])
+        setDevotion(dev)
+        setTheme(thm)
+        if (readRes.data) setMarked(true)
+        if (bmRes.data) setBookmarked(true)
+      } catch {
+        // fall through and show the page without crashing
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
