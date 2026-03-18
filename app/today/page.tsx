@@ -50,8 +50,20 @@ export default function TodayPage() {
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
 
-      // Check read + bookmark status in parallel
-      const [readRes, bmRes] = await Promise.all([
+      // Fetch devotion, theme, read status, and bookmark status together after auth
+      const [{ data: dev }, { data: thm }, readRes, bmRes] = await Promise.all([
+        supabase
+          .from('devotions')
+          .select('*')
+          .eq('month', month)
+          .eq('day', day)
+          .eq('published', true)
+          .single(),
+        supabase
+          .from('month_themes')
+          .select('*')
+          .eq('month', month)
+          .single(),
         supabase
           .from('devotion_reads')
           .select('read_on')
@@ -66,8 +78,11 @@ export default function TodayPage() {
           .eq('day', day)
           .maybeSingle(),
       ])
+      setDevotion(dev)
+      setTheme(thm)
       if (readRes.data) setMarked(true)
       if (bmRes.data) setBookmarked(true)
+      setLoading(false)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
@@ -106,30 +121,6 @@ export default function TodayPage() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
-
-  useEffect(() => {
-    async function fetchData() {
-      const [{ data: dev }, { data: thm }] = await Promise.all([
-        supabase
-          .from('devotions')
-          .select('*')
-          .eq('month', month)
-          .eq('day', day)
-          .eq('published', true)
-          .single(),
-        supabase
-          .from('month_themes')
-          .select('*')
-          .eq('month', month)
-          .single(),
-      ])
-      setDevotion(dev)
-      setTheme(thm)
-      setLoading(false)
-    }
-
-    fetchData()
-  }, [month, day])
 
   if (loading) {
     return (
