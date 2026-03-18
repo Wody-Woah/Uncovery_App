@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -22,6 +23,12 @@ export default function SignupPage() {
     setLoading(true)
 
     const displayName = `${firstName.trim()} ${lastName.trim()}`.trim()
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      setLoading(false)
+      return
+    }
 
     const { data, error } = await supabase.auth.signUp({ email, password })
 
@@ -132,6 +139,22 @@ export default function SignupPage() {
               autoComplete="new-password"
               minLength={6}
               placeholder="At least 6 characters"
+              className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs uppercase tracking-widest text-steel mb-2">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              minLength={6}
+              placeholder="Re-enter your password"
               className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30"
             />
           </div>
