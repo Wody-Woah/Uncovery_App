@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
 import { getTodayET } from '@/lib/getTodayET'
+import Image from 'next/image'
 import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
 import Avatar from '@/components/Avatar'
 
@@ -287,36 +288,46 @@ export default function DashboardPage() {
       </div>
 
       {/* Today card */}
-      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-xs uppercase tracking-widest text-steel">Today</h2>
+      <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]">
+        <Image
+          src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/75" />
+        <div className="relative z-10 p-5 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xs uppercase tracking-widest text-white/70">Today</h2>
+            {theme && (
+              <span className="text-xs text-white/60 italic truncate">
+                {theme.theme_scripture_reference}
+              </span>
+            )}
+          </div>
+
           {theme && (
-            <span className="text-xs text-muted italic truncate">
-              {theme.theme_scripture_reference}
-            </span>
+            <p className="text-xs font-medium text-white/80">{theme.theme_title}</p>
+          )}
+
+          {devotion ? (
+            <>
+              <div>
+                <p className="text-base font-semibold text-white">{devotion.title}</p>
+                <p className="text-sm text-white/70 mt-0.5">{devotion.verse_reference}</p>
+              </div>
+              <Link
+                href="/today"
+                className="block w-full rounded-xl bg-white/20 border border-white/30 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-white/30 transition-colors backdrop-blur-sm"
+              >
+                Continue Reading →
+              </Link>
+            </>
+          ) : (
+            <p className="text-sm text-white/70">No devotion for today yet.</p>
           )}
         </div>
-
-        {theme && (
-          <p className="text-xs font-medium text-steel/80">{theme.theme_title}</p>
-        )}
-
-        {devotion ? (
-          <>
-            <div>
-              <p className="text-base font-semibold text-charcoal">{devotion.title}</p>
-              <p className="text-sm text-muted mt-0.5">{devotion.verse_reference}</p>
-            </div>
-            <Link
-              href="/today"
-              className="block w-full rounded-xl bg-steel px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-steel/90 transition-colors"
-            >
-              Continue Reading →
-            </Link>
-          </>
-        ) : (
-          <p className="text-sm text-muted">No devotion for today yet.</p>
-        )}
       </div>
 
       {/* From the Author card */}

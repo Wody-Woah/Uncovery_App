@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
@@ -142,17 +143,27 @@ export default function TodayPage() {
 
       {/* Month Theme Card */}
       {theme && (
-        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">
-            {theme.month_name} · Theme
-          </p>
-          <h2 className="text-lg font-semibold text-charcoal mb-1">{theme.theme_title}</h2>
-          <p className="text-sm text-muted italic mb-3">{theme.theme_scripture_reference}</p>
-          {theme.theme_scripture_text && (
-            <p className="font-serif text-sm text-charcoal/80 border-l-2 border-steel/30 pl-3 leading-relaxed">
-              {theme.theme_scripture_text}
+        <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]">
+          <Image
+            src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
+            alt=""
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/75" />
+          <div className="relative z-10 p-6">
+            <p className="text-xs uppercase tracking-widest text-white/70 mb-2">
+              {theme.month_name} · Theme
             </p>
-          )}
+            <h2 className="text-lg font-semibold text-white mb-1">{theme.theme_title}</h2>
+            <p className="text-sm text-white/70 italic mb-3">{theme.theme_scripture_reference}</p>
+            {theme.theme_scripture_text && (
+              <p className="font-serif text-sm text-white/85 border-l-2 border-white/40 pl-3 leading-relaxed">
+                {theme.theme_scripture_text}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
