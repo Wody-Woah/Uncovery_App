@@ -9,13 +9,15 @@ type Props = {
   currentMonth: number
   currentYear: number
   readDates: string[]
+  variant?: 'light' | 'dark'
 }
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-export default function MonthlyStreakGrid({ currentMonth, currentYear, readDates }: Props) {
+export default function MonthlyStreakGrid({ currentMonth, currentYear, readDates, variant = 'light' }: Props) {
+  const dark = variant === 'dark'
   const router = useRouter()
   const today = getTodayET()
 
@@ -41,7 +43,7 @@ export default function MonthlyStreakGrid({ currentMonth, currentYear, readDates
         {DAY_LABELS.map((label) => (
           <div
             key={label}
-            className="text-center text-[10px] text-muted uppercase tracking-wide py-1"
+            className={`text-center text-[10px] uppercase tracking-wide py-1 ${dark ? 'text-white/50' : 'text-muted'}`}
           >
             {label.slice(0, 1)}
           </div>
@@ -63,10 +65,10 @@ export default function MonthlyStreakGrid({ currentMonth, currentYear, readDates
               className={[
                 'mx-auto flex aspect-square w-8 items-center justify-center rounded-full text-xs transition-colors',
                 isRead
-                  ? 'bg-steel/20 font-medium text-steel hover:bg-steel/30'
-                  : 'text-muted/70 hover:bg-steel/5',
+                  ? dark ? 'bg-white/25 font-medium text-white hover:bg-white/35' : 'bg-steel/20 font-medium text-steel hover:bg-steel/30'
+                  : dark ? 'text-white/50 hover:bg-white/10' : 'text-muted/70 hover:bg-steel/5',
                 isToday
-                  ? 'ring-1 ring-steel/50 ring-offset-1'
+                  ? dark ? 'ring-1 ring-white/60' : 'ring-1 ring-steel/50 ring-offset-1'
                   : '',
               ]
                 .filter(Boolean)

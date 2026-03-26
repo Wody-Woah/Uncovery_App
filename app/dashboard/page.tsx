@@ -249,19 +249,28 @@ export default function DashboardPage() {
       )}
 
       {/* Welcome card */}
-      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-steel mb-1">{dateLabel}</p>
-          <h1 className="text-2xl font-semibold text-charcoal">
-            Welcome back{displayName ? `, ${displayName}` : ''}
-          </h1>
+      <div className="relative rounded-2xl overflow-hidden shadow-sm">
+        <Image
+          src={supabase.storage.from('themes').getPublicUrl('welcome-card.jpg').data.publicUrl}
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="relative z-10 p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-white/70 mb-1">{dateLabel}</p>
+            <h1 className="text-2xl font-semibold text-white">
+              Welcome back{displayName ? `, ${displayName}` : ''}
+            </h1>
+          </div>
+          <Avatar avatarUrl={avatarUrl} displayName={displayName} size="md" />
         </div>
-        <Avatar avatarUrl={avatarUrl} displayName={displayName} size="md" />
       </div>
 
       {/* Journey card */}
-      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-4">
-        <h2 className="text-xs uppercase tracking-widest text-steel">Your Journey</h2>
+      <div className="rounded-2xl p-5 shadow-sm space-y-4 bg-gradient-to-br from-[#1e3a52] to-steel">
+        <h2 className="text-xs uppercase tracking-widest text-white/70">Your Journey</h2>
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Current Streak', value: `${streaks.current}d` },
@@ -270,19 +279,20 @@ export default function DashboardPage() {
           ].map(({ label, value }) => (
             <div
               key={label}
-              className="rounded-xl bg-canvas border border-steel/10 p-3 text-center"
+              className="rounded-xl bg-white/10 border border-white/15 p-3 text-center"
             >
-              <p className="text-xl font-semibold text-charcoal tabular-nums">{value}</p>
-              <p className="text-[11px] text-muted mt-0.5 leading-tight">{label}</p>
+              <p className="text-xl font-semibold text-white tabular-nums">{value}</p>
+              <p className="text-[11px] text-white/60 mt-0.5 leading-tight">{label}</p>
             </div>
           ))}
         </div>
 
-        <div className="border-t border-steel/10 pt-4">
+        <div className="border-t border-white/15 pt-4">
           <MonthlyStreakGrid
             currentMonth={month}
             currentYear={year}
             readDates={readDates}
+            variant="dark"
           />
         </div>
       </div>
@@ -331,7 +341,7 @@ export default function DashboardPage() {
       </div>
 
       {/* From the Author card */}
-      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-4">
+      <div className="rounded-2xl border border-steel/15 bg-canvas p-5 shadow-sm space-y-4">
         <div>
           <h2 className="text-xs uppercase tracking-widest text-steel">From the Author</h2>
           <p className="text-xs text-muted mt-0.5">New reflections and recent messages.</p>
