@@ -218,6 +218,21 @@ export default function ProfilePage() {
           </button>
         </form>
       </div>
+
+      {/* Danger zone */}
+      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+        <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Account</h2>
+        <p className="text-sm text-muted mb-4">
+          To request deletion of your account and all associated data, tap the link below.
+        </p>
+        <a
+          href="/delete-account"
+          className="text-sm text-sunrise hover:underline"
+        >
+          Delete my account →
+        </a>
+      </div>
+
     </div>
   )
 }
