@@ -1,13 +1,24 @@
-# The Uncovery
+# The Uncovery Devotional
 
-A mobile-friendly daily devotional web app built with Next.js, TypeScript, Tailwind CSS, and Supabase.
+A mobile-first daily devotional web app and Android app built for people in recovery, faith, and spiritual growth. Based on the book *The Uncovery Devotional* by George Castillo and Brit Eaton.
 
 ## Stack
 
-- **Next.js 14** (App Router)
+- **Next.js 14** (App Router, all pages `'use client'`)
 - **TypeScript**
-- **Tailwind CSS**
-- **Supabase** (Auth + Database)
+- **Tailwind CSS** (custom color palette)
+- **Supabase** (Auth + PostgreSQL + Realtime)
+- **Framer Motion** (welcome page animations)
+- **Vercel** (hosting, auto-deploy)
+- **Resend** (transactional email)
+
+## Distribution
+
+- **Web:** uncoverydevotional.com
+- **Android:** Google Play Store (TWA via PWABuilder, package: `com.uncoverydevotional.twa`)
+- **iOS:** Add to Home Screen via Safari (PWA)
+
+---
 
 ## Getting Started
 
@@ -28,15 +39,12 @@ cp .env.example .env.local
 Required variables in `.env.local`:
 
 ```
-# App (browser-safe)
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-
-# Scripts only (server-side, never exposed to browser)
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-The service role key is only needed for the bulk import script. Find it in **Supabase → Project Settings → API → service_role secret**.
+The service role key is only needed for the bulk import script.
 
 ### 3. Run the dev server
 
@@ -44,30 +52,94 @@ The service role key is only needed for the bulk import script. Find it in **Sup
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — it will redirect to `/login`.
+Open [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Project Structure
+
+```
+app/
+  layout.tsx                          # Root layout (header, background, bottom nav)
+  page.tsx                            # Redirects → /today or /login
+  today/page.tsx                      # Today's devotion (auto-marks read on scroll)
+  browse/page.tsx                     # Browse devotions by month/day
+  devotion/[month]/[day]/page.tsx     # Full devotion detail
+  dashboard/page.tsx                  # Streak stats, today preview, author updates
+  welcome/page.tsx                    # First-login author message
+  login/page.tsx                      # Email/password login
+  signup/page.tsx                     # Account creation (first name, last name, email, password)
+  profile/page.tsx                    # Edit display name, bio, change password
+  bookmarks/page.tsx                  # Saved devotions
+  journal/page.tsx                    # Private journal entries
+  groups/page.tsx                     # Small groups list
+  groups/new/page.tsx                 # Create a group
+  groups/join/page.tsx                # Join via invite code
+  groups/[id]/page.tsx                # Group chat with realtime messages + reactions
+  groups/[id]/members/page.tsx        # Members list, invite code, leave/delete group
+  updates/[id]/page.tsx               # Full author update
+  privacy/page.tsx                    # Privacy policy
+  delete-account/page.tsx             # Account deletion request
+  admin/page.tsx                      # Admin dashboard
+  admin/devotions/page.tsx            # All devotions
+  admin/devotions/new/page.tsx        # Create devotion
+  admin/devotions/[id]/edit/page.tsx  # Edit devotion
+  admin/updates/page.tsx              # Manage author updates
+  admin/users/page.tsx                # User management (search, sort, delete, admin toggle)
+
+components/
+  Header.tsx              # Top navigation
+  BottomNav.tsx           # Mobile bottom navigation (Home, Today, Groups, Search, More)
+  DevotionCard.tsx        # Devotion display with bookmark + auto-read-on-scroll
+  MonthlyStreakGrid.tsx   # Calendar grid showing read days
+
+lib/
+  supabaseClient.ts       # Browser Supabase client
+  isAdmin.ts              # Admin check helper
+  getTodayET.ts           # Eastern Time date helper
+
+public/
+  manifest.json           # PWA manifest
+  apple-touch-icon.png    # 180×180 iOS icon
+  icon-192.png            # 192×192 Android icon
+  icon-512.png            # 512×512 Android icon
+  .well-known/
+    assetlinks.json       # Android TWA domain verification
+
+docs/
+  APP_SPEC.md             # Full feature and route specification
+  DB_SCHEMA.md            # Database tables, RLS, functions, triggers
+  UI_STYLE.md             # Design system and component patterns
+  CLAUDE_INSTRUCTIONS.md  # Build rules and patterns for Claude Code
+
+scripts/
+  import-devotions.mjs    # Bulk upsert devotions from JSON
+```
+
+---
+
+## Git Remotes
+
+Two remotes — always push to both:
+
+```bash
+git push origin dev           # GitHub (Uncovery_App.git, dev branch)
+git push vercel dev:main      # Vercel (uncovery-app.git, main branch)
+```
+
+Vercel auto-deploys from the `main` branch of the vercel remote.
+
+---
 
 ## Bulk Import
 
-Use the import script to upsert devotions from a JSON file. It uses the Supabase service role key to bypass RLS and performs an upsert on `(month, day)` — safe to run repeatedly.
+Use the import script to upsert devotions from a JSON file:
 
 ```bash
 node scripts/import-devotions.mjs data/january.json
 ```
 
-The script will print a per-row log and a final summary:
-
-```
-✓ Inserted: January 1 — "A New Beginning"
-↺ Updated:  January 2 — "Still Waters"
-
-──────────────────────────────────────
-  Inserted:          1
-  Updated:           1
-  Failed:            0
-──────────────────────────────────────
-```
-
-**JSON shape** — each entry in the array must include:
+**JSON shape:**
 
 | Field | Type | Required |
 |---|---|---|
@@ -80,43 +152,31 @@ The script will print a per-row log and a final summary:
 | `verse_text` | string | no |
 | `published` | boolean | no (default `true`) |
 
-See `data/example.json` for a working sample. Real data files are gitignored — only `data/example.json` is tracked.
-
-## Project Structure
-
-```
-app/
-  layout.tsx                        # Root layout (header, fonts, global styles)
-  page.tsx                          # Redirects → /login
-  today/page.tsx                    # Today's devotion + month theme
-  browse/page.tsx                   # Month/day picker
-  devotion/[month]/[day]/           # Devotion detail page
-  login/page.tsx                    # Email/password login
-  signup/page.tsx                   # Account creation
-  admin/page.tsx                    # Admin dashboard
-  admin/devotions/page.tsx          # All devotions list
-  admin/devotions/new/page.tsx      # Create devotion form
-  admin/devotions/[id]/edit/        # Edit devotion form
-components/
-  Header.tsx              # Sticky nav (Today, Browse, Admin, Sign in/out)
-lib/
-  supabaseClient.ts       # Browser Supabase client
-  isAdmin.ts              # Admin check helper
-  utils.ts                # cn() utility (clsx + tailwind-merge)
-scripts/
-  import-devotions.mjs    # Bulk upsert devotions from JSON
-data/
-  example.json            # Example import file (2 entries)
-```
+---
 
 ## Database
 
-See `docs/DB_SCHEMA.md` for full schema. Tables:
+See `docs/DB_SCHEMA.md` for full schema. Key tables:
 
-- `devotions` — daily devotion content (month + day indexed, published flag)
+- `devotions` — daily devotion content
 - `month_themes` — monthly theme + scripture
-- `admins` — user IDs with admin access (RLS-enforced)
+- `profiles` — user display names and bios
+- `user_flags` — onboarding state per user
+- `devotion_reads` — reading history for streaks
+- `bookmarks` — saved devotions
+- `journal_entries` — private journal
+- `author_updates` — messages from George
+- `groups` + `group_members` + `group_messages` + `group_message_reactions` — Small Groups feature
+- `admins` — admin access control
 
-## Deployment
+---
 
-Deploy to [Vercel](https://vercel.com) — set the two `NEXT_PUBLIC_*` env vars in the project settings.
+## Before Pushing
+
+Always run a build check first:
+
+```bash
+npm run build
+```
+
+Fix any ESLint or TypeScript errors before pushing.

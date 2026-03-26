@@ -1,128 +1,107 @@
-# Claude Code — Build Instructions for "The Uncovery" Web App
+# Claude Code — Instructions for The Uncovery Devotional
 
-## Project Goal
-Build a mobile-friendly web app (browser-based) for "The Uncovery" devotional.
-It should feel calm, premium, and readable (Bible-app-like), and match the book’s tone.
+## Critical Rules (Never Break These)
+- **NEVER push to any repo without the user explicitly saying to push.** Always ask first.
+- **Always run `npm run build` before pushing** to catch ESLint/TypeScript errors locally.
+- **Never use `router.push()`** after login, signup, or welcome completion — use `window.location.href` to ensure full session initialization.
+- Apostrophes in JSX must use `&apos;` — raw `'` will fail ESLint.
+- Do not over-engineer. Only build what is asked. No extra abstractions, helpers, or features.
 
-## Tech Stack (Required)
-- Next.js 14+ with App Router
+---
+
+## Git / Deployment
+
+Two remotes, always push to both:
+- `origin` → `git@github.com:Wody-Woah/Uncovery_App.git` → `dev` branch
+- `vercel` → `git@github.com:Wody-Woah/uncovery-app.git` → `main` branch
+
+Push commands:
+```bash
+git push origin dev
+git push vercel dev:main
+```
+
+Vercel auto-deploys from the `main` branch of the vercel remote.
+
+---
+
+## Tech Stack
+- Next.js 14 App Router — all pages are `'use client'`
 - TypeScript
-- Tailwind CSS
-- Supabase (Auth + Database)
-- @supabase/supabase-js
-- Optional (but preferred): shadcn/ui for components
+- Tailwind CSS with custom colors (see UI_STYLE.md)
+- Supabase (`@supabase/supabase-js`) — Auth, PostgreSQL, Realtime
+- Framer Motion — used on welcome page only
+- Vercel — hosting
 
-## Hard Rules
-- Mobile-first UI.
-- Reading experience is the priority.
-- Avoid over-engineering.
-- No backend server needed beyond Supabase.
-- Do NOT store Supabase service role key in the client.
-- Use RLS policies already defined in Supabase.
-- Keep pages fast and simple.
-- Only implement MVP features first.
+---
 
-## MVP Features (Build in This Order)
+## Supabase Patterns
 
-### 1) Project Setup
-- Initialize Next.js App Router project with TypeScript
-- Add Tailwind
-- Create basic layout shell and global styles
+### Auth
+- Always use `supabase.auth.getUser()` to check session inside `useEffect`
+- Redirect to `/login` if no user
+- New users auto-get a `profiles` row via the `handle_new_user` trigger
 
-### 2) Supabase Client Setup
-- Create `lib/supabaseClient.ts` for browser client
-- Add env vars support:
-  - NEXT_PUBLIC_SUPABASE_URL
-  - NEXT_PUBLIC_SUPABASE_ANON_KEY
-- Add a `lib/supabaseServer.ts` if needed for server components (optional)
+### RLS Workarounds
+When RLS causes recursion or blocks legitimate cross-user reads, use **security definer functions** (RPCs) that bypass RLS. Existing ones:
+- `get_my_group_ids()` — user's group IDs
+- `is_group_admin(gid)` — admin check for groups
+- `get_group_id_by_invite_code(code)` — join group without membership
+- `get_member_display_names(member_ids)` — names with auth.users email fallback
+- `admin_get_users()`, `admin_delete_user()`, `admin_toggle_admin()` — admin panel
 
-### 3) Auth (Email/Password)
-Pages:
-- /login
-- /signup
-Behavior:
-- Sign up and log in via Supabase Auth
-- After login redirect to /today
-- Add a simple user menu or logout button in header
+### Realtime
+- Use `supabase.channel()` with `postgres_changes` for live group chat
+- Use `useRef` for values needed inside realtime callbacks to avoid stale closures
+- Always call `supabase.removeChannel(channel)` in the useEffect cleanup
 
-### 4) Data Fetching (Read)
-Tables:
-- devotions
-- month_themes
-Queries:
-- Today devotion:
-  - where month = currentMonth and day = currentDay and published = true
-- Month theme:
-  - where month = currentMonth
+### Optimistic Updates
+- Apply state change immediately, then call Supabase
+- Revert on error
+- Used for: emoji reactions, admin role toggle
 
-### 5) Pages (Public)
-- /today
-  - Shows a subtle hero banner (road vibe) with soft gradient fade
-  - Shows month theme card
-  - Shows devotion card
-- /browse
-  - Simple month/day picker (dropdowns are fine for MVP)
-  - Navigate to /devotion/[month]/[day]
-- /devotion/[month]/[day]
-  - Fetch devotion by month/day (published only for non-admin)
+---
 
-### 6) Admin Check (RLS-based)
-Admins are determined by presence of user row in `admins` table.
+## Common Patterns
 
-Implement a helper:
-- `lib/isAdmin.ts`:
-  - if user exists, query `admins` where user_id = auth.uid()
-  - return true/false
+### Loading States
+Always wrap data fetching in `try/catch/finally` with `setLoading(false)` in `finally`:
+```tsx
+try {
+  // fetch data
+} catch {
+  // silent fail
+} finally {
+  setLoading(false)
+}
+```
 
-### 7) Admin Pages (Protected)
-- /admin
-  - Show admin-only controls and list of devotions (basic table)
-- /admin/devotions/new
-  - Form to create devotion
-- /admin/devotions/[id]/edit
-  - Form to edit devotion
-Admin forms can insert/update/delete devotions via Supabase client.
-RLS policies will enforce access.
+### Groups - Creating
+Use `crypto.randomUUID()` client-side for the group ID to avoid 403 on `.select()` after insert.
 
-## UI Requirements (Must Follow)
-Follow the style guide: `docs/UI_STYLE.md`
-General:
-- Warm off-white background
-- Charcoal text
-- Muted steel-blue accent (buttons/links)
-- Devotion content should read like a book:
-  - Serif for devotion body and prayer
-  - Sans for UI labels/titles
-- Constrain reading width (max 700px)
-- Use generous spacing and simple cards
-- Hero image is subtle (low opacity + gradient fade); do not replicate torn paper effect
+### Date / Time
+Always use `getTodayET()` from `lib/getTodayET.ts` — never `new Date()` directly for devotion queries. App uses Eastern Time.
 
-## Routing + Navigation
-- Header with: Today | Browse | (Admin if admin) | Login/Profile
-- / should redirect to /today
+---
 
-## Data Model
-Use `docs/DB_SCHEMA.md` as the source of truth.
+## File Structure Notes
+- `app/` — all pages (Next.js App Router)
+- `components/` — shared components (Header, BottomNav, DevotionCard, MonthlyStreakGrid)
+- `lib/` — utilities (supabaseClient, isAdmin, getTodayET)
+- `public/` — static assets (images, manifest.json, icons, assetlinks.json)
+- `docs/` — spec files (this file and others)
 
-## Deliverables
-Create:
-- Complete Next.js project structure
-- Pages and components for MVP
-- Clear README with setup instructions
-- `.env.example`
+---
 
-## Non-MVP (Do NOT build yet)
-- Bookmarks
-- Notes/highlights
-- Search
-- Streaks
-- Push notifications
-- Social features
+## Style
+See `docs/UI_STYLE.md` for full style guide.
+- Use `text-shadow-hero` on white text over the dark background image
+- All pages have the fixed dark hero background (set in layout.tsx)
+- Bottom navigation bar on mobile (`components/BottomNav.tsx`)
 
-## Quality Bar
-This should feel polished:
-- Clean typography
-- Smooth spacing
-- Works well on mobile
-- No broken layouts
-- No “developer-looking” raw forms (use clean inputs/buttons)
+---
+
+## Reference Docs
+- App features and routes: `docs/APP_SPEC.md`
+- Database tables and functions: `docs/DB_SCHEMA.md`
+- Colors and typography: `docs/UI_STYLE.md`
