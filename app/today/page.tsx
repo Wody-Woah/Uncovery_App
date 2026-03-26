@@ -151,15 +151,15 @@ export default function TodayPage() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/75" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/15 to-black/55" />
           <div className="relative z-10 p-6">
-            <p className="text-xs uppercase tracking-widest text-white/70 mb-2">
+            <p className="text-xs uppercase tracking-widest text-white mb-2 text-shadow-strong">
               {theme.month_name} · Theme
             </p>
-            <h2 className="text-lg font-semibold text-white mb-1">{theme.theme_title}</h2>
-            <p className="text-sm text-white/70 italic mb-3">{theme.theme_scripture_reference}</p>
+            <h2 className="text-lg font-semibold text-white mb-1 text-shadow-strong">{theme.theme_title}</h2>
+            <p className="text-sm text-white italic mb-3 text-shadow-strong">{theme.theme_scripture_reference}</p>
             {theme.theme_scripture_text && (
-              <p className="font-serif text-sm text-white/85 border-l-2 border-white/40 pl-3 leading-relaxed">
+              <p className="font-serif text-sm text-white border-l-2 border-white/40 pl-3 leading-relaxed text-shadow-strong">
                 {theme.theme_scripture_text}
               </p>
             )}

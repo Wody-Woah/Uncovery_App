@@ -16,6 +16,9 @@
   .text-shadow-hero {
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
+  .text-shadow-strong {
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 2px 12px rgba(0, 0, 0, 0.7);
+  }
   /* Reuses the same blue-300 (#93c5fd) already used on admin breadcrumb links */
   .text-brand-blue {
     color: #93c5fd;

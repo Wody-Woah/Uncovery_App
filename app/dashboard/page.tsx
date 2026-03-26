@@ -259,8 +259,8 @@ export default function DashboardPage() {
         />
         <div className="relative z-10 p-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-widest text-white/70 mb-1">{dateLabel}</p>
-            <h1 className="text-2xl font-semibold text-white">
+            <p className="text-xs uppercase tracking-widest text-white mb-1 text-shadow-strong">{dateLabel}</p>
+            <h1 className="text-2xl font-semibold text-white text-shadow-strong">
               Welcome back{displayName ? `, ${displayName}` : ''}
             </h1>
           </div>
