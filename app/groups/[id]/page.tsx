@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET } from '@/lib/getTodayET'
+import Avatar from '@/components/Avatar'
 
 const EMOJIS = ['🙏', '❤️', '👍', '🕊️', '✝️', '💙', '🔥']
 
@@ -56,6 +57,8 @@ export default function GroupChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [names, setNames] = useState<Record<string, string>>({})
   const namesRef = useRef<Record<string, string>>({})
+  const [avatars, setAvatars] = useState<Record<string, string | null>>({})
+  const avatarsRef = useRef<Record<string, string | null>>({})
   const [reactions, setReactions] = useState<ReactionsMap>({})
   const [pickerOpen, setPickerOpen] = useState<string | null>(null)
   const [devotion, setDevotion] = useState<TodayDevotion | null>(null)
@@ -66,6 +69,7 @@ export default function GroupChatPage() {
   const { month, day } = getTodayET()
 
   useEffect(() => { namesRef.current = names }, [names])
+  useEffect(() => { avatarsRef.current = avatars }, [avatars])
   useEffect(() => { userIdRef.current = userId }, [userId])
 
   const scrollToBottom = useCallback(() => {
@@ -101,14 +105,20 @@ export default function GroupChatPage() {
 
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
       const { data: profilesData } = await supabase
-        .rpc('get_member_display_names', { member_ids: memberIds })
+        .from('profiles')
+        .select('id, display_name, avatar_url')
+        .in('id', memberIds)
 
       const nameMap: Record<string, string> = {}
-      profilesData?.forEach((p: { id: string; name: string }) => {
-        nameMap[p.id] = p.name
+      const avatarMap: Record<string, string | null> = {}
+      profilesData?.forEach((p: { id: string; display_name: string; avatar_url: string | null }) => {
+        nameMap[p.id] = p.display_name ?? 'Unknown'
+        avatarMap[p.id] = p.avatar_url ?? null
       })
       setNames(nameMap)
       namesRef.current = nameMap
+      setAvatars(avatarMap)
+      avatarsRef.current = avatarMap
 
       const mapped: Message[] = (messagesRes.data ?? []).map((m: {
         id: string; user_id: string; content: string; created_at: string
@@ -149,9 +159,14 @@ export default function GroupChatPage() {
           const msg = payload.new as { id: string; user_id: string; content: string; created_at: string }
           let display_name = namesRef.current[msg.user_id]
           if (!display_name) {
-            const { data } = await supabase.rpc('get_member_display_names', { member_ids: [msg.user_id] })
-            display_name = data?.[0]?.name || 'Unknown'
+            const { data } = await supabase
+              .from('profiles')
+              .select('display_name, avatar_url')
+              .eq('id', msg.user_id)
+              .single()
+            display_name = data?.display_name || 'Unknown'
             setNames((prev) => ({ ...prev, [msg.user_id]: display_name }))
+            setAvatars((prev) => ({ ...prev, [msg.user_id]: data?.avatar_url ?? null }))
           }
           setMessages((prev) => {
             if (prev.find((m) => m.id === msg.id)) return prev
@@ -248,9 +263,15 @@ export default function GroupChatPage() {
     if (!text.trim() || !userId || sending) return
     setSending(true)
     setPickerOpen(null)
-    await supabase.from('group_messages').insert({
+    const { data } = await supabase.from('group_messages').insert({
       group_id: id, user_id: userId, content: text.trim(), month, day,
-    })
+    }).select('id, user_id, content, created_at').single()
+    if (data) {
+      setMessages((prev) => {
+        if (prev.find((m) => m.id === data.id)) return prev
+        return [...prev, { ...data, display_name: names[userId] ?? 'You' }]
+      })
+    }
     setText('')
     setSending(false)
   }
@@ -302,53 +323,60 @@ export default function GroupChatPage() {
               const isOwn = msg.user_id === userId
 
               return (
-                <div key={msg.id} className={`flex flex-col gap-0.5 ${isOwn ? 'items-end' : 'items-start'}`}>
-                  <p className="text-xs text-muted px-1">
-                    {isOwn ? 'You' : msg.display_name} · {formatTime(msg.created_at)}
-                  </p>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                    isOwn ? 'bg-steel text-white rounded-br-sm' : 'bg-canvas text-charcoal rounded-bl-sm'
-                  }`}>
-                    {msg.content}
-                  </div>
-
-                  {/* Reactions */}
-                  <div className="flex flex-wrap items-center gap-1 px-1 mt-0.5">
-                    {hasReactions && Object.entries(msgReactions).map(([emoji, { count, userReacted }]) => (
-                      <button
-                        key={emoji}
-                        onClick={() => toggleReaction(msg.id, emoji)}
-                        className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs border transition-colors ${
-                          userReacted
-                            ? 'bg-steel/10 border-steel/30 text-steel font-medium'
-                            : 'bg-white border-steel/15 text-charcoal hover:bg-canvas'
-                        }`}
-                      >
-                        {emoji} {count}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setPickerOpen(pickerOpen === msg.id ? null : msg.id)}
-                      className="w-6 h-6 flex items-center justify-center rounded-full border border-steel/15 bg-white text-muted text-xs hover:bg-canvas transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  {/* Emoji picker */}
-                  {pickerOpen === msg.id && (
-                    <div className="flex gap-1 p-2 rounded-xl border border-steel/15 bg-white shadow-lg mt-1">
-                      {EMOJIS.map((e) => (
-                        <button
-                          key={e}
-                          onClick={() => toggleReaction(msg.id, e)}
-                          className="flex-1 text-base flex items-center justify-center py-1 rounded-lg hover:bg-canvas transition-colors"
-                        >
-                          {e}
-                        </button>
-                      ))}
+                <div key={msg.id} className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'} items-end`}>
+                  {!isOwn && (
+                    <div className="shrink-0 self-end mb-5">
+                      <Avatar avatarUrl={avatars[msg.user_id]} displayName={msg.display_name} size="sm" />
                     </div>
                   )}
+                  <div className={`flex flex-col gap-0.5 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
+                    <p className="text-xs text-muted px-1">
+                      {isOwn ? 'You' : msg.display_name} · {formatTime(msg.created_at)}
+                    </p>
+                    <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                      isOwn ? 'bg-steel text-white rounded-br-sm' : 'bg-canvas text-charcoal rounded-bl-sm'
+                    }`}>
+                      {msg.content}
+                    </div>
+
+                    {/* Reactions */}
+                    <div className="flex flex-wrap items-center gap-1 px-1 mt-0.5">
+                      {hasReactions && Object.entries(msgReactions).map(([emoji, { count, userReacted }]) => (
+                        <button
+                          key={emoji}
+                          onClick={() => toggleReaction(msg.id, emoji)}
+                          className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs border transition-colors ${
+                            userReacted
+                              ? 'bg-steel/10 border-steel/30 text-steel font-medium'
+                              : 'bg-white border-steel/15 text-charcoal hover:bg-canvas'
+                          }`}
+                        >
+                          {emoji} {count}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setPickerOpen(pickerOpen === msg.id ? null : msg.id)}
+                        className="w-6 h-6 flex items-center justify-center rounded-full border border-steel/15 bg-white text-muted text-xs hover:bg-canvas transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Emoji picker */}
+                    {pickerOpen === msg.id && (
+                      <div className="flex gap-1 p-2 rounded-xl border border-steel/15 bg-white shadow-lg mt-1">
+                        {EMOJIS.map((e) => (
+                          <button
+                            key={e}
+                            onClick={() => toggleReaction(msg.id, e)}
+                            className="flex-1 text-base flex items-center justify-center py-1 rounded-lg hover:bg-canvas transition-colors"
+                          >
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })
