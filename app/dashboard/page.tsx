@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
 import { getTodayET } from '@/lib/getTodayET'
 import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
+import Avatar from '@/components/Avatar'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -97,6 +98,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [ready, setReady] = useState(false)
   const [displayName, setDisplayName] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [devotion, setDevotion] = useState<DevotionPreview>(null)
   const [theme, setTheme] = useState<MonthTheme>(null)
   const [streaks, setStreaks] = useState<Streaks>({ current: 0, longest: 0, total: 0 })
@@ -163,7 +165,7 @@ export default function DashboardPage() {
         isAdmin(),
         supabase
           .from('profiles')
-          .select('display_name')
+          .select('display_name, avatar_url')
           .eq('id', user.id)
           .single(),
       ])
@@ -171,6 +173,7 @@ export default function DashboardPage() {
       if (devotionRes.data) setDevotion(devotionRes.data)
       if (themeRes.data) setTheme(themeRes.data)
       if (profileRes.data?.display_name) setDisplayName(profileRes.data.display_name)
+      if (profileRes.data?.avatar_url) setAvatarUrl(profileRes.data.avatar_url)
       if (readsRes.data) {
         const dates = readsRes.data.map((r: { read_on: string }) => r.read_on)
         setReadDates(dates)
@@ -245,11 +248,14 @@ export default function DashboardPage() {
       )}
 
       {/* Welcome card */}
-      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm">
-        <p className="text-xs uppercase tracking-widest text-steel mb-1">{dateLabel}</p>
-        <h1 className="text-2xl font-semibold text-charcoal">
-          Welcome back{displayName ? `, ${displayName}` : ''}
-        </h1>
+      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-steel mb-1">{dateLabel}</p>
+          <h1 className="text-2xl font-semibold text-charcoal">
+            Welcome back{displayName ? `, ${displayName}` : ''}
+          </h1>
+        </div>
+        <Avatar avatarUrl={avatarUrl} displayName={displayName} size="md" />
       </div>
 
       {/* Journey card */}

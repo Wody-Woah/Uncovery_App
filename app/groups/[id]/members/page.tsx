@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import Avatar from '@/components/Avatar'
 
 type Member = {
   user_id: string
   role: string
   display_name: string
+  avatar_url: string | null
 }
 
 type Group = {
@@ -53,16 +55,19 @@ export default function MembersPage() {
 
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
       const { data: profilesData } = await supabase
-        .rpc('get_member_display_names', { member_ids: memberIds })
+        .from('profiles')
+        .select('id, display_name, avatar_url')
+        .in('id', memberIds)
 
-      const nameMap: Record<string, string> = {}
-      profilesData?.forEach((p: { id: string; name: string }) => {
-        nameMap[p.id] = p.name
+      const profileMap: Record<string, { display_name: string; avatar_url: string | null }> = {}
+      profilesData?.forEach((p: { id: string; display_name: string; avatar_url: string | null }) => {
+        profileMap[p.id] = { display_name: p.display_name ?? 'Unknown', avatar_url: p.avatar_url ?? null }
       })
 
       const mapped: Member[] = (membersRes.data ?? []).map((m: { user_id: string; role: string }) => ({
         ...m,
-        display_name: nameMap[m.user_id] ?? 'Unknown',
+        display_name: profileMap[m.user_id]?.display_name ?? 'Unknown',
+        avatar_url: profileMap[m.user_id]?.avatar_url ?? null,
       }))
 
       // Sort: admins first
@@ -183,12 +188,15 @@ export default function MembersPage() {
         <div className="divide-y divide-steel/10">
           {members.map((m) => (
             <div key={m.user_id} className="flex items-center justify-between px-5 py-3.5">
-              <p className="text-sm text-charcoal">
-                {m.display_name}
-                {m.user_id === userId && (
-                  <span className="text-muted"> (you)</span>
-                )}
-              </p>
+              <div className="flex items-center gap-3">
+                <Avatar avatarUrl={m.avatar_url} displayName={m.display_name} size="sm" />
+                <p className="text-sm text-charcoal">
+                  {m.display_name}
+                  {m.user_id === userId && (
+                    <span className="text-muted"> (you)</span>
+                  )}
+                </p>
+              </div>
               {m.role === 'admin' && (
                 <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5">
                   Admin
