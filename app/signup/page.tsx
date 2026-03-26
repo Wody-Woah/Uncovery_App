@@ -30,7 +30,11 @@ export default function SignupPage() {
       return
     }
 
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { display_name: displayName } }
+    })
 
     if (error) {
       setError(friendlyError(error.message))
