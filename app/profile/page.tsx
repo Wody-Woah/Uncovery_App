@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
 import { supabase } from '@/lib/supabaseClient'
+import Avatar from '@/components/Avatar'
 
 async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> {
   const img = await createImageBitmap(await fetch(imageSrc).then((r) => r.blob()))
@@ -207,13 +207,6 @@ export default function ProfilePage() {
     }
   }
 
-  const initials = displayName
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-
   if (profileLoading) {
     return (
       <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">
@@ -292,19 +285,7 @@ export default function ProfilePage() {
             className="relative group focus:outline-none"
             title="Change photo"
           >
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-steel flex items-center justify-center">
-              {avatarUrl ? (
-                <Image
-                  src={avatarUrl}
-                  alt="Profile photo"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-2xl font-semibold text-white">{initials || '?'}</span>
-              )}
-            </div>
+            <Avatar avatarUrl={avatarUrl} displayName={displayName} size="lg" />
             {/* Camera overlay */}
             <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
