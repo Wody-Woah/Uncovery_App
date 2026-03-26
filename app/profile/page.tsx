@@ -1,9 +1,23 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Cropper from 'react-easy-crop'
+import type { Area } from 'react-easy-crop'
 import { supabase } from '@/lib/supabaseClient'
+
+async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> {
+  const img = await createImageBitmap(await fetch(imageSrc).then((r) => r.blob()))
+  const canvas = document.createElement('canvas')
+  canvas.width = pixelCrop.width
+  canvas.height = pixelCrop.height
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height)
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Canvas is empty')), 'image/jpeg', 0.92)
+  )
+}
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -20,6 +34,12 @@ export default function ProfilePage() {
   const [profileSuccess, setProfileSuccess] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
+
+  // Crop modal
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
 
   // Password fields
   const [newPassword, setNewPassword] = useState('')
@@ -60,11 +80,10 @@ export default function ProfilePage() {
     init()
   }, [router])
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !userId) return
+    if (!file) return
 
-    // Validate file type and size (max 5MB)
     if (!file.type.startsWith('image/')) {
       setAvatarError('Please select an image file.')
       return
@@ -75,34 +94,50 @@ export default function ProfilePage() {
     }
 
     setAvatarError(null)
+    const objectUrl = URL.createObjectURL(file)
+    setCropSrc(objectUrl)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    // Reset input so the same file can be re-selected if needed
+    e.target.value = ''
+  }
+
+  const onCropComplete = useCallback((_: Area, pixels: Area) => {
+    setCroppedAreaPixels(pixels)
+  }, [])
+
+  async function handleCropConfirm() {
+    if (!cropSrc || !croppedAreaPixels || !userId) return
     setAvatarUploading(true)
+    setCropSrc(null)
 
-    const fileExt = file.name.split('.').pop()
-    const filePath = `${userId}/avatar.${fileExt}`
+    try {
+      const blob = await getCroppedBlob(cropSrc, croppedAreaPixels)
+      const filePath = `${userId}/avatar.jpg`
 
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, file, { upsert: true })
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, { upsert: true, contentType: 'image/jpeg' })
 
-    if (uploadError) {
-      setAvatarError('Upload failed. Please try again.')
-      setAvatarUploading(false)
-      return
+      if (uploadError) {
+        setAvatarError('Upload failed. Please try again.')
+        setAvatarUploading(false)
+        return
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath)
+      const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`
+
+      await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq('id', userId)
+
+      setAvatarUrl(urlWithTimestamp)
+    } catch {
+      setAvatarError('Something went wrong. Please try again.')
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath)
-
-    // Add cache-busting timestamp so the new image loads immediately
-    const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`
-
-    await supabase
-      .from('profiles')
-      .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
-      .eq('id', userId)
-
-    setAvatarUrl(urlWithTimestamp)
     setAvatarUploading(false)
   }
 
@@ -111,10 +146,7 @@ export default function ProfilePage() {
     setAvatarError(null)
     setAvatarUploading(true)
 
-    // Remove all avatar files for this user from storage
-    const extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif']
-    const paths = extensions.map((ext) => `${userId}/avatar.${ext}`)
-    await supabase.storage.from('avatars').remove(paths)
+    await supabase.storage.from('avatars').remove([`${userId}/avatar.jpg`])
 
     await supabase
       .from('profiles')
@@ -175,7 +207,6 @@ export default function ProfilePage() {
     }
   }
 
-  // Initials fallback
   const initials = displayName
     .split(' ')
     .map((n) => n[0])
@@ -196,182 +227,234 @@ export default function ProfilePage() {
   const labelClass = 'block text-xs uppercase tracking-widest text-steel mb-2'
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Profile</h1>
+    <>
+      {/* Crop modal */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+          <div className="relative flex-1">
+            <Cropper
+              image={cropSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
 
-      {/* Avatar card */}
-      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm flex flex-col items-center gap-4">
-        <p className="text-xs uppercase tracking-widest text-steel self-start">Photo</p>
+          {/* Zoom slider */}
+          <div className="px-6 py-4 bg-black flex items-center gap-4">
+            <span className="text-white/50 text-xs">–</span>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1 accent-steel"
+            />
+            <span className="text-white/50 text-xs">+</span>
+          </div>
 
-        {/* Avatar circle */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={avatarUploading}
-          className="relative group focus:outline-none"
-          title="Change photo"
-        >
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-steel flex items-center justify-center">
-            {avatarUrl ? (
-              <Image
-                src={avatarUrl}
-                alt="Profile photo"
-                width={96}
-                height={96}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-semibold text-white">{initials || '?'}</span>
+          {/* Actions */}
+          <div className="flex gap-3 px-6 pb-8 bg-black">
+            <button
+              onClick={() => setCropSrc(null)}
+              className="flex-1 rounded-lg border border-white/20 py-3 text-white text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCropConfirm}
+              className="flex-1 rounded-lg bg-steel py-3 text-white text-sm font-medium"
+            >
+              Use Photo
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Profile</h1>
+
+        {/* Avatar card */}
+        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm flex flex-col items-center gap-4">
+          <p className="text-xs uppercase tracking-widest text-steel self-start">Photo</p>
+
+          {/* Avatar circle */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={avatarUploading}
+            className="relative group focus:outline-none"
+            title="Change photo"
+          >
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-steel flex items-center justify-center">
+              {avatarUrl ? (
+                <Image
+                  src={avatarUrl}
+                  alt="Profile photo"
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl font-semibold text-white">{initials || '?'}</span>
+              )}
+            </div>
+            {/* Camera overlay */}
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
+          </button>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+
+          {avatarUploading && (
+            <p className="text-xs text-muted">Uploading…</p>
+          )}
+          {avatarError && (
+            <p className="text-xs text-red-600">{avatarError}</p>
+          )}
+          {!avatarUploading && !avatarError && (
+            <p className="text-xs text-muted">Tap your photo to change it</p>
+          )}
+          {avatarUrl && !avatarUploading && (
+            <button
+              onClick={handleAvatarDelete}
+              className="text-xs text-red-500 hover:underline"
+            >
+              Remove photo
+            </button>
+          )}
+        </div>
+
+        {/* Profile card */}
+        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+          <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Your Profile</h2>
+
+          <form onSubmit={handleProfileSave} className="space-y-5">
+            {profileError && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {profileError}
+              </div>
             )}
-          </div>
-          {/* Camera overlay */}
-          <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-          </div>
-        </button>
+            {profileSuccess && (
+              <div className="rounded-lg bg-steel/10 border border-steel/20 px-4 py-3 text-sm text-steel font-medium">
+                Profile saved.
+              </div>
+            )}
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleAvatarChange}
-        />
+            <div>
+              <label className={labelClass}>Display Name</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => { setDisplayName(e.target.value); setProfileSuccess(false) }}
+                required
+                placeholder="Your name"
+                className={inputClass}
+              />
+            </div>
 
-        {avatarUploading && (
-          <p className="text-xs text-muted">Uploading…</p>
-        )}
-        {avatarError && (
-          <p className="text-xs text-red-600">{avatarError}</p>
-        )}
-        {!avatarUploading && !avatarError && (
-          <p className="text-xs text-muted">Tap your photo to change it</p>
-        )}
-        {avatarUrl && !avatarUploading && (
-          <button
-            onClick={handleAvatarDelete}
-            className="text-xs text-red-500 hover:underline"
+            <div>
+              <label className={labelClass}>Bio</label>
+              <textarea
+                value={bio}
+                onChange={(e) => { setBio(e.target.value); setProfileSuccess(false) }}
+                rows={3}
+                placeholder="A little about you…"
+                className={`${inputClass} resize-none leading-relaxed`}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={profileSaving}
+              className="rounded-lg bg-steel px-5 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors disabled:opacity-60"
+            >
+              {profileSaving ? 'Saving…' : 'Save Profile'}
+            </button>
+          </form>
+        </div>
+
+        {/* Security card */}
+        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+          <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Security</h2>
+
+          <form onSubmit={handlePasswordChange} className="space-y-5">
+            {passwordError && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {passwordError}
+              </div>
+            )}
+            {passwordSuccess && (
+              <div className="rounded-lg bg-steel/10 border border-steel/20 px-4 py-3 text-sm text-steel font-medium">
+                Password updated.
+              </div>
+            )}
+
+            <div>
+              <label className={labelClass}>New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => { setNewPassword(e.target.value); setPasswordSuccess(false); setPasswordError(null) }}
+                placeholder="Min. 8 characters"
+                autoComplete="new-password"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setPasswordSuccess(false); setPasswordError(null) }}
+                placeholder="Repeat new password"
+                autoComplete="new-password"
+                className={inputClass}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={passwordSaving}
+              className="rounded-lg bg-steel px-5 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors disabled:opacity-60"
+            >
+              {passwordSaving ? 'Updating…' : 'Change Password'}
+            </button>
+          </form>
+        </div>
+
+        {/* Account card */}
+        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+          <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Account</h2>
+          <p className="text-sm text-muted mb-4">
+            To request deletion of your account and all associated data, tap the link below.
+          </p>
+          <a
+            href="/delete-account"
+            className="text-sm text-sunrise hover:underline"
           >
-            Remove photo
-          </button>
-        )}
+            Delete my account →
+          </a>
+        </div>
+
       </div>
-
-      {/* Profile card */}
-      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
-        <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Your Profile</h2>
-
-        <form onSubmit={handleProfileSave} className="space-y-5">
-          {profileError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-              {profileError}
-            </div>
-          )}
-          {profileSuccess && (
-            <div className="rounded-lg bg-steel/10 border border-steel/20 px-4 py-3 text-sm text-steel font-medium">
-              Profile saved.
-            </div>
-          )}
-
-          <div>
-            <label className={labelClass}>Display Name</label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => { setDisplayName(e.target.value); setProfileSuccess(false) }}
-              required
-              placeholder="Your name"
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Bio</label>
-            <textarea
-              value={bio}
-              onChange={(e) => { setBio(e.target.value); setProfileSuccess(false) }}
-              rows={3}
-              placeholder="A little about you…"
-              className={`${inputClass} resize-none leading-relaxed`}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={profileSaving}
-            className="rounded-lg bg-steel px-5 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors disabled:opacity-60"
-          >
-            {profileSaving ? 'Saving…' : 'Save Profile'}
-          </button>
-        </form>
-      </div>
-
-      {/* Security card */}
-      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
-        <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Security</h2>
-
-        <form onSubmit={handlePasswordChange} className="space-y-5">
-          {passwordError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-              {passwordError}
-            </div>
-          )}
-          {passwordSuccess && (
-            <div className="rounded-lg bg-steel/10 border border-steel/20 px-4 py-3 text-sm text-steel font-medium">
-              Password updated.
-            </div>
-          )}
-
-          <div>
-            <label className={labelClass}>New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => { setNewPassword(e.target.value); setPasswordSuccess(false); setPasswordError(null) }}
-              placeholder="Min. 8 characters"
-              autoComplete="new-password"
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => { setConfirmPassword(e.target.value); setPasswordSuccess(false); setPasswordError(null) }}
-              placeholder="Repeat new password"
-              autoComplete="new-password"
-              className={inputClass}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={passwordSaving}
-            className="rounded-lg bg-steel px-5 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors disabled:opacity-60"
-          >
-            {passwordSaving ? 'Updating…' : 'Change Password'}
-          </button>
-        </form>
-      </div>
-
-      {/* Account card */}
-      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
-        <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Account</h2>
-        <p className="text-sm text-muted mb-4">
-          To request deletion of your account and all associated data, tap the link below.
-        </p>
-        <a
-          href="/delete-account"
-          className="text-sm text-sunrise hover:underline"
-        >
-          Delete my account →
-        </a>
-      </div>
-
-    </div>
+    </>
   )
 }
