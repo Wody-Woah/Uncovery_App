@@ -154,7 +154,7 @@ export default function MembersPage() {
       <div>
         <Link
           href={`/groups/${id}`}
-          className="text-xs text-white/60 text-shadow-hero hover:text-white/80 transition-colors"
+          className="rounded-lg bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap backdrop-blur-sm"
         >
           ← {group?.name}
         </Link>

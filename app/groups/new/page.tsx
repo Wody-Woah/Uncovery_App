@@ -53,15 +53,17 @@ export default function NewGroupPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link href="/groups" className="text-xs text-white/60 text-shadow-hero hover:text-white/80 transition-colors">
+    <div className="space-y-2">
+      <div className="space-y-1">
+        <div className="text-center mt-4">
+          <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Create a Group</h1>
+          <p className="text-sm text-white/80 text-shadow-hero mt-1">
+            You&apos;ll get an invite code to share after creating.
+          </p>
+        </div>
+        <Link href="/groups" className="inline-flex rounded-lg bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap backdrop-blur-sm -mt-2">
           ← Groups
         </Link>
-        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero mt-1">Create a Group</h1>
-        <p className="text-sm text-white/80 text-shadow-hero mt-1">
-          You&apos;ll get an invite code to share after creating.
-        </p>
       </div>
 
       <form

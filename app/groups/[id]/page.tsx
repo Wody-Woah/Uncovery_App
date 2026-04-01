@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET } from '@/lib/getTodayET'
 import Avatar from '@/components/Avatar'
@@ -288,11 +289,11 @@ export default function GroupChatPage() {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-        <Link href="/groups" className="text-xs text-white/60 text-shadow-hero hover:text-white/80 transition-colors whitespace-nowrap">
+        <Link href="/groups" className="rounded-lg bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap backdrop-blur-sm">
           ← Groups
         </Link>
         <h1 className="text-xl font-semibold text-brand-blue text-shadow-hero text-center">{group?.name}</h1>
-        <Link href={`/groups/${id}/members`} className="text-xs text-white/70 text-shadow-hero hover:text-white transition-colors whitespace-nowrap">
+        <Link href={`/groups/${id}/members`} className="rounded-lg bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap backdrop-blur-sm">
           Members →
         </Link>
       </div>
@@ -300,12 +301,23 @@ export default function GroupChatPage() {
       {/* Today's devotion pin */}
       {devotion && (
         <Link
-          href={`/devotion/${devotion.month}/${devotion.day}`}
-          className="rounded-2xl border border-steel/20 bg-white p-4 shadow-sm block hover:border-steel/40 transition-colors"
+          href={`/today?from=group&groupId=${id}`}
+          className="relative rounded-2xl overflow-hidden shadow-sm block min-h-[100px]"
+          style={{ willChange: 'transform' }}
         >
-          <p className="text-xs uppercase tracking-widest text-steel mb-1">Today&apos;s Devotion</p>
-          <p className="font-medium text-charcoal text-sm">{devotion.title}</p>
-          <p className="text-xs text-muted mt-0.5">{devotion.verse_reference}</p>
+          <Image
+            src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
+            alt=""
+            fill
+            sizes="(max-width: 700px) 100vw, 700px"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70" />
+          <div className="relative z-10 p-4">
+            <p className="text-xs uppercase tracking-widest text-white mb-1">Today&apos;s Devotion</p>
+            <p className="font-medium text-white text-sm">{devotion.title}</p>
+            <p className="text-xs text-white/80 mt-0.5">{devotion.verse_reference}</p>
+          </div>
         </Link>
       )}
 

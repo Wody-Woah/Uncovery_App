@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
@@ -26,8 +27,10 @@ type MonthTheme = {
   theme_scripture_text: string | null
 }
 
-export default function TodayPage() {
+function TodayPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromGroupId = searchParams.get('from') === 'group' ? searchParams.get('groupId') : null
   const [devotion, setDevotion] = useState<Devotion | null>(null)
   const [theme, setTheme] = useState<MonthTheme | null>(null)
   const [loading, setLoading] = useState(true)
@@ -138,6 +141,16 @@ export default function TodayPage() {
 
   return (
     <div className="space-y-8">
+      {/* Back to group button — only shown when navigated from a group chat */}
+      {fromGroupId && (
+        <Link
+          href={`/groups/${fromGroupId}`}
+          className="inline-flex items-center gap-1 text-sm text-brand-blue hover:underline text-shadow-hero"
+        >
+          ← Back to Group
+        </Link>
+      )}
+
       {/* Date label */}
       <p className="text-xs uppercase tracking-widest text-brand-blue text-shadow-hero">{dateLabel}</p>
 
@@ -186,5 +199,13 @@ export default function TodayPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function TodayPage() {
+  return (
+    <Suspense>
+      <TodayPageInner />
+    </Suspense>
   )
 }
