@@ -120,7 +120,7 @@ export default function MembersPage() {
       {/* Delete confirmation modal */}
       {showDeleteModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4"
           onClick={() => setShowDeleteModal(false)}
         >
           <div

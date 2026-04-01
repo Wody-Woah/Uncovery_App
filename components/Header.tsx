@@ -94,7 +94,7 @@ export default function Header() {
       {/* Sign out confirmation modal */}
       {showSignOutModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4"
           onClick={() => setShowSignOutModal(false)}
         >
           <div

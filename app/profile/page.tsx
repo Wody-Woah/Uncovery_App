@@ -223,7 +223,7 @@ export default function ProfilePage() {
     <>
       {/* Crop modal */}
       {cropSrc && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+        <div className="fixed inset-0 z-[60] flex flex-col bg-black">
           <div className="relative flex-1">
             <Cropper
               image={cropSrc}

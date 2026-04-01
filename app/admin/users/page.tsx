@@ -137,7 +137,7 @@ export default function AdminUsersPage() {
       {/* Delete confirmation modal */}
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4"
           onClick={() => setDeleteTarget(null)}
         >
           <div
@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
       {/* Role toggle confirmation modal */}
       {toggleTarget && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4"
           onClick={() => setToggleTarget(null)}
         >
           <div
