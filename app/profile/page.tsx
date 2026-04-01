@@ -6,6 +6,7 @@ import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
 import { supabase } from '@/lib/supabaseClient'
 import Avatar from '@/components/Avatar'
+import heic2any from 'heic2any'
 
 async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> {
   const img = await createImageBitmap(await fetch(imageSrc).then((r) => r.blob()))
@@ -34,6 +35,7 @@ export default function ProfilePage() {
   const [profileSuccess, setProfileSuccess] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [heicConverting, setHeicConverting] = useState(false)
 
   // Crop modal
   const [cropSrc, setCropSrc] = useState<string | null>(null)
@@ -80,7 +82,7 @@ export default function ProfilePage() {
     init()
   }, [router])
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -94,7 +96,22 @@ export default function ProfilePage() {
     }
 
     setAvatarError(null)
-    const objectUrl = URL.createObjectURL(file)
+
+    let blob: Blob = file
+    if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+      setHeicConverting(true)
+      try {
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 })
+        blob = Array.isArray(converted) ? converted[0] : converted
+      } catch {
+        setAvatarError('Could not convert this photo. Please try a different image.')
+        setHeicConverting(false)
+        return
+      }
+      setHeicConverting(false)
+    }
+
+    const objectUrl = URL.createObjectURL(blob)
     setCropSrc(objectUrl)
     setCrop({ x: 0, y: 0 })
     setZoom(1)
@@ -303,6 +320,9 @@ export default function ProfilePage() {
             onChange={handleFileSelect}
           />
 
+          {heicConverting && (
+            <p className="text-xs text-muted">Converting photo…</p>
+          )}
           {avatarUploading && (
             <p className="text-xs text-muted">Uploading…</p>
           )}
