@@ -302,7 +302,7 @@ export default function ProfilePage() {
             className="relative group focus:outline-none"
             title="Change photo"
           >
-            <Avatar avatarUrl={avatarUrl} displayName={displayName} size="lg" />
+            <Avatar avatarUrl={avatarUrl} displayName={displayName} size="xl" />
             {/* Camera overlay */}
             <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -269,7 +269,7 @@ export default function DashboardPage() {
               Welcome back{displayName ? `, ${displayName}` : ''}
             </h1>
           </div>
-          <Avatar avatarUrl={avatarUrl} displayName={displayName} size="md" />
+          <Avatar avatarUrl={avatarUrl} displayName={displayName} size="lg" />
         </div>
       </div>
 
