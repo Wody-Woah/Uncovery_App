@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabaseClient'
 
 export default function SignupPage() {
   const router = useRouter()
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -15,6 +16,14 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  async function handleGoogleSignIn() {
+    setGoogleLoading(true)
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    })
+  }
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -169,6 +178,27 @@ export default function SignupPage() {
             className="w-full rounded-lg bg-steel px-4 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors disabled:opacity-60"
           >
             {loading ? "Creating account…" : "Create account"}
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-steel/15" />
+            <span className="text-xs text-muted">or</span>
+            <div className="flex-1 h-px bg-steel/15" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 rounded-lg border border-steel/20 bg-white px-4 py-2.5 text-sm font-medium text-charcoal hover:bg-canvas transition-colors disabled:opacity-60"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">
+              <path fill="#4285F4" d="M47.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h13.2c-.6 3-2.3 5.5-4.9 7.2v6h7.9c4.6-4.3 7.3-10.6 7.3-17.2z"/>
+              <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.9-6c-2.1 1.4-4.9 2.3-8 2.3-6.1 0-11.3-4.1-13.2-9.7H2.7v6.2C6.6 42.6 14.7 48 24 48z"/>
+              <path fill="#FBBC05" d="M10.8 28.8c-.5-1.4-.8-2.8-.8-4.3s.3-3 .8-4.3v-6.2H2.7C1 17.4 0 20.6 0 24s1 6.6 2.7 9.1l8.1-4.3z"/>
+              <path fill="#EA4335" d="M24 9.5c3.4 0 6.5 1.2 8.9 3.5l6.6-6.6C35.9 2.6 30.4 0 24 0 14.7 0 6.6 5.4 2.7 13.2l8.1 4.3C12.7 13.6 17.9 9.5 24 9.5z"/>
+            </svg>
+            {googleLoading ? 'Redirecting…' : 'Continue with Google'}
           </button>
         </form>
 

@@ -64,7 +64,7 @@ export default function RootLayout({
           </div>
 
           <Header />
-          <main className="mx-auto max-w-reading px-4 pt-10 pb-24 md:pb-10">
+          <main className="mx-auto max-w-reading px-4 pt-[93px] pb-24 md:pb-10 isolate">
             {children}
           </main>
           <BottomNav />

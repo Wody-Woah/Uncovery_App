@@ -249,18 +249,23 @@ export default function DashboardPage() {
       )}
 
       {/* Welcome card */}
-      <div className="relative rounded-2xl overflow-hidden shadow-sm">
+      <div
+        className="relative rounded-2xl overflow-hidden shadow-sm min-h-[100px]"
+        style={{ willChange: 'transform' }}
+      >
         <Image
           src={supabase.storage.from('themes').getPublicUrl('welcome-card.jpg').data.publicUrl}
           alt=""
           fill
+          sizes="(max-width: 700px) 100vw, 700px"
           className="object-cover"
           priority
         />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-black/25" />
         <div className="relative z-10 p-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-widest text-white mb-1 text-shadow-strong">{dateLabel}</p>
-            <h1 className="text-2xl font-semibold text-white text-shadow-strong">
+            <p className="text-xs uppercase tracking-widest text-white/80 mb-1">{dateLabel}</p>
+            <h1 className="text-2xl font-semibold text-white">
               Welcome back{displayName ? `, ${displayName}` : ''}
             </h1>
           </div>
@@ -298,7 +303,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Today card */}
-      <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]">
+      <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
         <Image
           src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
           alt=""

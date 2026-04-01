@@ -123,7 +123,7 @@ export default function Header() {
         </div>
       )}
 
-      <header className="border-b border-steel/20 bg-canvas sticky top-0 z-10">
+      <header className="border-b border-steel/20 bg-canvas fixed top-0 inset-x-0 z-40">
         <div className="mx-auto max-w-reading px-4 py-4 flex items-center justify-between">
           {/* Brand */}
           <Link

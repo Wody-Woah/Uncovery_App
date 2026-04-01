@@ -1,7 +1,7 @@
 # The Uncovery Devotional — App Specification (Current)
 
 ## Goal
-A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by George Castillo and Brit Eaton. Designed for people in recovery, faith, and spiritual growth. Feels calm, personal, and readable — like a premium Bible app.
+A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by George A. Wood and Brit Eaton. Designed for people in recovery, faith, and spiritual growth. Feels calm, personal, and readable — like a premium Bible app.
 
 ---
 
@@ -119,6 +119,31 @@ A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by
 - `apple-touch-icon.png` (180×180)
 - `/.well-known/assetlinks.json` for Android TWA verification
 - Package name: `com.uncoverydevotional.twa`
+
+---
+
+## Future Features
+
+### Video Section (YouVersion-style)
+Modeled after the YouVersion Bible app's video feed. George posts reels to YouTube and the app surfaces them in a polished, native-feeling feed.
+
+**Feed layout:**
+- Vertical scrollable list of video cards
+- Each card shows a thumbnail (auto-pulled from YouTube using video ID), title, and optional short description
+- Tapping a card opens a full-screen video player
+
+**Content management:**
+- Videos hosted on YouTube — George posts as normal, admin pastes the YouTube URL
+- Thumbnails generated automatically from the YouTube video ID (no manual upload)
+- Admin panel to add, remove, and reorder videos
+- Optional category/tag per video (e.g. "Recovery", "Faith", "Hope")
+
+**Navigation:**
+- Dedicated Videos tab in bottom nav or a "Watch" section on the dashboard featuring 1–2 latest videos
+
+**Database:**
+- New `videos` table: `id`, `youtube_url`, `title`, `description`, `category`, `published`, `sort_order`, `created_at`
+- YouTube video ID extracted from URL client-side to build thumbnail URL: `https://img.youtube.com/vi/{VIDEO_ID}/hqdefault.jpg`
 
 ---
 

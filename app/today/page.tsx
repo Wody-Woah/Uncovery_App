@@ -143,7 +143,7 @@ export default function TodayPage() {
 
       {/* Month Theme Card */}
       {theme && (
-        <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]">
+        <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
           <Image
             src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
             alt=""
@@ -151,15 +151,15 @@ export default function TodayPage() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/15 to-black/55" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/65" />
           <div className="relative z-10 p-6">
-            <p className="text-xs uppercase tracking-widest text-white mb-2 text-shadow-strong">
+            <p className="text-xs uppercase tracking-widest text-white mb-2">
               {theme.month_name} · Theme
             </p>
-            <h2 className="text-lg font-semibold text-white mb-1 text-shadow-strong">{theme.theme_title}</h2>
-            <p className="text-sm text-white italic mb-3 text-shadow-strong">{theme.theme_scripture_reference}</p>
+            <h2 className="text-lg font-semibold text-white mb-1">{theme.theme_title}</h2>
+            <p className="text-sm text-white italic mb-3">{theme.theme_scripture_reference}</p>
             {theme.theme_scripture_text && (
-              <p className="font-serif text-sm text-white border-l-2 border-white/40 pl-3 leading-relaxed text-shadow-strong">
+              <p className="font-serif text-sm text-white border-l-2 border-white/40 pl-3 leading-relaxed">
                 {theme.theme_scripture_text}
               </p>
             )}
