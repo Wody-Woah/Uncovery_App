@@ -6,7 +6,6 @@ import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
 import { supabase } from '@/lib/supabaseClient'
 import Avatar from '@/components/Avatar'
-import heic2any from 'heic2any'
 
 async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> {
   const img = await createImageBitmap(await fetch(imageSrc).then((r) => r.blob()))
@@ -101,6 +100,7 @@ export default function ProfilePage() {
     if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
       setHeicConverting(true)
       try {
+        const heic2any = (await import('heic2any')).default
         const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 })
         blob = Array.isArray(converted) ? converted[0] : converted
       } catch {
