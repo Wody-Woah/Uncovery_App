@@ -30,6 +30,7 @@ A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by
 - `/login` — email/password login
 - `/signup` — first name, last name, email, password, confirm password
 - `/privacy` — privacy policy
+- `/terms` — terms of service
 - `/delete-account` — account deletion request page
 
 ### Authenticated
@@ -47,6 +48,8 @@ A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by
 - `/groups/[id]` — group chat with realtime messages and emoji reactions
 - `/groups/[id]/members` — members list, invite code, leave/delete group
 - `/updates/[id]` — full author update detail page
+- `/search` — search devotions by keyword (title, verse, body)
+- `/book` — "Get the Book" page with book cover image and Amazon purchase link
 
 ### Admin
 - `/admin` — admin dashboard with cards linking to sub-pages
@@ -78,6 +81,14 @@ A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by
 ### Journal
 - Private per-user journal entries
 - Create, view, delete entries
+
+### Profile & Avatar
+- Edit display name and bio
+- Change password
+- Upload a profile photo with crop UI (`react-easy-crop`)
+- Supports HEIC/HEIF images (converted to JPEG via `heic2any` before crop)
+- Avatar stored in Supabase Storage (`avatars` bucket), URL saved to `profiles.avatar_url`
+- `Avatar` component used across the app to display profile photos
 
 ### Small Groups
 - Create a group (generates UUID invite code)

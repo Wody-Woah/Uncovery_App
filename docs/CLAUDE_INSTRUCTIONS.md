@@ -86,7 +86,7 @@ Always use `getTodayET()` from `lib/getTodayET.ts` — never `new Date()` direct
 
 ## File Structure Notes
 - `app/` — all pages (Next.js App Router)
-- `components/` — shared components (Header, BottomNav, DevotionCard, MonthlyStreakGrid)
+- `components/` — shared components (Header, BottomNav, DevotionCard, MonthlyStreakGrid, Avatar, DevotionNotes)
 - `lib/` — utilities (supabaseClient, isAdmin, getTodayET)
 - `public/` — static assets (images, manifest.json, icons, assetlinks.json)
 - `docs/` — spec files (this file and others)

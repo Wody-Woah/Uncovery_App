@@ -64,6 +64,7 @@ User profile data. Row auto-created by `handle_new_user` trigger on signup.
 | id | uuid | PRIMARY KEY, references auth.users |
 | display_name | text | nullable, set from user metadata on signup |
 | bio | text | nullable |
+| avatar_url | text | nullable, public URL to profile photo in Supabase Storage |
 | updated_at | timestamptz | |
 
 RLS:
