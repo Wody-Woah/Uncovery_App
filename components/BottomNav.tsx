@@ -28,16 +28,6 @@ function CalendarIcon() {
   )
 }
 
-function GridIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  )
-}
 
 function SearchIcon() {
   return (
@@ -237,6 +227,21 @@ export default function BottomNav() {
                   Admin
                 </Link>
               )}
+              <div className="border-t border-steel/10 my-1" />
+              <Link
+                href="/privacy"
+                onClick={() => setShowMore(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted hover:bg-white transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                onClick={() => setShowMore(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted hover:bg-white transition-colors"
+              >
+                Terms of Service
+              </Link>
               <div className="border-t border-steel/10 my-1" />
               <button
                 onClick={handleSignOut}

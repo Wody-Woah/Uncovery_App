@@ -180,6 +180,13 @@ export default function SignupPage() {
             {loading ? "Creating account…" : "Create account"}
           </button>
 
+          <p className="text-center text-xs text-muted leading-relaxed">
+            By creating an account, you agree to our{' '}
+            <Link href="/terms" className="underline hover:text-charcoal transition-colors">Terms of Service</Link>
+            {' '}and{' '}
+            <Link href="/privacy" className="underline hover:text-charcoal transition-colors">Privacy Policy</Link>.
+          </p>
+
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-steel/15" />
             <span className="text-xs text-muted">or</span>

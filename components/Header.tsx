@@ -6,12 +6,15 @@ import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import type { User } from '@supabase/supabase-js'
 import { cn } from '@/lib/utils'
+import Avatar from '@/components/Avatar'
 
 export default function Header() {
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [displayName, setDisplayName] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -19,7 +22,10 @@ export default function Header() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      if (user) checkAdmin(user.id)
+      if (user) {
+        checkAdmin(user.id)
+        fetchProfile(user.id)
+      }
     })
 
     const {
@@ -29,8 +35,11 @@ export default function Header() {
       setUser(currentUser)
       if (currentUser) {
         checkAdmin(currentUser.id)
+        fetchProfile(currentUser.id)
       } else {
         setIsAdmin(false)
+        setDisplayName(null)
+        setAvatarUrl(null)
       }
     })
 
@@ -59,6 +68,18 @@ export default function Header() {
     if (showUserMenu) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showUserMenu])
+
+  async function fetchProfile(userId: string) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_url')
+      .eq('id', userId)
+      .single()
+    if (data) {
+      setDisplayName(data.display_name)
+      setAvatarUrl(data.avatar_url)
+    }
+  }
 
   async function checkAdmin(userId: string) {
     const { data } = await supabase
@@ -135,22 +156,22 @@ export default function Header() {
 
           {/* Nav — hidden on mobile (BottomNav handles mobile navigation) */}
           <nav className="hidden md:flex items-center gap-6">
-            {navLink('/today', 'Today')}
-            {navLink('/groups', 'Groups')}
-            {navLink('/search', 'Search')}
+            {user && navLink('/today', 'Today')}
+            {user && navLink('/groups', 'Groups')}
+            {user && navLink('/search', 'Search')}
             {isAdmin && navLink('/admin', 'Admin')}
 
             {user ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu((v) => !v)}
-                  className="text-sm text-black hover:text-steel transition-colors"
+                  className="rounded-full focus:outline-none focus:ring-2 focus:ring-steel/40"
                 >
-                  User
+                  <Avatar avatarUrl={avatarUrl} displayName={displayName} size="sm" />
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-steel/20 bg-white shadow-lg py-1 z-20">
+                  <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-steel/20 bg-white shadow-lg py-1 z-20">
                     <Link
                       href="/profile"
                       onClick={() => setShowUserMenu(false)}
@@ -159,12 +180,42 @@ export default function Header() {
                       Profile
                     </Link>
                     <Link
+                      href="/bookmarks"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
+                    >
+                      Bookmarks
+                    </Link>
+                    <Link
+                      href="/journal"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
+                    >
+                      Journal
+                    </Link>
+                    <Link
                       href="/book"
                       onClick={() => setShowUserMenu(false)}
                       className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
                     >
                       Book
                     </Link>
+                    <div className="border-t border-steel/10 my-1" />
+                    <Link
+                      href="/privacy"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-muted hover:bg-canvas transition-colors"
+                    >
+                      Privacy Policy
+                    </Link>
+                    <Link
+                      href="/terms"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-muted hover:bg-canvas transition-colors"
+                    >
+                      Terms of Service
+                    </Link>
+                    <div className="border-t border-steel/10 my-1" />
                     <button
                       onClick={() => { setShowUserMenu(false); setShowSignOutModal(true) }}
                       className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
@@ -175,12 +226,14 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="text-sm text-steel hover:text-steel/70 transition-colors"
-              >
-                Sign in
-              </Link>
+              !pathname?.startsWith('/login') && !pathname?.startsWith('/signup') && (
+                <Link
+                  href="/login"
+                  className="text-sm text-steel hover:text-steel/70 transition-colors"
+                >
+                  Sign in
+                </Link>
+              )
             )}
           </nav>
         </div>
