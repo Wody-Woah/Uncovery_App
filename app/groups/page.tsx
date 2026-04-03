@@ -56,7 +56,7 @@ export default function GroupsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Small Groups</h1>
         <p className="text-sm text-white/80 text-shadow-hero mt-1">
-          Discuss today&apos;s devotion with your community.
+          Read together. Reflect together. Stay connected.
         </p>
       </div>
 
@@ -76,9 +76,11 @@ export default function GroupsPage() {
       </div>
 
       {groups.length === 0 ? (
-        <div className="rounded-2xl border border-steel/15 bg-white p-10 text-center shadow-sm">
-          <p className="text-charcoal font-medium text-sm">You&apos;re not in any groups yet.</p>
-          <p className="text-muted text-sm mt-1">Create one or join with an invite code.</p>
+        <div className="rounded-2xl border border-steel/15 bg-white p-8 shadow-sm space-y-3">
+          <p className="text-charcoal font-semibold text-base">You weren&apos;t meant to do this alone.</p>
+          <p className="text-muted text-sm leading-relaxed">
+            Create a private group for friends, family, or a recovery community. Each day, your group gets a shared space to reflect on the devotion — ask questions, share what&apos;s stirring, and remind each other you&apos;re not doing this alone.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

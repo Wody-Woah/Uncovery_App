@@ -15,6 +15,7 @@ type Group = {
   name: string
   description: string | null
   created_by: string
+  invite_code: string
 }
 
 type Message = {
@@ -63,6 +64,8 @@ export default function GroupChatPage() {
   const [reactions, setReactions] = useState<ReactionsMap>({})
   const [pickerOpen, setPickerOpen] = useState<string | null>(null)
   const [devotion, setDevotion] = useState<TodayDevotion | null>(null)
+  const [memberCount, setMemberCount] = useState(0)
+  const [codeCopied, setCodeCopied] = useState(false)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -94,7 +97,7 @@ export default function GroupChatPage() {
       if (!membership) { router.push('/groups'); return }
 
       const [groupRes, membersRes, messagesRes, devotionRes] = await Promise.all([
-        supabase.from('groups').select('id, name, description, created_by').eq('id', id).single(),
+        supabase.from('groups').select('id, name, description, created_by, invite_code').eq('id', id).single(),
         supabase.from('group_members').select('user_id').eq('group_id', id),
         supabase.from('group_messages').select('id, user_id, content, created_at').eq('group_id', id).order('created_at', { ascending: true }).limit(100),
         supabase.from('devotions').select('title, verse_reference, month, day').eq('month', month).eq('day', day).eq('published', true).single(),
@@ -105,6 +108,7 @@ export default function GroupChatPage() {
       setDevotion(devotionRes.data)
 
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
+      setMemberCount(memberIds.length)
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id, display_name, avatar_url')
@@ -297,6 +301,42 @@ export default function GroupChatPage() {
           Members →
         </Link>
       </div>
+
+      {/* Invite card — shown to the creator only when no one else has joined yet */}
+      {userId === group?.created_by && memberCount === 1 && (
+        <div className="rounded-2xl border border-steel/30 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-steel/10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-steel">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <line x1="19" y1="8" x2="19" y2="14" />
+                <line x1="22" y1="11" x2="16" y2="11" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-charcoal">Invite people to your group</p>
+              <p className="text-xs text-muted mt-0.5">Share this code with anyone you&apos;d like to invite.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 rounded-xl bg-canvas border border-steel/15 px-4 py-3">
+            <p className="font-mono text-xl font-semibold text-charcoal tracking-[0.2em] flex-1">
+              {group?.invite_code}
+            </p>
+            <button
+              onClick={async () => {
+                if (!group?.invite_code) return
+                await navigator.clipboard.writeText(group.invite_code)
+                setCodeCopied(true)
+                setTimeout(() => setCodeCopied(false), 2000)
+              }}
+              className="rounded-lg bg-steel px-4 py-2 text-sm font-medium text-white hover:bg-steel/90 transition-colors min-w-[80px]"
+            >
+              {codeCopied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Today's devotion pin */}
       {devotion && (

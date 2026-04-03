@@ -27,7 +27,6 @@ export default function MembersPage() {
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -78,13 +77,6 @@ export default function MembersPage() {
 
     init()
   }, [id, router])
-
-  async function handleCopyCode() {
-    if (!group) return
-    await navigator.clipboard.writeText(group.invite_code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   async function handleDelete() {
     if (!userId || deleting) return
@@ -159,23 +151,6 @@ export default function MembersPage() {
           ← {group?.name}
         </Link>
         <h1 className="text-xl font-semibold text-brand-blue text-shadow-hero mt-1">Members</h1>
-      </div>
-
-      {/* Invite code */}
-      <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3">
-        <p className="text-xs uppercase tracking-widest text-steel">Invite Code</p>
-        <div className="flex items-center gap-3">
-          <p className="font-mono text-2xl font-semibold text-charcoal tracking-[0.2em] flex-1">
-            {group?.invite_code}
-          </p>
-          <button
-            onClick={handleCopyCode}
-            className="rounded-lg border border-steel/20 px-4 py-2 text-sm text-charcoal hover:bg-canvas transition-colors min-w-[80px]"
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-        </div>
-        <p className="text-xs text-muted">Share this code with anyone you&apos;d like to invite.</p>
       </div>
 
       {/* Member list */}
