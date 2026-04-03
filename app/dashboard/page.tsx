@@ -325,6 +325,11 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
+              {!readDates.includes(todayStr) && (
+                <p className="text-center text-[11px] text-white/45 leading-snug -mt-1">
+                  Scroll to the end of today&apos;s devotion to count it toward your streak.
+                </p>
+              )}
               <div className="border-t border-white/15 pt-4">
                 <MonthlyStreakGrid
                   currentMonth={month}

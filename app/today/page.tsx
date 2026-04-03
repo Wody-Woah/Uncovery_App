@@ -39,9 +39,12 @@ function TodayPageInner() {
   const [marking, setMarking] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarking, setBookmarking] = useState(false)
+  const [hadStreak, setHadStreak] = useState(false)
 
-  const { month, day } = getTodayET()
+  const { month, day, year } = getTodayET()
   const todayStr = getETDateString()
+  const yesterdayDate = new Date(year, month - 1, day - 1)
+  const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`
 
   const dateLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -56,8 +59,8 @@ function TodayPageInner() {
         if (!user) { router.push('/login'); return }
         setUserId(user.id)
 
-        // Fetch devotion, theme, read status, and bookmark status together after auth
-        const [{ data: dev }, { data: thm }, readRes, bmRes] = await Promise.all([
+        // Fetch devotion, theme, read status, bookmark status, and yesterday's read together
+        const [{ data: dev }, { data: thm }, readRes, bmRes, yesterdayRes] = await Promise.all([
           supabase
             .from('devotions')
             .select('*')
@@ -83,11 +86,18 @@ function TodayPageInner() {
             .eq('month', month)
             .eq('day', day)
             .maybeSingle(),
+          supabase
+            .from('devotion_reads')
+            .select('read_on')
+            .eq('user_id', user.id)
+            .eq('read_on', yesterdayStr)
+            .maybeSingle(),
         ])
         setDevotion(dev)
         setTheme(thm)
         if (readRes.data) setMarked(true)
         if (bmRes.data) setBookmarked(true)
+        if (yesterdayRes.data) setHadStreak(true)
       } catch {
         // fall through and show the page without crashing
       } finally {
@@ -191,6 +201,7 @@ function TodayPageInner() {
           marked={marked}
           marking={marking}
           onMarkRead={handleMarkRead}
+          hadStreak={hadStreak}
         />
       ) : (
         <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">

@@ -23,6 +23,7 @@ type Props = {
   marked?: boolean
   marking?: boolean
   onMarkRead?: () => void
+  hadStreak?: boolean
 }
 
 function BookmarkIcon({ filled }: { filled: boolean }) {
@@ -50,6 +51,7 @@ export default function DevotionCard({
   onBookmarkToggle,
   marked,
   onMarkRead,
+  hadStreak,
 }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -122,7 +124,11 @@ export default function DevotionCard({
       {onMarkRead && (
         <div ref={sentinelRef} className="flex items-center justify-center gap-2 py-1">
           {marked ? (
-            <p className="text-xs text-steel/70">Read today ✓</p>
+            <p className="text-xs text-steel/70">
+              {hadStreak
+                ? "Today's reading complete — your streak continues ✓"
+                : "Today's reading complete — your streak begins ✓"}
+            </p>
           ) : (
             <p className="text-xs text-muted/50">Scroll to the end to mark as read</p>
           )}
