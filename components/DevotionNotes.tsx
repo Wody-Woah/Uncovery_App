@@ -75,7 +75,7 @@ export default function DevotionNotes({ userId, month, day }: Props) {
           onClick={() => setShowForm(true)}
           className="w-full rounded-xl border border-steel/20 bg-canvas px-4 py-2.5 text-sm font-medium text-steel hover:bg-steel/5 transition-colors"
         >
-          + Add Note
+          + Add a Private Journal Entry
         </button>
       )}
 
@@ -85,7 +85,7 @@ export default function DevotionNotes({ userId, month, day }: Props) {
           <textarea
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
-            placeholder="Write your note…"
+            placeholder="Write your reflection…"
             rows={4}
             className="w-full rounded-lg border border-steel/20 bg-white px-3 py-2.5 text-sm text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30 resize-none"
           />
@@ -114,7 +114,7 @@ export default function DevotionNotes({ userId, month, day }: Props) {
               disabled={saving || !noteText.trim()}
               className="flex-1 rounded-lg bg-steel px-4 py-2 text-sm font-medium text-white hover:bg-steel/90 transition-colors disabled:opacity-60"
             >
-              {saving ? 'Saving…' : 'Save Note'}
+              {saving ? 'Saving…' : 'Save Entry'}
             </button>
             <button
               onClick={handleCancel}

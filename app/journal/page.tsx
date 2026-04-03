@@ -59,13 +59,16 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Journal</h1>
+      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Journal</h1>
 
       {notes.length === 0 ? (
-        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
-          <p className="text-muted text-sm">No notes yet.</p>
-          <p className="text-muted text-xs mt-1">
-            Add a note while reading a devotion to find it here.
+        <div className="rounded-2xl border border-steel/20 bg-white px-8 py-12 text-center shadow-sm space-y-4">
+          <h2 className="text-xl font-semibold text-charcoal">Welcome to Your Journal</h2>
+          <p className="text-sm text-charcoal/80 leading-relaxed">
+            This is your private space — a place to capture what stirs in you as you read. Your thoughts, prayers, and reflections belong only to you and are never visible to anyone else.
+          </p>
+          <p className="text-sm text-muted leading-relaxed">
+            To write your first entry, open any devotion and tap <span className="font-medium text-steel">+ Add a Journal Entry</span> at the bottom of the page.
           </p>
         </div>
       ) : (
