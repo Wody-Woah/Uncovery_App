@@ -45,7 +45,7 @@ export default function BrowsePage() {
       <div>
         <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Browse Devotions</h1>
         <p className="text-sm text-white/80 text-shadow-hero mt-1">
-          Select a month and day to read a devotion.
+          Catch up on a missed day, read ahead, or revisit a past devotion.
         </p>
       </div>
 
