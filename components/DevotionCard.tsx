@@ -130,7 +130,7 @@ export default function DevotionCard({
                 : "Today's reading complete — your streak begins ✓"}
             </p>
           ) : (
-            <p className="text-xs text-muted/50">Scroll to the end to mark as read</p>
+            <p className="text-xs text-muted/50">Read to the end to count today toward your streak.</p>
           )}
         </div>
       )}

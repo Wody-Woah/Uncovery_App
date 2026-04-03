@@ -51,7 +51,7 @@ export default function JoinGroupPage() {
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Join a Group</h1>
           <p className="text-sm text-white/80 text-shadow-hero mt-1">
-            Enter the invite code shared by your group admin.
+            Read together and share daily reflections with your community.
           </p>
         </div>
       </div>

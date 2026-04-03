@@ -119,9 +119,10 @@ export default function SearchPage() {
       ) : searching ? (
         <p className="text-center text-white/80 font-semibold text-sm pt-4 text-shadow-hero">Searching…</p>
       ) : results.length === 0 ? (
-        <p className="text-center text-white/80 font-semibold text-sm pt-4 text-shadow-hero">
-          No results for &ldquo;{query}&rdquo;
-        </p>
+        <div className="rounded-2xl border border-steel/15 bg-white p-8 text-center shadow-sm space-y-2">
+          <p className="text-charcoal font-medium text-sm">No results for &ldquo;{query}&rdquo;</p>
+          <p className="text-muted text-xs leading-relaxed">Try a different keyword or topic, or <Link href="/browse" className="text-steel hover:underline">browse all devotions</Link>.</p>
+        </div>
       ) : (
         <ul className="space-y-3">
           {results.map((r) => (

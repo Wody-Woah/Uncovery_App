@@ -187,7 +187,7 @@ export default function MembersPage() {
         <button
           onClick={handleLeave}
           disabled={leaving}
-          className="w-full rounded-xl bg-sunrise px-4 py-3 text-sm font-medium text-white hover:bg-sunrise/90 transition-colors disabled:opacity-50"
+          className="w-full rounded-xl border border-steel/20 bg-white px-4 py-3 text-sm font-medium text-charcoal hover:bg-canvas transition-colors disabled:opacity-50"
         >
           {leaving ? 'Leaving…' : 'Leave Group'}
         </button>

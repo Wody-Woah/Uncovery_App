@@ -365,9 +365,12 @@ export default function GroupChatPage() {
       <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
         <div className="p-4 space-y-4 min-h-[300px] max-h-[50vh] overflow-y-auto">
           {messages.length === 0 ? (
-            <p className="text-center text-muted text-sm py-8">
-              No messages yet. Start the conversation!
-            </p>
+            <div className="flex flex-col items-center text-center py-8 space-y-2">
+              <p className="text-charcoal font-medium text-sm">Be the first to share</p>
+              <p className="text-muted text-xs leading-relaxed max-w-[240px]">
+                What did today&apos;s devotion stir in you? Your reflection might be exactly what someone else needs to hear.
+              </p>
+            </div>
           ) : (
             messages.map((msg) => {
               const msgReactions = reactions[msg.id] ?? {}

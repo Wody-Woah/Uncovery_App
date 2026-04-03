@@ -68,7 +68,7 @@ export default function JournalPage() {
             This is your private space — a place to capture what stirs in you as you read. Your thoughts, prayers, and reflections belong only to you and are never visible to anyone else.
           </p>
           <p className="text-sm text-muted leading-relaxed">
-            To write your first entry, open any devotion and tap <span className="font-medium text-steel">+ Add a Journal Entry</span> at the bottom of the page.
+            To write your first entry, open any devotion and tap <span className="font-medium text-steel">+ Add a Private Journal Entry</span> at the bottom of the page.
           </p>
         </div>
       ) : (

@@ -74,11 +74,20 @@ export default function BookmarksPage() {
       <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Bookmarks</h1>
 
       {bookmarks.length === 0 ? (
-        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
-          <p className="text-muted text-sm">No bookmarks yet.</p>
-          <p className="text-muted text-xs mt-1">
-            Save a devotion while reading to find it here.
-          </p>
+        <div className="rounded-2xl border border-steel/20 bg-white p-8 text-center shadow-sm space-y-3">
+          <div className="flex justify-center">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-steel/10">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-steel">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <p className="text-charcoal font-semibold text-sm">Nothing saved yet</p>
+            <p className="text-muted text-sm mt-1 leading-relaxed">
+              When a devotion resonates with you, tap the bookmark icon while reading to save it here.
+            </p>
+          </div>
         </div>
       ) : (
         <ul className="space-y-3">
