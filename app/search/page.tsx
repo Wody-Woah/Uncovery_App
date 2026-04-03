@@ -69,24 +69,53 @@ export default function SearchPage() {
     return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
   }
 
+  const SUGGESTIONS = ['forgiveness', 'gratitude', 'hope', 'surrender', 'prayer', 'healing']
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-white text-shadow-hero mb-4">Search</h1>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search titles, verses, and devotion text"
-          autoFocus
-          className="w-full rounded-xl border border-steel/20 bg-white px-4 py-3 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30 shadow-sm"
-        />
-      </div>
+      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Search</h1>
+
+      {/* Search input */}
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Start typing to search…"
+        autoFocus
+        className="w-full rounded-xl border border-steel/20 bg-white px-4 py-3 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30 shadow-sm"
+      />
 
       {/* States */}
       {query.length < 2 ? (
-        <p className="text-center text-white/80 font-semibold text-sm pt-4 text-shadow-hero">Type to search…</p>
+        <div className="rounded-2xl border border-steel/15 bg-white p-8 shadow-sm space-y-5">
+          <div className="flex flex-col items-center text-center space-y-2">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-steel/10">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-steel">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-charcoal">Search across all devotions</p>
+            <p className="text-xs text-muted leading-relaxed">
+              Find devotions by keyword, topic, or verse reference.
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-xs uppercase tracking-widest text-steel">Try searching for</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setQuery(s)}
+                  className="rounded-full border border-steel/20 bg-canvas px-3 py-1.5 text-sm text-charcoal hover:bg-steel/10 hover:border-steel/30 transition-colors capitalize"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : searching ? (
         <p className="text-center text-white/80 font-semibold text-sm pt-4 text-shadow-hero">Searching…</p>
       ) : results.length === 0 ? (
