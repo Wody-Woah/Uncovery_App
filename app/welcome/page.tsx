@@ -195,7 +195,7 @@ export default function WelcomePage() {
           disabled={saving}
           className="block w-full rounded-xl bg-steel px-4 py-3 text-center text-sm font-medium text-white hover:bg-steel/90 transition-colors disabled:opacity-60"
         >
-          {saving ? 'One moment…' : 'Continue to the App'}
+          {saving ? 'One moment…' : 'Continue to the Home Page'}
         </button>
         <a
           href="https://a.co/d/078elRSp"
