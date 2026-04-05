@@ -42,9 +42,9 @@ export default function BrowsePage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className="text-center space-y-1">
         <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Browse Devotions</h1>
-        <p className="text-sm text-white/80 text-shadow-hero mt-1">
+        <p className="text-sm text-white/80 text-shadow-hero">
           Catch up on a missed day, read ahead, or revisit a past devotion.
         </p>
       </div>

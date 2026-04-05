@@ -83,15 +83,18 @@ export default function DevotionCard({
         onClick={onBookmarkToggle}
         disabled={bookmarking}
         aria-label={bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
-        className={`absolute top-5 right-5 transition-colors disabled:opacity-50 disabled:cursor-default ${
-          bookmarked ? 'text-steel' : 'text-muted hover:text-steel'
+        className={`absolute top-4 right-4 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-default ${
+          bookmarked
+            ? 'border-steel/30 bg-steel/10 text-steel'
+            : 'border-steel/20 bg-white text-muted hover:text-steel hover:border-steel/30 hover:bg-steel/5'
         }`}
       >
         <BookmarkIcon filled={bookmarked} />
+        {bookmarked ? 'Saved' : 'Save'}
       </button>
 
-      {/* Header — pr-10 keeps title clear of the bookmark icon */}
-      <div className="pr-10">
+      {/* Header — pr-20 keeps title clear of the bookmark pill */}
+      <div className="pr-20">
         <h1 className="text-2xl font-semibold text-charcoal mb-1">{devotion.title}</h1>
         <p className="text-sm text-muted">{devotion.verse_reference}</p>
       </div>

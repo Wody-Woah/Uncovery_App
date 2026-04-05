@@ -71,7 +71,7 @@ export default function BookmarksPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Bookmarks</h1>
+      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Bookmarks</h1>
 
       {bookmarks.length === 0 ? (
         <div className="rounded-2xl border border-steel/20 bg-white p-8 text-center shadow-sm space-y-3">

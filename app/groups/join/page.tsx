@@ -43,17 +43,12 @@ export default function JoinGroupPage() {
   }
 
   return (
-    <div className="space-y-2">
-      <div className="space-y-3">
-        <Link href="/groups" className="inline-flex rounded-lg bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap backdrop-blur-sm">
-          ← Groups
-        </Link>
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Join a Group</h1>
-          <p className="text-sm text-white/80 text-shadow-hero mt-1">
-            Read together and share daily reflections with your community.
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Join a Group</h1>
+        <p className="text-sm text-white/80 text-shadow-hero">
+          Read together and share daily reflections with your community.
+        </p>
       </div>
 
       <form
@@ -84,6 +79,13 @@ export default function JoinGroupPage() {
           {joining ? 'Joining…' : 'Join Group'}
         </button>
       </form>
+
+      <Link
+        href="/groups"
+        className="block w-full rounded-xl border border-white/20 bg-white/15 px-4 py-3 text-center text-sm font-medium text-white hover:bg-white/25 transition-colors backdrop-blur-sm"
+      >
+        ← Back to Groups
+      </Link>
     </div>
   )
 }
