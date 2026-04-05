@@ -162,7 +162,11 @@ function TodayPageInner() {
       )}
 
       {/* Date label */}
-      <p className="text-xs uppercase tracking-widest text-brand-blue text-shadow-hero">{dateLabel}</p>
+      <div>
+        <span className="rounded-full bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white">
+          {dateLabel}
+        </span>
+      </div>
 
       {/* Month Theme Card */}
       {theme && (
