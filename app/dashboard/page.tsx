@@ -511,6 +511,30 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Profile nudge — shown when user has no avatar */}
+      {!avatarUrl && (
+        <div className="rounded-2xl border border-steel/30 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-steel/10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-steel">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-charcoal">Personalize your profile</p>
+              <p className="text-xs text-muted mt-0.5">Add a photo and display name so your group members can recognize you.</p>
+            </div>
+          </div>
+          <Link
+            href="/profile"
+            className="block w-full rounded-xl bg-steel px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-steel/90 transition-colors"
+          >
+            Set Up Profile
+          </Link>
+        </div>
+      )}
+
       {/* Welcome card — pinned, not sortable */}
       <div
         className="relative rounded-2xl overflow-hidden shadow-sm min-h-[100px]"
