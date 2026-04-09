@@ -27,6 +27,15 @@ type MonthTheme = {
   theme_scripture_text: string | null
 }
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
+function daysInMonth(m: number) {
+  return new Date(2024, m, 0).getDate()
+}
+
 function TodayPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -40,6 +49,9 @@ function TodayPageInner() {
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarking, setBookmarking] = useState(false)
   const [hadStreak, setHadStreak] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [pickerMonth, setPickerMonth] = useState(0)
+  const [pickerDay, setPickerDay] = useState(0)
 
   const { month, day, year } = getTodayET()
   const todayStr = getETDateString()
@@ -161,12 +173,90 @@ function TodayPageInner() {
         </Link>
       )}
 
-      {/* Date label */}
+      {/* Date label — tappable to browse a different date */}
       <div>
-        <span className="rounded-full bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white">
+        <button
+          onClick={() => {
+            setPickerMonth(month)
+            setPickerDay(day)
+            setShowDatePicker(true)
+          }}
+          className="rounded-full bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white hover:bg-white/30 transition-colors"
+        >
           {dateLabel}
-        </span>
+        </button>
       </div>
+
+      {/* Date picker modal */}
+      {showDatePicker && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4"
+          onClick={() => setShowDatePicker(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden space-y-5 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <p className="text-xs uppercase tracking-widest text-steel mb-0.5">Read a Different Day</p>
+              <p className="text-sm text-muted">Select a month and day to navigate to that devotion.</p>
+            </div>
+
+            <div className="space-y-4">
+              {/* Month */}
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-steel mb-2">Month</label>
+                <select
+                  value={pickerMonth}
+                  onChange={(e) => {
+                    const m = Number(e.target.value)
+                    setPickerMonth(m)
+                    const max = daysInMonth(m)
+                    if (pickerDay > max) setPickerDay(max)
+                  }}
+                  className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-base text-charcoal focus:outline-none focus:ring-2 focus:ring-steel/30"
+                >
+                  {MONTHS.map((name, i) => (
+                    <option key={i + 1} value={i + 1}>{name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Day */}
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-steel mb-2">Day</label>
+                <select
+                  value={pickerDay}
+                  onChange={(e) => setPickerDay(Number(e.target.value))}
+                  className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-base text-charcoal focus:outline-none focus:ring-2 focus:ring-steel/30"
+                >
+                  {Array.from({ length: daysInMonth(pickerMonth) }, (_, i) => i + 1).map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDatePicker(false)}
+                className="flex-1 rounded-xl border border-steel/20 px-4 py-2.5 text-sm font-medium text-charcoal hover:bg-canvas transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDatePicker(false)
+                  router.push(`/devotion/${pickerMonth}/${pickerDay}`)
+                }}
+                className="flex-1 rounded-xl bg-steel px-4 py-2.5 text-sm font-medium text-white hover:bg-steel/90 transition-colors"
+              >
+                Read Devotion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Month Theme Card */}
       {theme && (
