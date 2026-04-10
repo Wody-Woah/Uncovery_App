@@ -87,9 +87,11 @@ function TodayPageInner() {
             .single(),
           supabase
             .from('devotion_reads')
-            .select('read_on')
+            .select('month')
             .eq('user_id', user.id)
-            .eq('read_on', todayStr)
+            .eq('month', month)
+            .eq('day', day)
+            .eq('year', year)
             .maybeSingle(),
           supabase
             .from('bookmarks')
@@ -145,7 +147,7 @@ function TodayPageInner() {
     setMarking(true)
     const { error } = await supabase
       .from('devotion_reads')
-      .insert({ user_id: userId, month, day, read_on: todayStr })
+      .insert({ user_id: userId, month, day, year, read_on: todayStr })
     // Treat duplicate (23505) or no error both as success
     if (!error || error.code === '23505') setMarked(true)
     setMarking(false)

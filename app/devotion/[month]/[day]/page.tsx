@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
 
 type Devotion = {
@@ -33,21 +34,34 @@ export default function DevotionPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarking, setBookmarking] = useState(false)
+  const [marked, setMarked] = useState(false)
+  const [marking, setMarking] = useState(false)
+  const { year: currentYear } = getTodayET()
+  const todayStr = getETDateString()
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
-      const { data } = await supabase
-        .from('bookmarks')
-        .select('month')
-        .eq('user_id', user.id)
-        .eq('month', month)
-        .eq('day', day)
-        .maybeSingle()
-      if (data) setBookmarked(true)
+      const [bmRes, readRes] = await Promise.all([
+        supabase.from('bookmarks').select('month').eq('user_id', user.id).eq('month', month).eq('day', day).maybeSingle(),
+        supabase.from('devotion_reads').select('read_on').eq('user_id', user.id).eq('month', month).eq('day', day).eq('year', currentYear).maybeSingle(),
+      ])
+      if (bmRes.data) setBookmarked(true)
+      if (readRes.data) setMarked(true)
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, month, day])
+
+  async function handleMarkRead() {
+    if (!userId || marked || marking) return
+    setMarking(true)
+    const { error } = await supabase
+      .from('devotion_reads')
+      .insert({ user_id: userId, month, day, year: currentYear, read_on: todayStr })
+    if (!error || error.code === '23505') setMarked(true)
+    setMarking(false)
+  }
 
   async function handleBookmarkToggle() {
     if (!userId || bookmarking) return
@@ -137,6 +151,10 @@ export default function DevotionPage() {
         bookmarked={bookmarked}
         bookmarking={bookmarking}
         onBookmarkToggle={handleBookmarkToggle}
+        marked={marked}
+        marking={marking}
+        onMarkRead={handleMarkRead}
+        showStreakMessage={false}
       />
     </div>
   )

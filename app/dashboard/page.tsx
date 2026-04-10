@@ -53,9 +53,9 @@ function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
-function computeStreaks(reads: string[], todayStr: string, yesterdayStr: string): Streaks {
+function computeStreaks(reads: string[], todayStr: string, yesterdayStr: string, totalDevotions: number): Streaks {
   const unique = Array.from(new Set(reads)).sort()
-  const total = unique.length
+  const total = totalDevotions
 
   if (total === 0) return { current: 0, longest: 0, total: 0 }
 
@@ -259,7 +259,7 @@ export default function DashboardPage() {
             .then(() => {})
         }
 
-        const [devotionRes, themeRes, readsRes, adminResult, profileRes] = await Promise.all([
+        const [devotionRes, themeRes, readsRes, readsCountRes, adminResult, profileRes] = await Promise.all([
           supabase
             .from('devotions')
             .select('title, verse_reference')
@@ -277,7 +277,11 @@ export default function DashboardPage() {
             .select('read_on')
             .eq('user_id', user.id)
             .order('read_on', { ascending: false })
-            .limit(60),
+            .limit(400),
+          supabase
+            .from('devotion_reads')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id),
           isAdmin(),
           supabase
             .from('profiles')
@@ -293,7 +297,7 @@ export default function DashboardPage() {
         if (readsRes.data) {
           const dates = readsRes.data.map((r: { read_on: string }) => r.read_on)
           setReadDates(dates)
-          setStreaks(computeStreaks(dates, todayStr, yesterdayStr))
+          setStreaks(computeStreaks(dates, todayStr, yesterdayStr, readsCountRes.count ?? dates.length))
         }
 
         let updatesQuery = supabase

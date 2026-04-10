@@ -70,6 +70,7 @@ export default function GroupChatPage() {
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
   const { month, day } = getTodayET()
 
   useEffect(() => { namesRef.current = names }, [names])
@@ -77,7 +78,8 @@ export default function GroupChatPage() {
   useEffect(() => { userIdRef.current = userId }, [userId])
 
   const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = chatContainerRef.current
+    if (container) container.scrollTop = container.scrollHeight
   }, [])
 
   useEffect(() => {
@@ -146,6 +148,10 @@ export default function GroupChatPage() {
     init()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   useEffect(() => {
     if (!loading) scrollToBottom()
@@ -291,13 +297,10 @@ export default function GroupChatPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header */}
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-        <Link href="/groups" className="rounded-lg bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap backdrop-blur-sm">
-          ← Groups
-        </Link>
-        <h1 className="text-xl font-semibold text-brand-blue text-shadow-hero text-center">{group?.name}</h1>
-        <Link href={`/groups/${id}/members`} className="rounded-lg bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap backdrop-blur-sm">
+      {/* Header — sticky so group name is always visible */}
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1e3a52] to-steel px-4 py-3 shadow-md">
+        <h1 className="text-base font-semibold text-white flex-1 text-center">{group?.name}</h1>
+        <Link href={`/groups/${id}/members`} className="shrink-0 rounded-lg bg-white/15 border border-white/25 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/25 transition-colors whitespace-nowrap">
           Members →
         </Link>
       </div>
@@ -363,7 +366,7 @@ export default function GroupChatPage() {
 
       {/* Chat */}
       <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
-        <div className="p-4 space-y-4 min-h-[300px] max-h-[50vh] overflow-y-auto">
+        <div ref={chatContainerRef} className="p-4 space-y-4 min-h-[300px] max-h-[50vh] overflow-y-auto">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center text-center py-8 space-y-2">
               <p className="text-charcoal font-medium text-sm">Be the first to share</p>
@@ -456,6 +459,14 @@ export default function GroupChatPage() {
           </button>
         </form>
       </div>
+
+      {/* Back to Groups — full width at the bottom */}
+      <Link
+        href="/groups"
+        className="block w-full rounded-xl border border-white/20 bg-white/15 px-4 py-3 text-center text-sm font-medium text-white hover:bg-white/25 transition-colors backdrop-blur-sm"
+      >
+        ← Back to Groups
+      </Link>
     </div>
   )
 }

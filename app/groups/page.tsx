@@ -54,8 +54,8 @@ export default function GroupsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Small Groups</h1>
-        <p className="text-sm text-white/80 text-shadow-hero mt-1">
+        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
+        <p className="text-sm text-white/80 text-shadow-hero mt-1 text-center">
           Read together. Reflect together. Stay connected.
         </p>
       </div>
