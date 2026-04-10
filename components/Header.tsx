@@ -180,6 +180,13 @@ export default function Header() {
                       Profile
                     </Link>
                     <Link
+                      href="/settings"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
+                    >
+                      Settings
+                    </Link>
+                    <Link
                       href="/bookmarks"
                       onClick={() => setShowUserMenu(false)}
                       className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"

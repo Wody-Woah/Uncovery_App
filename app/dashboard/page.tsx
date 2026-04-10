@@ -208,6 +208,7 @@ export default function DashboardPage() {
   const [showGroupsAnnouncement, setShowGroupsAnnouncement] = useState(false)
   const [cleanDate, setCleanDate] = useState<string | null>(null)
   const [showCleanDateCard, setShowCleanDateCard] = useState(false)
+  const [showJourneyCard, setShowJourneyCard] = useState(true)
 
   const [showDragHint, setShowDragHint] = useState(() =>
     typeof window !== 'undefined' ? !localStorage.getItem(DRAG_HINT_KEY) : false
@@ -311,7 +312,7 @@ export default function DashboardPage() {
           isAdmin(),
           supabase
             .from('profiles')
-            .select('display_name, avatar_url, clean_date, show_clean_date_card')
+            .select('display_name, avatar_url, clean_date, show_clean_date_card, show_journey_card')
             .eq('id', user.id)
             .single(),
         ])
@@ -322,6 +323,7 @@ export default function DashboardPage() {
         if (profileRes.data?.avatar_url) setAvatarUrl(profileRes.data.avatar_url)
         if (profileRes.data?.clean_date) setCleanDate(profileRes.data.clean_date)
         if (profileRes.data?.show_clean_date_card) setShowCleanDateCard(profileRes.data.show_clean_date_card)
+        setShowJourneyCard(profileRes.data?.show_journey_card ?? true)
         if (readsRes.data) {
           const dates = readsRes.data.map((r: { read_on: string }) => r.read_on)
           setReadDates(dates)
@@ -354,6 +356,7 @@ export default function DashboardPage() {
   }
 
   const activeCardOrder = cardOrder.filter((id) => {
+    if (id === 'journey') return showJourneyCard
     if (id === 'clean-date') return showCleanDateCard && !!cleanDate
     return true
   })
