@@ -53,6 +53,30 @@ function pad(n: number) {
   return String(n).padStart(2, '0')
 }
 
+function computeDaysClean(cleanDateStr: string): number {
+  const clean = new Date(cleanDateStr + 'T00:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.floor((today.getTime() - clean.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function getAnniversaryYears(cleanDateStr: string): number | null {
+  const clean = new Date(cleanDateStr + 'T00:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (today.getMonth() === clean.getMonth() && today.getDate() === clean.getDate()) {
+    const years = today.getFullYear() - clean.getFullYear()
+    return years > 0 ? years : null
+  }
+  return null
+}
+
+function ordinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd']
+  const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
 function computeStreaks(reads: string[], todayStr: string, yesterdayStr: string, totalDevotions: number): Streaks {
   const unique = Array.from(new Set(reads)).sort()
   const total = totalDevotions
@@ -104,7 +128,7 @@ const QUICK_ACTIONS = [
   { label: 'Journal',   href: '/journal' },
 ]
 
-const DEFAULT_ORDER = ['journey', 'today', 'author', 'quick-actions']
+const DEFAULT_ORDER = ['journey', 'clean-date', 'today', 'author', 'quick-actions']
 const STORAGE_KEY = 'dashboard_card_order'
 const DRAG_HINT_KEY = 'dashboard_drag_hint_seen'
 
@@ -182,6 +206,9 @@ export default function DashboardPage() {
   const [readDates, setReadDates] = useState<string[]>([])
   const [updates, setUpdates] = useState<AuthorUpdate[]>([])
   const [showGroupsAnnouncement, setShowGroupsAnnouncement] = useState(false)
+  const [cleanDate, setCleanDate] = useState<string | null>(null)
+  const [showCleanDateCard, setShowCleanDateCard] = useState(false)
+
   const [showDragHint, setShowDragHint] = useState(() =>
     typeof window !== 'undefined' ? !localStorage.getItem(DRAG_HINT_KEY) : false
   )
@@ -192,12 +219,11 @@ export default function DashboardPage() {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (
-          Array.isArray(parsed) &&
-          parsed.length === DEFAULT_ORDER.length &&
-          DEFAULT_ORDER.every((id) => parsed.includes(id))
-        ) {
-          return parsed
+        if (Array.isArray(parsed)) {
+          // Keep saved order, add any new cards not yet present
+          const merged = parsed.filter((id: string) => DEFAULT_ORDER.includes(id))
+          DEFAULT_ORDER.forEach((id) => { if (!merged.includes(id)) merged.push(id) })
+          return merged
         }
       }
     } catch {}
@@ -285,7 +311,7 @@ export default function DashboardPage() {
           isAdmin(),
           supabase
             .from('profiles')
-            .select('display_name, avatar_url')
+            .select('display_name, avatar_url, clean_date, show_clean_date_card')
             .eq('id', user.id)
             .single(),
         ])
@@ -294,6 +320,8 @@ export default function DashboardPage() {
         if (themeRes.data) setTheme(themeRes.data)
         if (profileRes.data?.display_name) setDisplayName(profileRes.data.display_name)
         if (profileRes.data?.avatar_url) setAvatarUrl(profileRes.data.avatar_url)
+        if (profileRes.data?.clean_date) setCleanDate(profileRes.data.clean_date)
+        if (profileRes.data?.show_clean_date_card) setShowCleanDateCard(profileRes.data.show_clean_date_card)
         if (readsRes.data) {
           const dates = readsRes.data.map((r: { read_on: string }) => r.read_on)
           setReadDates(dates)
@@ -325,9 +353,47 @@ export default function DashboardPage() {
     return <div className="py-20 text-center text-muted text-sm">Loading…</div>
   }
 
+  const activeCardOrder = cardOrder.filter((id) => {
+    if (id === 'clean-date') return showCleanDateCard && !!cleanDate
+    return true
+  })
+
   function renderCard(id: string, index: number) {
     const isFirst = index === 0
     switch (id) {
+      case 'clean-date': {
+        if (!cleanDate) return null
+        const daysClean = computeDaysClean(cleanDate)
+        const anniversary = getAnniversaryYears(cleanDate)
+        const cleanDateObj = new Date(cleanDate + 'T00:00:00')
+        const cleanMonth = cleanDateObj.getMonth() + 1
+        const imageMonth = cleanMonth === month ? (month === 1 ? 12 : month - 1) : cleanMonth
+        const imageUrl = supabase.storage.from('themes').getPublicUrl(`month-${String(imageMonth).padStart(2, '0')}.jpg`).data.publicUrl
+        const sinceLabel = cleanDateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        return (
+          <SortableCard key="clean-date" id="clean-date" dark showHint={isFirst && showDragHint}>
+            <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
+              <Image src={imageUrl} alt="" fill className="object-cover" priority />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/75" />
+              <div className="relative z-10 p-5 space-y-3 text-center">
+                {anniversary !== null && (
+                  <div className="rounded-xl bg-white/20 border border-white/30 px-4 py-2.5 backdrop-blur-sm">
+                    <p className="text-xs font-semibold text-white leading-snug">
+                      Today marks your {ordinal(anniversary)} year of freedom — we are so proud of you.
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-white/70">Days Clean</p>
+                  <p className="text-5xl font-bold text-white tabular-nums mt-1">{daysClean.toLocaleString()}</p>
+                </div>
+                <p className="text-sm text-white/70">Since {sinceLabel}</p>
+              </div>
+            </div>
+          </SortableCard>
+        )
+      }
+
       case 'journey':
         return (
           <SortableCard key="journey" id="journey" dark showHint={isFirst && showDragHint}>
@@ -566,9 +632,9 @@ export default function DashboardPage() {
 
       {/* Sortable cards */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
+        <SortableContext items={activeCardOrder} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
-            {cardOrder.map((id, index) => renderCard(id, index))}
+            {activeCardOrder.map((id, index) => renderCard(id, index))}
           </div>
         </SortableContext>
       </DndContext>

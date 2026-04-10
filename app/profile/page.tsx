@@ -42,6 +42,13 @@ export default function ProfilePage() {
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
 
+  // Clean date fields
+  const [cleanDate, setCleanDate] = useState('')
+  const [showCleanDateCard, setShowCleanDateCard] = useState(false)
+  const [cleanDateSaving, setCleanDateSaving] = useState(false)
+  const [cleanDateSuccess, setCleanDateSuccess] = useState(false)
+  const [cleanDateError, setCleanDateError] = useState<string | null>(null)
+
   // Password fields
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -57,7 +64,7 @@ export default function ProfilePage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, display_name, bio, avatar_url')
+        .select('id, display_name, bio, avatar_url, clean_date, show_clean_date_card')
         .eq('id', user.id)
         .single()
 
@@ -65,6 +72,8 @@ export default function ProfilePage() {
         setDisplayName(profile.display_name ?? '')
         setBio(profile.bio ?? '')
         setAvatarUrl(profile.avatar_url ?? null)
+        setCleanDate(profile.clean_date ?? '')
+        setShowCleanDateCard(profile.show_clean_date_card ?? false)
       } else {
         const defaultName = user.email?.split('@')[0] ?? 'User'
         await supabase.from('profiles').upsert({
@@ -172,6 +181,28 @@ export default function ProfilePage() {
 
     setAvatarUrl(null)
     setAvatarUploading(false)
+  }
+
+  async function handleCleanDateSave() {
+    setCleanDateError(null)
+    setCleanDateSuccess(false)
+    setCleanDateSaving(true)
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        clean_date: cleanDate || null,
+        show_clean_date_card: showCleanDateCard,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+
+    setCleanDateSaving(false)
+    if (error) {
+      setCleanDateError(error.message)
+    } else {
+      setCleanDateSuccess(true)
+    }
   }
 
   async function handleProfileSave(e: React.FormEvent) {
@@ -389,6 +420,67 @@ export default function ProfilePage() {
               {profileSaving ? 'Saving…' : 'Save Profile'}
             </button>
           </form>
+        </div>
+
+        {/* Clean Date card */}
+        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+          <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Clean Date</h2>
+          <p className="text-sm text-muted mb-5">Track your sobriety and display a Days Clean card on your dashboard.</p>
+
+          <div className="space-y-5">
+            {cleanDateError && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {cleanDateError}
+              </div>
+            )}
+            {cleanDateSuccess && (
+              <div className="rounded-lg bg-steel/10 border border-steel/20 px-4 py-3 text-sm text-steel font-medium">
+                Saved.
+              </div>
+            )}
+
+            <div>
+              <label className={labelClass}>My Clean Date</label>
+              <input
+                type="date"
+                value={cleanDate}
+                onChange={(e) => { setCleanDate(e.target.value); setCleanDateSuccess(false) }}
+                max={new Date().toISOString().split('T')[0]}
+                className={inputClass}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-charcoal">Show on dashboard</p>
+                <p className="text-xs text-muted mt-0.5">Display a Days Clean card on your home screen.</p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  const next = !showCleanDateCard
+                  setShowCleanDateCard(next)
+                  setCleanDateSuccess(false)
+                  await supabase
+                    .from('profiles')
+                    .update({ show_clean_date_card: next, updated_at: new Date().toISOString() })
+                    .eq('id', userId)
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${showCleanDateCard ? 'bg-steel' : 'bg-steel/20'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${showCleanDateCard ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCleanDateSave}
+              disabled={cleanDateSaving}
+              className="rounded-lg bg-steel px-5 py-2.5 text-white text-sm font-medium hover:bg-steel/90 transition-colors disabled:opacity-60"
+            >
+              {cleanDateSaving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
         </div>
 
         {/* Security card */}
