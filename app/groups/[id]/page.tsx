@@ -23,6 +23,7 @@ type Message = {
   user_id: string
   content: string
   created_at: string
+  updated_at: string | null
   display_name: string
 }
 
@@ -69,8 +70,11 @@ export default function GroupChatPage() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { month, day } = getTodayET()
 
   useEffect(() => { namesRef.current = names }, [names])
@@ -101,7 +105,7 @@ export default function GroupChatPage() {
       const [groupRes, membersRes, messagesRes, devotionRes] = await Promise.all([
         supabase.from('groups').select('id, name, description, created_by, invite_code').eq('id', id).single(),
         supabase.from('group_members').select('user_id').eq('group_id', id),
-        supabase.from('group_messages').select('id, user_id, content, created_at').eq('group_id', id).order('created_at', { ascending: true }).limit(100),
+        supabase.from('group_messages').select('id, user_id, content, created_at, updated_at').eq('group_id', id).order('created_at', { ascending: true }).limit(100),
         supabase.from('devotions').select('title, verse_reference, month, day').eq('month', month).eq('day', day).eq('published', true).single(),
       ])
 
@@ -128,7 +132,7 @@ export default function GroupChatPage() {
       avatarsRef.current = avatarMap
 
       const mapped: Message[] = (messagesRes.data ?? []).map((m: {
-        id: string; user_id: string; content: string; created_at: string
+        id: string; user_id: string; content: string; created_at: string; updated_at: string | null
       }) => ({ ...m, display_name: nameMap[m.user_id] ?? 'Unknown' }))
       setMessages(mapped)
 
@@ -157,7 +161,7 @@ export default function GroupChatPage() {
     if (!loading) scrollToBottom()
   }, [loading, messages, scrollToBottom])
 
-  // Realtime: new messages
+  // Realtime: new messages + edits
   useEffect(() => {
     if (!id) return
 
@@ -167,7 +171,7 @@ export default function GroupChatPage() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${id}` },
         async (payload) => {
-          const msg = payload.new as { id: string; user_id: string; content: string; created_at: string }
+          const msg = payload.new as { id: string; user_id: string; content: string; created_at: string; updated_at: string | null }
           let display_name = namesRef.current[msg.user_id]
           if (!display_name) {
             const { data } = await supabase
@@ -183,6 +187,16 @@ export default function GroupChatPage() {
             if (prev.find((m) => m.id === msg.id)) return prev
             return [...prev, { ...msg, display_name }]
           })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'group_messages', filter: `group_id=eq.${id}` },
+        (payload) => {
+          const updated = payload.new as { id: string; content: string; updated_at: string | null }
+          setMessages((prev) => prev.map((m) =>
+            m.id === updated.id ? { ...m, content: updated.content, updated_at: updated.updated_at } : m
+          ))
         }
       )
       .subscribe()
@@ -269,6 +283,37 @@ export default function GroupChatPage() {
     }
   }
 
+  function handlePressStart(msgId: string, content: string) {
+    longPressTimer.current = setTimeout(() => {
+      setEditingId(msgId)
+      setEditText(content)
+    }, 500)
+  }
+
+  function handlePressEnd() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  async function handleEditSave(msgId: string) {
+    if (!editText.trim() || !userId) return
+    const now = new Date().toISOString()
+    const { error } = await supabase
+      .from('group_messages')
+      .update({ content: editText.trim(), updated_at: now })
+      .eq('id', msgId)
+      .eq('user_id', userId)
+    if (!error) {
+      setMessages((prev) => prev.map((m) =>
+        m.id === msgId ? { ...m, content: editText.trim(), updated_at: now } : m
+      ))
+      setEditingId(null)
+      setEditText('')
+    }
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim() || !userId || sending) return
@@ -280,7 +325,7 @@ export default function GroupChatPage() {
     if (data) {
       setMessages((prev) => {
         if (prev.find((m) => m.id === data.id)) return prev
-        return [...prev, { ...data, display_name: names[userId] ?? 'You' }]
+        return [...prev, { ...data, updated_at: null, display_name: names[userId] ?? 'You' }]
       })
     }
     setText('')
@@ -390,12 +435,51 @@ export default function GroupChatPage() {
                   <div className={`flex flex-col gap-0.5 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'}`}>
                     <p className="text-xs text-muted px-1">
                       {isOwn ? 'You' : msg.display_name} · {formatTime(msg.created_at)}
+                      {msg.updated_at && <span className="ml-1 italic">(edited)</span>}
                     </p>
-                    <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                      isOwn ? 'bg-steel text-white rounded-br-sm' : 'bg-canvas text-charcoal rounded-bl-sm'
-                    }`}>
+
+                    {/* Edit mode */}
+                    {editingId === msg.id ? (
+                      <div className="w-full space-y-2">
+                        <textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          autoFocus
+                          rows={3}
+                          className="w-full rounded-xl border border-steel/30 bg-canvas px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-steel/30 resize-none"
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => { setEditingId(null); setEditText('') }}
+                            className="rounded-lg border border-steel/20 px-3 py-1.5 text-xs font-medium text-charcoal hover:bg-canvas transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleEditSave(msg.id)}
+                            disabled={!editText.trim()}
+                            className="rounded-lg bg-steel px-3 py-1.5 text-xs font-medium text-white hover:bg-steel/90 transition-colors disabled:opacity-50"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                    <div
+                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed select-none ${
+                        isOwn ? 'bg-steel text-white rounded-br-sm cursor-pointer active:opacity-80' : 'bg-canvas text-charcoal rounded-bl-sm'
+                      }`}
+                      onTouchStart={isOwn ? () => handlePressStart(msg.id, msg.content) : undefined}
+                      onTouchEnd={isOwn ? handlePressEnd : undefined}
+                      onTouchMove={isOwn ? handlePressEnd : undefined}
+                      onMouseDown={isOwn ? () => handlePressStart(msg.id, msg.content) : undefined}
+                      onMouseUp={isOwn ? handlePressEnd : undefined}
+                      onMouseLeave={isOwn ? handlePressEnd : undefined}
+                      onContextMenu={isOwn ? (e) => e.preventDefault() : undefined}
+                    >
                       {msg.content}
                     </div>
+                    )}
 
                     {/* Reactions */}
                     <div className="flex flex-wrap items-center gap-1 px-1 mt-0.5">
