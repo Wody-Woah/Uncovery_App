@@ -19,9 +19,10 @@ Push commands:
 ```bash
 git push origin dev
 git push vercel dev:main
+vercel --prod
 ```
 
-Vercel auto-deploys from the `main` branch of the vercel remote.
+GitHub auto-deploy webhook is not working. Always run `vercel --prod` after pushing to deploy to production. Vercel CLI must be installed and authenticated (`vercel login`).
 
 ---
 
