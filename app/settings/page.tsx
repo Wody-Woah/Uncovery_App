@@ -5,6 +5,32 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  return new Uint8Array(Array.from(rawData, (char) => char.charCodeAt(0)))
+}
+
+// Whole-hour offset (positive = west of UTC, e.g. EST = 5)
+function offsetHours() {
+  return Math.round(new Date().getTimezoneOffset() / 60)
+}
+function localToUtc(localHour: number) {
+  return (localHour + offsetHours() + 24) % 24
+}
+function utcToLocal(utcHour: number) {
+  return (utcHour - offsetHours() + 24) % 24
+}
+function formatHour(h: number) {
+  const d = new Date()
+  d.setHours(h, 0, 0, 0)
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+}
+
+// 6 AM – 9 PM
+const REMINDER_LOCAL_HOURS = Array.from({ length: 16 }, (_, i) => i + 6)
+
 export default function SettingsPage() {
   const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
@@ -12,6 +38,13 @@ export default function SettingsPage() {
   const [showCleanDateCard, setShowCleanDateCard] = useState(false)
   const [hasCleanDate, setHasCleanDate] = useState(false)
   const [loading, setLoading] = useState(true)
+
+  // Notifications
+  const [notifSupported, setNotifSupported] = useState(false)
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
+  const [notifEnabled, setNotifEnabled] = useState(false)
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [selectedLocalHour, setSelectedLocalHour] = useState(9)
 
   useEffect(() => {
     async function init() {
@@ -35,12 +68,108 @@ export default function SettingsPage() {
     init()
   }, [router])
 
+  // Check push support and current subscription once userId is ready
+  useEffect(() => {
+    if (!userId) return
+
+    const supported =
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window
+
+    setNotifSupported(supported)
+    if (!supported) return
+
+    setNotifPermission(Notification.permission)
+
+    navigator.serviceWorker.ready.then(async (reg) => {
+      const sub = await reg.pushManager.getSubscription()
+      setNotifEnabled(!!sub)
+
+      if (sub) {
+        const { data } = await supabase
+          .from('push_subscriptions')
+          .select('reminder_hour')
+          .eq('user_id', userId)
+          .eq('endpoint', sub.endpoint)
+          .single()
+        if (data) setSelectedLocalHour(utcToLocal(data.reminder_hour))
+      }
+    })
+  }, [userId])
+
   async function saveField(field: string, value: boolean) {
     if (!userId) return
     await supabase
       .from('profiles')
       .update({ [field]: value, updated_at: new Date().toISOString() })
       .eq('id', userId)
+  }
+
+  async function handleTimeChange(newLocalHour: number) {
+    setSelectedLocalHour(newLocalHour)
+    if (!userId) return
+    const utcHour = localToUtc(newLocalHour)
+    await supabase
+      .from('push_subscriptions')
+      .update({ reminder_hour: utcHour })
+      .eq('user_id', userId)
+  }
+
+  async function handleNotificationToggle() {
+    if (notifLoading || !userId) return
+    setNotifLoading(true)
+
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.ready
+
+      if (notifEnabled) {
+        const sub = await reg.pushManager.getSubscription()
+        if (sub) {
+          await sub.unsubscribe()
+          const { data: { session } } = await supabase.auth.getSession()
+          await fetch('/api/subscribe', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          })
+        }
+        setNotifEnabled(false)
+      } else {
+        const permission = await Notification.requestPermission()
+        setNotifPermission(permission)
+        if (permission !== 'granted') { setNotifLoading(false); return }
+
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
+        })
+
+        const { data: { session } } = await supabase.auth.getSession()
+        await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            subscription: sub.toJSON(),
+            reminderHour: localToUtc(selectedLocalHour),
+          }),
+        })
+        setNotifEnabled(true)
+      }
+    } catch (err) {
+      console.error('Notification toggle error:', err)
+    }
+
+    setNotifLoading(false)
   }
 
   if (loading) {
@@ -57,12 +186,12 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Settings</h1>
 
+      {/* Dashboard Cards */}
       <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
         <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Dashboard Cards</h2>
         <p className="text-sm text-muted mb-5">Choose which cards appear on your home screen.</p>
 
         <div className="space-y-1">
-
           {/* Your Journey */}
           <div className="flex items-center justify-between gap-4 py-3">
             <div>
@@ -108,8 +237,57 @@ export default function SettingsPage() {
               <span className={knobClass(showCleanDateCard)} />
             </button>
           </div>
-
         </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+        <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Notifications</h2>
+        <p className="text-sm text-muted mb-5">Get a morning reminder to read your daily devotion.</p>
+
+        {!notifSupported ? (
+          <p className="text-sm text-muted">
+            Push notifications are not supported in this browser. On iPhone, add this app to your Home Screen first.
+          </p>
+        ) : notifPermission === 'denied' ? (
+          <p className="text-sm text-muted">
+            Notifications are blocked. Enable them in your browser or device settings, then return here.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-charcoal">Daily Reminder</p>
+                <p className="text-xs text-muted mt-0.5">A nudge to read your devotion each day.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleNotificationToggle}
+                disabled={notifLoading}
+                className={toggleClass(notifEnabled, notifLoading)}
+              >
+                <span className={knobClass(notifEnabled)} />
+              </button>
+            </div>
+
+            {notifEnabled && (
+              <div className="border-t border-steel/10 pt-4">
+                <label className="block text-xs uppercase tracking-widest text-steel mb-2">
+                  Reminder Time
+                </label>
+                <select
+                  value={selectedLocalHour}
+                  onChange={(e) => handleTimeChange(Number(e.target.value))}
+                  className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-steel/30"
+                >
+                  {REMINDER_LOCAL_HOURS.map((h) => (
+                    <option key={h} value={h}>{formatHour(h)}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
