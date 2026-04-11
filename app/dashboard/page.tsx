@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
@@ -58,6 +58,21 @@ function computeDaysClean(cleanDateStr: string): number {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return Math.floor((today.getTime() - clean.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+function computeBreakdown(cleanDateStr: string): { years: number; months: number; days: number } {
+  const clean = new Date(cleanDateStr + 'T00:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let years = today.getFullYear() - clean.getFullYear()
+  let months = today.getMonth() - clean.getMonth()
+  let days = today.getDate() - clean.getDate()
+  if (days < 0) {
+    months--
+    days += new Date(today.getFullYear(), today.getMonth(), 0).getDate()
+  }
+  if (months < 0) { years--; months += 12 }
+  return { years, months, days }
 }
 
 function getAnniversaryYears(cleanDateStr: string): number | null {
@@ -209,6 +224,8 @@ export default function DashboardPage() {
   const [cleanDate, setCleanDate] = useState<string | null>(null)
   const [showCleanDateCard, setShowCleanDateCard] = useState(false)
   const [showJourneyCard, setShowJourneyCard] = useState(true)
+  const [cleanDateView, setCleanDateView] = useState<'days' | 'breakdown'>('days')
+  const swipeStartX = useRef<number | null>(null)
 
   const [showDragHint, setShowDragHint] = useState(() =>
     typeof window !== 'undefined' ? !localStorage.getItem(DRAG_HINT_KEY) : false
@@ -367,6 +384,7 @@ export default function DashboardPage() {
       case 'clean-date': {
         if (!cleanDate) return null
         const daysClean = computeDaysClean(cleanDate)
+        const breakdown = computeBreakdown(cleanDate)
         const anniversary = getAnniversaryYears(cleanDate)
         const cleanDateObj = new Date(cleanDate + 'T00:00:00')
         const cleanMonth = cleanDateObj.getMonth() + 1
@@ -378,7 +396,17 @@ export default function DashboardPage() {
             <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
               <Image src={imageUrl} alt="" fill className="object-cover" priority />
               <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/75" />
-              <div className="relative z-10 p-5 space-y-3 text-center">
+              <div
+                className="relative z-10 p-5 space-y-3 text-center"
+                onTouchStart={(e) => { swipeStartX.current = e.touches[0].clientX }}
+                onTouchEnd={(e) => {
+                  if (swipeStartX.current === null) return
+                  const diff = swipeStartX.current - e.changedTouches[0].clientX
+                  if (diff > 50) setCleanDateView('breakdown')
+                  else if (diff < -50) setCleanDateView('days')
+                  swipeStartX.current = null
+                }}
+              >
                 {anniversary !== null && (
                   <div className="rounded-xl bg-white/20 border border-white/30 px-4 py-2.5 backdrop-blur-sm">
                     <p className="text-xs font-semibold text-white leading-snug">
@@ -386,11 +414,40 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 )}
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-white/70">Days Clean</p>
-                  <p className="text-5xl font-bold text-white tabular-nums mt-1">{daysClean.toLocaleString()}</p>
-                </div>
+
+                {cleanDateView === 'days' ? (
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-white/70">Days Clean</p>
+                    <p className="text-5xl font-bold text-white tabular-nums mt-1">{daysClean.toLocaleString()}</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-4">
+                    {[
+                      { value: breakdown.years,  label: breakdown.years  === 1 ? 'Year'  : 'Years'  },
+                      { value: breakdown.months, label: breakdown.months === 1 ? 'Month' : 'Months' },
+                      { value: breakdown.days,   label: breakdown.days   === 1 ? 'Day'   : 'Days'   },
+                    ].map(({ value, label }) => (
+                      <div key={label} className="flex flex-col items-center">
+                        <p className="text-4xl font-bold text-white tabular-nums">{value}</p>
+                        <p className="text-xs text-white/70 mt-0.5">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <p className="text-sm text-white/70">Since {sinceLabel}</p>
+
+                {/* View toggle arrows */}
+                <div className="flex items-center justify-center gap-3 pt-1">
+                  <button
+                    onClick={() => setCleanDateView('days')}
+                    className={`w-2 h-2 rounded-full transition-colors ${cleanDateView === 'days' ? 'bg-white' : 'bg-white/30'}`}
+                  />
+                  <button
+                    onClick={() => setCleanDateView('breakdown')}
+                    className={`w-2 h-2 rounded-full transition-colors ${cleanDateView === 'breakdown' ? 'bg-white' : 'bg-white/30'}`}
+                  />
+                </div>
               </div>
             </div>
           </SortableCard>
