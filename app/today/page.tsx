@@ -105,6 +105,7 @@ function TodayPageInner() {
             .select('read_on')
             .eq('user_id', user.id)
             .eq('read_on', yesterdayStr)
+            .limit(1)
             .maybeSingle(),
         ])
         setDevotion(dev)
@@ -149,7 +150,10 @@ function TodayPageInner() {
       .from('devotion_reads')
       .insert({ user_id: userId, month, day, year, read_on: todayStr })
     // Treat duplicate (23505) or no error both as success
-    if (!error || error.code === '23505') setMarked(true)
+    if (!error || error.code === '23505') {
+      setMarked(true)
+      router.refresh() // invalidate router cache so dashboard re-fetches on return
+    }
     setMarking(false)
   }
 
