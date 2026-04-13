@@ -44,7 +44,6 @@ export default function SettingsPage() {
   const [selectedLocalHour, setSelectedLocalHour] = useState(9)
 
   // PWA install
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [installPrompt, setInstallPrompt] = useState<any>(null)
   const [isInstalled, setIsInstalled] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
@@ -75,7 +74,6 @@ export default function SettingsPage() {
     setIsInstalled(window.matchMedia('(display-mode: standalone)').matches)
     setIsIOS(/iphone|ipad|ipod/i.test(navigator.userAgent))
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e) }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
