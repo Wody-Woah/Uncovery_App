@@ -43,6 +43,12 @@ export default function SettingsPage() {
   const [notifLoading, setNotifLoading] = useState(false)
   const [selectedLocalHour, setSelectedLocalHour] = useState(9)
 
+  // PWA install
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [installPrompt, setInstallPrompt] = useState<any>(null)
+  const [isInstalled, setIsInstalled] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
+
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -64,6 +70,16 @@ export default function SettingsPage() {
     }
     init()
   }, [router])
+
+  useEffect(() => {
+    setIsInstalled(window.matchMedia('(display-mode: standalone)').matches)
+    setIsIOS(/iphone|ipad|ipod/i.test(navigator.userAgent))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e) }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
 
   useEffect(() => {
     if (!userId) return
@@ -101,6 +117,16 @@ export default function SettingsPage() {
       .from('profiles')
       .update({ [field]: value, updated_at: new Date().toISOString() })
       .eq('id', userId)
+  }
+
+  async function handleInstall() {
+    if (!installPrompt) return
+    installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    if (outcome === 'accepted') {
+      setInstallPrompt(null)
+      setIsInstalled(true)
+    }
   }
 
   async function handleTimeChange(newLocalHour: number) {
@@ -271,6 +297,42 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        )}
+      </div>
+      {/* Install App */}
+      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+        <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Install App</h2>
+        <p className="text-sm text-muted mb-5">Add Uncovery to your home screen for the best experience.</p>
+
+        {isInstalled ? (
+          <p className="text-sm text-steel font-medium">Already installed ✓</p>
+        ) : isIOS ? (
+          <ol className="space-y-3 text-sm text-charcoal">
+            <li className="flex items-start gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steel/10 text-xs font-semibold text-steel">1</span>
+              <span>Tap the <strong>Share</strong> button at the bottom of Safari (the box with an arrow pointing up).</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steel/10 text-xs font-semibold text-steel">2</span>
+              <span>Scroll down and tap <strong>Add to Home Screen</strong>.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steel/10 text-xs font-semibold text-steel">3</span>
+              <span>Tap <strong>Add</strong> in the top-right corner.</span>
+            </li>
+          </ol>
+        ) : installPrompt ? (
+          <button
+            type="button"
+            onClick={handleInstall}
+            className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors"
+          >
+            Add to Home Screen
+          </button>
+        ) : (
+          <p className="text-sm text-muted">
+            Open this page in Chrome on Android, or Safari on iPhone to install the app.
+          </p>
         )}
       </div>
     </div>
