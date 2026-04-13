@@ -308,14 +308,18 @@ export default function SettingsPage() {
           <ol className="space-y-3 text-sm text-charcoal">
             <li className="flex items-start gap-3">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steel/10 text-xs font-semibold text-steel">1</span>
-              <span>Tap the <strong>Share</strong> button at the bottom of Safari (the box with an arrow pointing up).</span>
+              <span>Tap the <strong>...</strong> button to the right of the address bar.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steel/10 text-xs font-semibold text-steel">2</span>
-              <span>Scroll down and tap <strong>Add to Home Screen</strong>.</span>
+              <span>Tap <strong>Share</strong> in the menu that appears.</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steel/10 text-xs font-semibold text-steel">3</span>
+              <span>Scroll down and tap <strong>Add to Home Screen</strong>.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-steel/10 text-xs font-semibold text-steel">4</span>
               <span>Tap <strong>Add</strong> in the top-right corner.</span>
             </li>
           </ol>
