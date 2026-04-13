@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import DevotionNotes from '@/components/DevotionNotes'
 
 type Devotion = {
@@ -44,6 +44,14 @@ function BookmarkIcon({ filled }: { filled: boolean }) {
   )
 }
 
+function ShareIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+    </svg>
+  )
+}
+
 export default function DevotionCard({
   devotion,
   userId,
@@ -56,6 +64,20 @@ export default function DevotionCard({
   showStreakMessage,
 }: Props) {
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    const parts: string[] = []
+    parts.push(devotion.title)
+    parts.push(devotion.verse_reference)
+    if (devotion.verse_text) parts.push(`\n"${devotion.verse_text}"`)
+    parts.push(`\n${devotion.body}`)
+    if (devotion.prayer) parts.push(`Prayer:\n${devotion.prayer}`)
+    parts.push('\n— The Uncovery Devotional')
+    navigator.clipboard.writeText(parts.join('\n'))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   useEffect(() => {
     if (!onMarkRead || marked) return
@@ -80,23 +102,33 @@ export default function DevotionCard({
   return (
     <div className="relative rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-6">
 
-      {/* Bookmark toggle — absolute top-right */}
-      <button
-        onClick={onBookmarkToggle}
-        disabled={bookmarking}
-        aria-label={bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
-        className={`absolute top-4 right-4 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-default ${
-          bookmarked
-            ? 'border-steel/30 bg-steel/10 text-steel'
-            : 'border-steel/20 bg-white text-muted hover:text-steel hover:border-steel/30 hover:bg-steel/5'
-        }`}
-      >
-        <BookmarkIcon filled={bookmarked} />
-        {bookmarked ? 'Saved' : 'Save'}
-      </button>
+      {/* Action buttons — absolute top-right */}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <button
+          onClick={handleCopy}
+          aria-label="Copy devotion text"
+          className="flex items-center gap-1.5 rounded-full border border-steel/20 bg-white px-3 py-1.5 text-xs font-medium text-muted hover:text-steel hover:border-steel/30 hover:bg-steel/5 transition-colors"
+        >
+          <ShareIcon />
+          {copied ? 'Copied!' : 'Share'}
+        </button>
+        <button
+          onClick={onBookmarkToggle}
+          disabled={bookmarking}
+          aria-label={bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-default ${
+            bookmarked
+              ? 'border-steel/30 bg-steel/10 text-steel'
+              : 'border-steel/20 bg-white text-muted hover:text-steel hover:border-steel/30 hover:bg-steel/5'
+          }`}
+        >
+          <BookmarkIcon filled={bookmarked} />
+          {bookmarked ? 'Saved' : 'Save'}
+        </button>
+      </div>
 
-      {/* Header — pr-20 keeps title clear of the bookmark pill */}
-      <div className="pr-20">
+      {/* Header — pr-36 keeps title clear of the two action buttons */}
+      <div className="pr-36">
         <h1 className="text-2xl font-semibold text-charcoal mb-1">{devotion.title}</h1>
         <p className="text-sm text-muted">{devotion.verse_reference}</p>
       </div>
