@@ -149,10 +149,21 @@ function TodayPageInner() {
     const { error } = await supabase
       .from('devotion_reads')
       .insert({ user_id: userId, month, day, year, read_on: todayStr })
-    // Treat duplicate (23505) or no error both as success
-    if (!error || error.code === '23505') {
+
+    if (!error) {
       setMarked(true)
-      router.refresh() // invalidate router cache so dashboard re-fetches on return
+      router.refresh()
+    } else if (error.code === '23505') {
+      // Already exists (read ahead) — update read_on to today so streak counts correctly
+      await supabase
+        .from('devotion_reads')
+        .update({ read_on: todayStr })
+        .eq('user_id', userId)
+        .eq('month', month)
+        .eq('day', day)
+        .eq('year', year)
+      setMarked(true)
+      router.refresh()
     }
     setMarking(false)
   }
