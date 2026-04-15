@@ -87,7 +87,7 @@ function TodayPageInner() {
             .single(),
           supabase
             .from('devotion_reads')
-            .select('month')
+            .select('read_on')
             .eq('user_id', user.id)
             .eq('month', month)
             .eq('day', day)
@@ -110,7 +110,7 @@ function TodayPageInner() {
         ])
         setDevotion(dev)
         setTheme(thm)
-        if (readRes.data) setMarked(true)
+        if (readRes.data?.read_on === todayStr) setMarked(true)
         if (bmRes.data) setBookmarked(true)
         if (yesterdayRes.data) setHadStreak(true)
       } catch {
