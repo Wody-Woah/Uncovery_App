@@ -65,7 +65,6 @@ export default function GroupChatPage() {
   const [reactions, setReactions] = useState<ReactionsMap>({})
   const [pickerOpen, setPickerOpen] = useState<string | null>(null)
   const [devotion, setDevotion] = useState<TodayDevotion | null>(null)
-  const [memberCount, setMemberCount] = useState(0)
   const [codeCopied, setCodeCopied] = useState(false)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
@@ -114,7 +113,6 @@ export default function GroupChatPage() {
       setDevotion(devotionRes.data)
 
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
-      setMemberCount(memberIds.length)
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id, display_name, avatar_url')
@@ -350,8 +348,8 @@ export default function GroupChatPage() {
         </Link>
       </div>
 
-      {/* Invite card — shown to the creator only when no one else has joined yet */}
-      {userId === group?.created_by && memberCount === 1 && (
+      {/* Invite card — shown to the creator always */}
+      {userId === group?.created_by && (
         <div className="rounded-2xl border border-steel/30 bg-white p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-steel/10">
