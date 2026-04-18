@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 const MONTHS = [
   '', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -74,41 +75,44 @@ export default function BookmarksPage() {
       <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Bookmarks</h1>
 
       {bookmarks.length === 0 ? (
-        <div className="rounded-2xl border border-steel/20 bg-white p-8 text-center shadow-sm space-y-3">
-          <div className="flex justify-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-steel/10">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-steel">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-              </svg>
+        <AnimatedCard>
+          <div className="rounded-2xl border border-steel/20 bg-white p-8 text-center shadow-sm space-y-3">
+            <div className="flex justify-center">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-steel/10">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-steel">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="text-charcoal font-semibold text-sm">Nothing saved yet</p>
+              <p className="text-muted text-sm mt-1 leading-relaxed">
+                When a devotion resonates with you, tap the bookmark icon while reading to save it here.
+              </p>
             </div>
           </div>
-          <div>
-            <p className="text-charcoal font-semibold text-sm">Nothing saved yet</p>
-            <p className="text-muted text-sm mt-1 leading-relaxed">
-              When a devotion resonates with you, tap the bookmark icon while reading to save it here.
-            </p>
-          </div>
-        </div>
+        </AnimatedCard>
       ) : (
         <ul className="space-y-3">
-          {bookmarks.map((b) => (
-            <li
-              key={`${b.month}-${b.day}`}
-              className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-center justify-between gap-4"
-            >
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-widest text-steel mb-1">
-                  {MONTHS[b.month]} {b.day}
-                </p>
-                <p className="text-base font-semibold text-charcoal truncate">{b.title}</p>
-                <p className="text-sm text-muted mt-0.5 truncate">{b.verse_reference}</p>
-              </div>
-              <Link
-                href={`/devotion/${b.month}/${b.day}`}
-                className="shrink-0 rounded-lg border border-steel/20 px-3 py-1.5 text-sm font-medium text-steel hover:bg-canvas transition-colors"
-              >
-                Open
-              </Link>
+          {bookmarks.map((b, index) => (
+            <li key={`${b.month}-${b.day}`}>
+              <AnimatedCard delay={index * 0.06}>
+                <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-xs uppercase tracking-widest text-steel mb-1">
+                      {MONTHS[b.month]} {b.day}
+                    </p>
+                    <p className="text-base font-semibold text-charcoal truncate">{b.title}</p>
+                    <p className="text-sm text-muted mt-0.5 truncate">{b.verse_reference}</p>
+                  </div>
+                  <Link
+                    href={`/devotion/${b.month}/${b.day}`}
+                    className="shrink-0 rounded-lg border border-steel/20 px-3 py-1.5 text-sm font-medium text-steel hover:bg-canvas transition-colors"
+                  >
+                    Open
+                  </Link>
+                </div>
+              </AnimatedCard>
             </li>
           ))}
         </ul>
