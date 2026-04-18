@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Group = {
   id: string
@@ -76,25 +77,28 @@ export default function GroupsPage() {
       </div>
 
       {groups.length === 0 ? (
-        <div className="rounded-2xl border border-steel/15 bg-white p-8 shadow-sm space-y-3">
-          <p className="text-charcoal font-semibold text-base">You weren&apos;t meant to do this alone.</p>
-          <p className="text-muted text-sm leading-relaxed">
-            Create a private group for friends, family, or a recovery community. Each day, your group gets a shared space to reflect on the devotion — ask questions, share what&apos;s stirring, and remind each other you&apos;re not doing this alone.
-          </p>
-        </div>
+        <AnimatedCard>
+          <div className="rounded-2xl border border-steel/15 bg-white p-8 shadow-sm space-y-3">
+            <p className="text-charcoal font-semibold text-base">You weren&apos;t meant to do this alone.</p>
+            <p className="text-muted text-sm leading-relaxed">
+              Create a private group for friends, family, or a recovery community. Each day, your group gets a shared space to reflect on the devotion — ask questions, share what&apos;s stirring, and remind each other you&apos;re not doing this alone.
+            </p>
+          </div>
+        </AnimatedCard>
       ) : (
         <div className="space-y-3">
-          {groups.map((group) => (
-            <Link
-              key={group.id}
-              href={`/groups/${group.id}`}
-              className="block rounded-2xl border border-steel/15 bg-white p-5 shadow-sm hover:border-steel/30 transition-colors"
-            >
-              <p className="font-medium text-charcoal">{group.name}</p>
-              {group.description && (
-                <p className="text-sm text-muted mt-0.5 line-clamp-1">{group.description}</p>
-              )}
-            </Link>
+          {groups.map((group, index) => (
+            <AnimatedCard key={group.id} delay={index * 0.06}>
+              <Link
+                href={`/groups/${group.id}`}
+                className="block rounded-2xl border border-steel/15 bg-white p-5 shadow-sm hover:border-steel/30 transition-colors"
+              >
+                <p className="font-medium text-charcoal">{group.name}</p>
+                {group.description && (
+                  <p className="text-sm text-muted mt-0.5 line-clamp-1">{group.description}</p>
+                )}
+              </Link>
+            </AnimatedCard>
           ))}
         </div>
       )}
