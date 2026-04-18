@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Devotion = {
   id: string
@@ -268,6 +269,7 @@ function TodayPageInner() {
 
       {/* Month Theme Card */}
       {theme && (
+        <AnimatedCard delay={0}>
         <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
           <Image
             src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
@@ -290,26 +292,31 @@ function TodayPageInner() {
             )}
           </div>
         </div>
+        </AnimatedCard>
       )}
 
       {/* Devotion Card */}
       {devotion ? (
-        <DevotionCard
-          devotion={devotion}
-          userId={userId}
-          bookmarked={bookmarked}
-          bookmarking={bookmarking}
-          onBookmarkToggle={handleBookmarkToggle}
-          marked={marked}
-          marking={marking}
-          onMarkRead={handleMarkRead}
-          hadStreak={hadStreak}
-        />
+        <AnimatedCard delay={0.08}>
+          <DevotionCard
+            devotion={devotion}
+            userId={userId}
+            bookmarked={bookmarked}
+            bookmarking={bookmarking}
+            onBookmarkToggle={handleBookmarkToggle}
+            marked={marked}
+            marking={marking}
+            onMarkRead={handleMarkRead}
+            hadStreak={hadStreak}
+          />
+        </AnimatedCard>
       ) : (
-        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
-          <p className="text-muted text-sm">No devotion found for today.</p>
-          <p className="text-muted text-xs mt-1">Check back soon or browse past devotions.</p>
-        </div>
+        <AnimatedCard delay={0.08}>
+          <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
+            <p className="text-muted text-sm">No devotion found for today.</p>
+            <p className="text-muted text-xs mt-1">Check back soon or browse past devotions.</p>
+          </div>
+        </AnimatedCard>
       )}
     </div>
   )
