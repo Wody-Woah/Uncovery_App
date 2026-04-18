@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 export default function JoinGroupPage() {
   const router = useRouter()
@@ -51,6 +52,7 @@ export default function JoinGroupPage() {
         </p>
       </div>
 
+      <AnimatedCard>
       <form
         onSubmit={handleJoin}
         className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5"
@@ -79,6 +81,7 @@ export default function JoinGroupPage() {
           {joining ? 'Joining…' : 'Join Group'}
         </button>
       </form>
+      </AnimatedCard>
 
       <Link
         href="/groups"

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -78,6 +79,7 @@ export default function SignupPage() {
           </p>
         </div>
 
+        <AnimatedCard>
         <form
           onSubmit={handleSignup}
           className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-4"
@@ -208,6 +210,7 @@ export default function SignupPage() {
             {googleLoading ? 'Redirecting…' : 'Continue with Google'}
           </button>
         </form>
+        </AnimatedCard>
 
         <p className="text-center text-sm text-white/90 mt-6">
           Already have an account?{" "}

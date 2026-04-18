@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Status = 'loading' | 'unauthorized' | 'ready'
 
@@ -138,6 +139,7 @@ export default function ManageDevotionsPage() {
       </div>
 
       {/* Table */}
+      <AnimatedCard>
       <div className="rounded-2xl border border-steel/20 bg-white shadow-sm overflow-hidden">
         {fetching ? (
           <div className="py-16 text-center text-muted text-sm">Loading devotions…</div>
@@ -196,6 +198,7 @@ export default function ManageDevotionsPage() {
           </>
         )}
       </div>
+      </AnimatedCard>
 
       {/* Pagination */}
       {!fetching && filtered.length > 0 && (

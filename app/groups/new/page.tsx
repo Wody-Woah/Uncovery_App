@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 function generateInviteCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -61,6 +62,7 @@ export default function NewGroupPage() {
         </p>
       </div>
 
+      <AnimatedCard>
       <form
         onSubmit={handleSubmit}
         className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5"
@@ -104,6 +106,7 @@ export default function NewGroupPage() {
           {saving ? 'Creating…' : 'Create Group'}
         </button>
       </form>
+      </AnimatedCard>
 
       <Link
         href="/groups"

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 const PAGE_SIZE = 25
 
@@ -248,6 +249,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* User list */}
+      <AnimatedCard>
       <div className="rounded-2xl border border-steel/20 bg-white shadow-sm overflow-hidden">
         {fetching ? (
           <div className="py-16 text-center text-muted text-sm">Loading users…</div>
@@ -337,6 +339,7 @@ export default function AdminUsersPage() {
           </>
         )}
       </div>
+      </AnimatedCard>
 
       {/* Pagination */}
       {!fetching && sorted.length > 0 && (

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Status = 'loading' | 'unauthorized' | 'ready'
 
@@ -77,6 +78,7 @@ export default function AdminUpdatesPage() {
       </div>
 
       {/* List */}
+      <AnimatedCard>
       <div className="rounded-2xl border border-steel/20 bg-white shadow-sm overflow-hidden">
         {updates.length === 0 ? (
           <div className="py-16 text-center text-muted text-sm">No updates yet.</div>
@@ -122,6 +124,7 @@ export default function AdminUpdatesPage() {
           </>
         )}
       </div>
+      </AnimatedCard>
     </div>
   )
 }

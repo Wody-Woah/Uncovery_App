@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type PageStatus = 'loading' | 'unauthorized' | 'not-found' | 'ready'
 
@@ -246,6 +247,7 @@ export default function EditDevotionPage() {
         )}
 
         {/* Date */}
+        <AnimatedCard delay={0}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-5">
           <p className={labelClass}>Date</p>
           <div className="grid grid-cols-2 gap-4">
@@ -279,8 +281,10 @@ export default function EditDevotionPage() {
             </div>
           </div>
         </div>
+        </AnimatedCard>
 
         {/* Content */}
+        <AnimatedCard delay={0.08}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-5">
           <p className={labelClass}>Content</p>
 
@@ -352,8 +356,10 @@ export default function EditDevotionPage() {
             />
           </div>
         </div>
+        </AnimatedCard>
 
         {/* Settings */}
+        <AnimatedCard delay={0.16}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -376,6 +382,7 @@ export default function EditDevotionPage() {
             </button>
           </div>
         </div>
+        </AnimatedCard>
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-4 pb-10">

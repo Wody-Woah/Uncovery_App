@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type PageStatus = 'loading' | 'unauthorized' | 'not-found' | 'ready'
 
@@ -145,6 +146,7 @@ export default function EditUpdatePage() {
           </div>
         )}
 
+        <AnimatedCard delay={0}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-5">
           <div>
             <label className={labelClass}>Title</label>
@@ -170,7 +172,9 @@ export default function EditUpdatePage() {
             />
           </div>
         </div>
+        </AnimatedCard>
 
+        <AnimatedCard delay={0.08}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -202,6 +206,7 @@ export default function EditUpdatePage() {
             </button>
           </div>
         </div>
+        </AnimatedCard>
 
         <div className="flex flex-wrap items-center gap-4 pb-10">
           <button
