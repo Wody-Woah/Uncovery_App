@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 export default function BookPage() {
   const router = useRouter()
@@ -21,7 +22,8 @@ export default function BookPage() {
   }
 
   return (
-    <div className="flex flex-col items-center py-8">
+    <div className="flex flex-col items-center py-8 w-full">
+      <AnimatedCard>
       <div className="w-full rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-6 text-center">
         <div>
           <p className="text-xs uppercase tracking-widest text-steel mb-2">
@@ -50,6 +52,7 @@ export default function BookPage() {
           Buy the Book on Amazon
         </a>
       </div>
+      </AnimatedCard>
     </div>
   )
 }
