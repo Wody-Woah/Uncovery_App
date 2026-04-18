@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Devotion = {
   id: string
@@ -122,11 +123,13 @@ export default function DevotionPage() {
         <button onClick={() => router.back()} className="text-sm text-brand-blue hover:underline text-shadow-hero">
           ← Back
         </button>
-        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
-          <p className="text-muted text-sm">
-            No devotion found for {monthName} {day}.
-          </p>
-        </div>
+        <AnimatedCard>
+          <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
+            <p className="text-muted text-sm">
+              No devotion found for {monthName} {day}.
+            </p>
+          </div>
+        </AnimatedCard>
       </div>
     )
   }
@@ -145,17 +148,19 @@ export default function DevotionPage() {
       </div>
 
       {/* Devotion Card */}
-      <DevotionCard
-        devotion={devotion}
-        userId={userId}
-        bookmarked={bookmarked}
-        bookmarking={bookmarking}
-        onBookmarkToggle={handleBookmarkToggle}
-        marked={marked}
-        marking={marking}
-        onMarkRead={handleMarkRead}
-        showStreakMessage={false}
-      />
+      <AnimatedCard>
+        <DevotionCard
+          devotion={devotion}
+          userId={userId}
+          bookmarked={bookmarked}
+          bookmarking={bookmarking}
+          onBookmarkToggle={handleBookmarkToggle}
+          marked={marked}
+          marking={marking}
+          onMarkRead={handleMarkRead}
+          showStreakMessage={false}
+        />
+      </AnimatedCard>
     </div>
   )
 }

@@ -32,7 +32,6 @@ export default function JournalPage() {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      setReady(true)
 
       const { data } = await supabase
         .from('devotion_notes')
@@ -41,6 +40,7 @@ export default function JournalPage() {
         .order('created_at', { ascending: false })
 
       setNotes(data ?? [])
+      setReady(true)
     }
 
     init()
@@ -55,7 +55,33 @@ export default function JournalPage() {
   }
 
   if (!ready) {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Journal</h1>
+        <ul className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <li
+              key={i}
+              className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3 animate-pulse"
+            >
+              <div className="flex items-center justify-between">
+                <div className="h-3 w-24 bg-steel/15 rounded" />
+                <div className="h-3 w-20 bg-steel/15 rounded" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-full bg-steel/15 rounded" />
+                <div className="h-3 w-5/6 bg-steel/15 rounded" />
+                <div className="h-3 w-2/3 bg-steel/15 rounded" />
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <div className="h-3 w-24 bg-steel/15 rounded" />
+                <div className="ml-auto h-3 w-12 bg-steel/15 rounded" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
   }
 
   return (

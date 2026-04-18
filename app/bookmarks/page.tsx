@@ -30,7 +30,6 @@ export default function BookmarksPage() {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      setReady(true)
 
       // Fetch bookmarks ordered by most recent
       const { data: bms } = await supabase
@@ -39,7 +38,10 @@ export default function BookmarksPage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (!bms || bms.length === 0) return
+      if (!bms || bms.length === 0) {
+        setReady(true)
+        return
+      }
 
       // Fetch all bookmarked devotions in one query using composite OR filter
       const filter = bms
@@ -61,13 +63,33 @@ export default function BookmarksPage() {
           verse_reference: devMap.get(`${b.month}-${b.day}`)?.verse_reference ?? '',
         }))
       )
+      setReady(true)
     }
 
     init()
   }, [router])
 
   if (!ready) {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Bookmarks</h1>
+        <ul className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <li
+              key={i}
+              className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-center justify-between gap-4 animate-pulse"
+            >
+              <div className="min-w-0 flex-1 space-y-2.5">
+                <div className="h-3 w-24 bg-steel/15 rounded" />
+                <div className="h-4 w-3/4 bg-steel/20 rounded" />
+                <div className="h-3 w-1/2 bg-steel/15 rounded" />
+              </div>
+              <div className="shrink-0 h-7 w-14 bg-steel/15 rounded-lg" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
   }
 
   return (
