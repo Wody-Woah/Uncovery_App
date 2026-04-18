@@ -73,17 +73,6 @@ export default function AdminPage() {
       {/* Action cards */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Link
-          href="/admin/devotions/new"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Create</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            New Devotion
-          </h2>
-          <p className="text-sm text-muted mt-1">Write and publish a new daily devotion.</p>
-        </Link>
-
-        <Link
           href="/admin/devotions"
           className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
         >
