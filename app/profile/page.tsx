@@ -6,6 +6,7 @@ import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
 import { supabase } from '@/lib/supabaseClient'
 import Avatar from '@/components/Avatar'
+import AnimatedCard from '@/components/AnimatedCard'
 
 async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> {
   const img = await createImageBitmap(await fetch(imageSrc).then((r) => r.blob()))
@@ -323,6 +324,7 @@ export default function ProfilePage() {
         <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Profile</h1>
 
         {/* Avatar card */}
+        <AnimatedCard delay={0}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm flex flex-col items-center gap-4">
           <p className="text-xs uppercase tracking-widest text-steel self-start">Photo</p>
 
@@ -372,8 +374,10 @@ export default function ProfilePage() {
             </button>
           )}
         </div>
+        </AnimatedCard>
 
         {/* Profile card */}
+        <AnimatedCard delay={0.08}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Your Profile</h2>
 
@@ -421,8 +425,10 @@ export default function ProfilePage() {
             </button>
           </form>
         </div>
+        </AnimatedCard>
 
         {/* Clean Date card */}
+        <AnimatedCard delay={0.16}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Clean Date</h2>
           <p className="text-sm text-muted mb-5">Track your sobriety and display a Days Clean card on your dashboard.</p>
@@ -482,8 +488,10 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+        </AnimatedCard>
 
         {/* Security card */}
+        <AnimatedCard delay={0.24}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Security</h2>
 
@@ -532,8 +540,10 @@ export default function ProfilePage() {
             </button>
           </form>
         </div>
+        </AnimatedCard>
 
         {/* Account card */}
+        <AnimatedCard delay={0.32}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Account</h2>
           <p className="text-sm text-muted mb-4">
@@ -546,6 +556,7 @@ export default function ProfilePage() {
             Delete my account →
           </a>
         </div>
+        </AnimatedCard>
 
       </div>
     </>
