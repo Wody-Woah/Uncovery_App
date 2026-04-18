@@ -9,6 +9,7 @@ import { getTodayET } from '@/lib/getTodayET'
 import Image from 'next/image'
 import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
 import Avatar from '@/components/Avatar'
+import AnimatedCard from '@/components/AnimatedCard'
 import {
   DndContext,
   closestCenter,
@@ -168,7 +169,7 @@ function GripIcon() {
 // Sortable card wrapper
 // ---------------------------------------------------------------------------
 
-function SortableCard({ id, dark, showHint, children }: { id: string; dark?: boolean; showHint?: boolean; children: React.ReactNode }) {
+function SortableCard({ id, index = 0, dark, showHint, children }: { id: string; index?: number; dark?: boolean; showHint?: boolean; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
 
   const style = {
@@ -178,30 +179,32 @@ function SortableCard({ id, dark, showHint, children }: { id: string; dark?: boo
 
   return (
     <div ref={setNodeRef} style={style} className={isDragging ? 'opacity-50 z-50 relative' : ''}>
-      <div className="relative">
-        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
-          {showHint && (
-            <span className={`text-[11px] font-medium rounded-md px-2 py-1 ${
-              dark ? 'bg-black/30 text-white/70' : 'bg-steel/10 text-steel/70'
-            }`}>
-              Drag to reorder
-            </span>
-          )}
-          <button
-            {...attributes}
-            {...listeners}
-            aria-label="Drag to reorder"
-            className={`cursor-grab active:cursor-grabbing p-1.5 rounded-md transition-colors touch-none ${
-              dark
-                ? 'text-white/70 bg-black/25 hover:bg-black/40'
-                : 'text-steel/60 bg-steel/10 hover:bg-steel/20'
-            }`}
-          >
-            <GripIcon />
-          </button>
+      <AnimatedCard delay={index * 0.08}>
+        <div className="relative">
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+            {showHint && (
+              <span className={`text-[11px] font-medium rounded-md px-2 py-1 ${
+                dark ? 'bg-black/30 text-white/70' : 'bg-steel/10 text-steel/70'
+              }`}>
+                Drag to reorder
+              </span>
+            )}
+            <button
+              {...attributes}
+              {...listeners}
+              aria-label="Drag to reorder"
+              className={`cursor-grab active:cursor-grabbing p-1.5 rounded-md transition-colors touch-none ${
+                dark
+                  ? 'text-white/70 bg-black/25 hover:bg-black/40'
+                  : 'text-steel/60 bg-steel/10 hover:bg-steel/20'
+              }`}
+            >
+              <GripIcon />
+            </button>
+          </div>
+          {children}
         </div>
-        {children}
-      </div>
+      </AnimatedCard>
     </div>
   )
 }
@@ -392,7 +395,7 @@ export default function DashboardPage() {
         const imageUrl = supabase.storage.from('themes').getPublicUrl(`month-${String(imageMonth).padStart(2, '0')}.jpg`).data.publicUrl
         const sinceLabel = cleanDateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         return (
-          <SortableCard key="clean-date" id="clean-date" dark showHint={isFirst && showDragHint}>
+          <SortableCard key="clean-date" id="clean-date" index={index} dark showHint={isFirst && showDragHint}>
             <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
               <Image src={imageUrl} alt="" fill className="object-cover" priority />
               <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/75" />
@@ -456,7 +459,7 @@ export default function DashboardPage() {
 
       case 'journey':
         return (
-          <SortableCard key="journey" id="journey" dark showHint={isFirst && showDragHint}>
+          <SortableCard key="journey" id="journey" index={index} dark showHint={isFirst && showDragHint}>
             <div className="rounded-2xl p-5 shadow-sm space-y-4 bg-gradient-to-br from-[#1e3a52] to-steel">
               <h2 className="text-xs uppercase tracking-widest text-white/70 pr-6">Your Journey</h2>
               <div className="grid grid-cols-3 gap-3">
@@ -493,7 +496,7 @@ export default function DashboardPage() {
 
       case 'today':
         return (
-          <SortableCard key="today" id="today" dark showHint={isFirst && showDragHint}>
+          <SortableCard key="today" id="today" index={index} dark showHint={isFirst && showDragHint}>
             <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
               <Image
                 src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
@@ -538,7 +541,7 @@ export default function DashboardPage() {
 
       case 'author':
         return (
-          <SortableCard key="author" id="author" showHint={isFirst && showDragHint}>
+          <SortableCard key="author" id="author" index={index} showHint={isFirst && showDragHint}>
             <div className="rounded-2xl border border-steel/15 bg-canvas p-5 shadow-sm space-y-4">
               <div className="pr-6">
                 <h2 className="text-xs uppercase tracking-widest text-steel">From the Author</h2>
@@ -575,7 +578,7 @@ export default function DashboardPage() {
 
       case 'quick-actions':
         return (
-          <SortableCard key="quick-actions" id="quick-actions" showHint={isFirst && showDragHint}>
+          <SortableCard key="quick-actions" id="quick-actions" index={index} showHint={isFirst && showDragHint}>
             <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
               <div className="px-4 pt-3 pb-3 pr-12">
                 <h2 className="text-xs uppercase tracking-widest text-steel">Quick Actions</h2>
