@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type AuthorUpdate = {
   id: string
@@ -59,9 +60,11 @@ export default function UpdateDetailPage() {
         <Link href="/dashboard" className="text-sm text-brand-blue hover:underline text-shadow-hero">
           ← Dashboard
         </Link>
-        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
-          <p className="text-muted text-sm">Update not found.</p>
-        </div>
+        <AnimatedCard>
+          <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
+            <p className="text-muted text-sm">Update not found.</p>
+          </div>
+        </AnimatedCard>
       </div>
     )
   }
@@ -78,15 +81,17 @@ export default function UpdateDetailPage() {
         ← Dashboard
       </Link>
 
-      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-charcoal mb-1">{update.title}</h1>
-          <p className="text-sm text-muted">{dateStr}</p>
+      <AnimatedCard>
+        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-charcoal mb-1">{update.title}</h1>
+            <p className="text-sm text-muted">{dateStr}</p>
+          </div>
+          <div className="font-serif text-charcoal leading-[1.85] whitespace-pre-wrap text-[1.0625rem]">
+            {update.body}
+          </div>
         </div>
-        <div className="font-serif text-charcoal leading-[1.85] whitespace-pre-wrap text-[1.0625rem]">
-          {update.body}
-        </div>
-      </div>
+      </AnimatedCard>
     </div>
   )
 }
