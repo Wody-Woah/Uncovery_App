@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import Avatar from '@/components/Avatar'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Member = {
   user_id: string
@@ -154,33 +155,35 @@ export default function MembersPage() {
       </div>
 
       {/* Member list */}
-      <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-steel/10">
-          <p className="text-xs uppercase tracking-widest text-steel">
-            {members.length} {members.length === 1 ? 'Member' : 'Members'}
-          </p>
-        </div>
-        <div className="divide-y divide-steel/10">
-          {members.map((m) => (
-            <div key={m.user_id} className="flex items-center justify-between px-5 py-3.5">
-              <div className="flex items-center gap-3">
-                <Avatar avatarUrl={m.avatar_url} displayName={m.display_name} size="sm" />
-                <p className="text-sm text-charcoal">
-                  {m.display_name}
-                  {m.user_id === userId && (
-                    <span className="text-muted"> (you)</span>
-                  )}
-                </p>
+      <AnimatedCard>
+        <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
+          <div className="px-5 py-3 border-b border-steel/10">
+            <p className="text-xs uppercase tracking-widest text-steel">
+              {members.length} {members.length === 1 ? 'Member' : 'Members'}
+            </p>
+          </div>
+          <div className="divide-y divide-steel/10">
+            {members.map((m) => (
+              <div key={m.user_id} className="flex items-center justify-between px-5 py-3.5">
+                <div className="flex items-center gap-3">
+                  <Avatar avatarUrl={m.avatar_url} displayName={m.display_name} size="sm" />
+                  <p className="text-sm text-charcoal">
+                    {m.display_name}
+                    {m.user_id === userId && (
+                      <span className="text-muted"> (you)</span>
+                    )}
+                  </p>
+                </div>
+                {m.role === 'admin' && (
+                  <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5">
+                    Admin
+                  </span>
+                )}
               </div>
-              {m.role === 'admin' && (
-                <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5">
-                  Admin
-                </span>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      </AnimatedCard>
 
       {/* Leave group — only shown to non-admins */}
       {myRole !== 'admin' && (
