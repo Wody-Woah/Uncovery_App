@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -196,6 +197,7 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Settings</h1>
 
       {/* Dashboard Cards */}
+      <AnimatedCard delay={0}>
       <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
         <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Dashboard Cards</h2>
         <p className="text-sm text-muted mb-5">Choose which cards appear on your home screen.</p>
@@ -246,8 +248,10 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      </AnimatedCard>
 
       {/* Notifications */}
+      <AnimatedCard delay={0.08}>
       <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
         <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Notifications</h2>
         <p className="text-sm text-muted mb-5">Get a daily reminder to read your devotion.</p>
@@ -297,7 +301,10 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+      </AnimatedCard>
+
       {/* Install App */}
+      <AnimatedCard delay={0.16}>
       <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
         <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Install App</h2>
         <p className="text-sm text-muted mb-5">Add Uncovery to your home screen for the best experience.</p>
@@ -337,6 +344,7 @@ export default function SettingsPage() {
           </p>
         )}
       </div>
+      </AnimatedCard>
     </div>
   )
 }
