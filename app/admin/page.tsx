@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Status = 'loading' | 'unauthenticated' | 'unauthorized' | 'admin'
 
@@ -72,38 +73,44 @@ export default function AdminPage() {
 
       {/* Action cards */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/admin/devotions"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            All Devotions
-          </h2>
-          <p className="text-sm text-muted mt-1">View, edit, or unpublish existing devotions.</p>
-        </Link>
+        <AnimatedCard delay={0}>
+          <Link
+            href="/admin/devotions"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              All Devotions
+            </h2>
+            <p className="text-sm text-muted mt-1">View, edit, or unpublish existing devotions.</p>
+          </Link>
+        </AnimatedCard>
 
-        <Link
-          href="/admin/updates"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Author</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            From the Author
-          </h2>
-          <p className="text-sm text-muted mt-1">Create and manage author updates.</p>
-        </Link>
+        <AnimatedCard delay={0.08}>
+          <Link
+            href="/admin/updates"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Author</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              From the Author
+            </h2>
+            <p className="text-sm text-muted mt-1">Create and manage author updates.</p>
+          </Link>
+        </AnimatedCard>
 
-        <Link
-          href="/admin/users"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            Users
-          </h2>
-          <p className="text-sm text-muted mt-1">View, search, and manage user accounts.</p>
-        </Link>
+        <AnimatedCard delay={0.16}>
+          <Link
+            href="/admin/users"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              Users
+            </h2>
+            <p className="text-sm text-muted mt-1">View, search, and manage user accounts.</p>
+          </Link>
+        </AnimatedCard>
       </div>
     </div>
   )
