@@ -28,14 +28,6 @@ function BrowseIcon() {
   )
 }
 
-function CalendarIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M3 10h18M8 2v4M16 2v4" />
-    </svg>
-  )
-}
 
 
 function SearchIcon() {
@@ -119,10 +111,10 @@ function GroupsIcon() {
 }
 
 const TABS = [
-  { href: '/today',   label: 'Today',   icon: <CalendarIcon /> },
-  { href: '/journal', label: 'Journal', icon: <JournalIcon /> },
-  { href: '/groups',  label: 'Groups',  icon: <GroupsIcon /> },
-  { href: '/search',  label: 'Search',  icon: <SearchIcon /> },
+  { href: '/dashboard', label: 'Home',    icon: <HomeIcon /> },
+  { href: '/journal',   label: 'Journal', icon: <JournalIcon /> },
+  { href: '/groups',    label: 'Groups',  icon: <GroupsIcon /> },
+  { href: '/search',    label: 'Search',  icon: <SearchIcon /> },
 ]
 
 export default function BottomNav() {
@@ -187,14 +179,6 @@ export default function BottomNav() {
             <div className="w-8 h-1 rounded-full bg-steel/20 mx-auto mt-3 mb-2" />
 
             <div className="px-4 py-2 space-y-1">
-              <Link
-                href="/dashboard"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
-              >
-                <span className="text-muted"><HomeIcon /></span>
-                Dashboard
-              </Link>
               <Link
                 href="/browse"
                 onClick={() => setShowMore(false)}

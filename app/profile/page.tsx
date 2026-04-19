@@ -260,6 +260,13 @@ export default function ProfilePage() {
     return (
       <div className="space-y-6">
         <div className="h-8 w-24 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm flex items-center justify-between animate-pulse">
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-16 rounded bg-steel/10" />
+            <div className="h-3 w-40 rounded bg-steel/10" />
+          </div>
+          <div className="h-4 w-4 rounded bg-steel/10" />
+        </div>
         <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm flex flex-col items-center gap-4 animate-pulse">
           <div className="h-3 w-12 rounded bg-steel/10 self-start" />
           <div className="h-20 w-20 rounded-full bg-steel/10" />
@@ -339,10 +346,23 @@ export default function ProfilePage() {
       )}
 
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Profile</h1>
+        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Profile</h1>
+
+        {/* Settings link */}
+        <AnimatedCard delay={0}>
+        <a href="/settings" className="flex items-center justify-between rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors">
+          <div>
+            <h2 className="text-sm font-semibold text-charcoal">Settings</h2>
+            <p className="text-xs text-muted mt-0.5">Notifications, app preferences, and more</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+        </AnimatedCard>
 
         {/* Avatar card */}
-        <AnimatedCard delay={0}>
+        <AnimatedCard delay={0.08}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm flex flex-col items-center gap-4">
           <p className="text-xs uppercase tracking-widest text-steel self-start">Photo</p>
 
@@ -561,7 +581,7 @@ export default function ProfilePage() {
         </AnimatedCard>
 
         {/* Account card */}
-        <AnimatedCard delay={0.32}>
+        <AnimatedCard delay={0.40}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Account</h2>
           <p className="text-sm text-muted mb-4">
