@@ -92,7 +92,19 @@ export default function EditUpdatePage() {
   }
 
   if (pageStatus === 'loading') {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-8">
+        <div className="h-7 w-36 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5 animate-pulse">
+          {[0, 1].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-3 w-24 rounded bg-steel/10" />
+              <div className={`w-full rounded-lg bg-steel/10 ${i === 1 ? 'h-32' : 'h-10'}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   if (pageStatus === 'unauthorized') {

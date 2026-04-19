@@ -18,7 +18,18 @@ export default function BookPage() {
   }, [router])
 
   if (!ready) {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return (
+      <div className="flex flex-col items-center py-8 w-full">
+        <div className="w-full rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-6 animate-pulse">
+          <div className="space-y-2 text-center">
+            <div className="h-3 w-32 rounded bg-steel/10 mx-auto" />
+            <div className="h-6 w-40 rounded bg-steel/10 mx-auto" />
+          </div>
+          <div className="w-full max-w-xs mx-auto h-48 rounded-xl bg-steel/10" />
+          <div className="h-12 w-full rounded-xl bg-steel/10" />
+        </div>
+      </div>
+    )
   }
 
   return (

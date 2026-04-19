@@ -108,7 +108,36 @@ export default function AdminUsersPage() {
   }
 
   if (status === 'loading') {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Checking access…</div>
+    return (
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <div className="h-3 w-32 rounded bg-white/20 animate-pulse" />
+          <div className="h-7 w-20 rounded bg-white/20 animate-pulse" />
+        </div>
+        <div className="flex gap-3">
+          <div className="h-9 flex-1 rounded-lg bg-white/20 animate-pulse" />
+          <div className="h-9 w-36 rounded-lg bg-white/20 animate-pulse" />
+        </div>
+        <div className="rounded-2xl border border-steel/20 bg-white shadow-sm overflow-hidden animate-pulse">
+          <div className="hidden sm:flex gap-4 px-5 py-3 border-b border-steel/10 bg-canvas">
+            {[1, 1, 0.5, 0.6, 0.3, 0.4, 0.2].map((flex, i) => (
+              <div key={i} className="h-3 rounded bg-steel/10" style={{ flex }} />
+            ))}
+          </div>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex gap-4 items-center px-5 py-3.5 border-b border-steel/10 last:border-0">
+              <div className="h-3 flex-1 rounded bg-steel/10" />
+              <div className="h-3 flex-1 rounded bg-steel/10" />
+              <div className="h-3 w-16 rounded bg-steel/10" />
+              <div className="h-3 w-20 rounded bg-steel/10" />
+              <div className="h-3 w-8 rounded bg-steel/10" />
+              <div className="h-5 w-12 rounded-full bg-steel/10" />
+              <div className="h-4 w-4 rounded bg-steel/10" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   if (status === 'unauthorized') {
@@ -252,7 +281,19 @@ export default function AdminUsersPage() {
       <AnimatedCard>
       <div className="rounded-2xl border border-steel/20 bg-white shadow-sm overflow-hidden">
         {fetching ? (
-          <div className="py-16 text-center text-muted text-sm">Loading users…</div>
+          <div className="animate-pulse">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex gap-4 items-center px-5 py-3.5 border-b border-steel/10 last:border-0">
+                <div className="h-3 flex-1 rounded bg-steel/10" />
+                <div className="h-3 flex-1 rounded bg-steel/10" />
+                <div className="h-3 w-16 rounded bg-steel/10" />
+                <div className="h-3 w-20 rounded bg-steel/10" />
+                <div className="h-3 w-8 rounded bg-steel/10" />
+                <div className="h-5 w-12 rounded-full bg-steel/10" />
+                <div className="h-4 w-4 rounded bg-steel/10" />
+              </div>
+            ))}
+          </div>
         ) : sorted.length === 0 ? (
           <div className="py-16 text-center text-muted text-sm">
             {users.length === 0 ? 'No users yet.' : 'No users match your search.'}

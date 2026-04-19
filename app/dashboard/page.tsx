@@ -372,7 +372,33 @@ export default function DashboardPage() {
   }, [])
 
   if (!ready) {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl min-h-[180px] bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3 animate-pulse">
+          <div className="h-3 w-24 rounded bg-steel/10" />
+          <div className="h-5 w-3/4 rounded bg-steel/10" />
+          <div className="h-3 w-2/5 rounded bg-steel/10" />
+          <div className="h-10 w-32 rounded-xl bg-steel/10" />
+        </div>
+        <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3 animate-pulse">
+          <div className="h-3 w-20 rounded bg-steel/10" />
+          <div className="flex gap-4 justify-center py-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div className="h-8 w-12 rounded bg-steel/10" />
+                <div className="h-2 w-10 rounded bg-steel/10" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3 animate-pulse">
+          <div className="h-3 w-28 rounded bg-steel/10" />
+          <div className="h-3 w-full rounded bg-steel/10" />
+          <div className="h-3 w-4/5 rounded bg-steel/10" />
+        </div>
+      </div>
+    )
   }
 
   const activeCardOrder = cardOrder.filter((id) => {

@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET } from '@/lib/getTodayET'
 import Avatar from '@/components/Avatar'
+import AnimatedCard from '@/components/AnimatedCard'
 
 const EMOJIS = ['🙏', '❤️', '👍', '🕊️', '✝️', '💙', '🔥']
 
@@ -335,7 +336,26 @@ export default function GroupChatPage() {
   }
 
   if (loading) {
-    return <div className="py-20 text-center text-white text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-2xl h-12 bg-white/20 animate-pulse" />
+        <div className="rounded-2xl min-h-[100px] bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden animate-pulse">
+          <div className="p-4 min-h-[300px] space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={`flex gap-2 ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
+                <div className="h-8 w-8 rounded-full bg-steel/10 shrink-0 self-end" />
+                <div className={`h-12 w-2/3 rounded-2xl bg-steel/10 ${i % 2 === 0 ? 'rounded-bl-sm' : 'rounded-br-sm'}`} />
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-steel/10 p-3 flex gap-2">
+            <div className="h-10 flex-1 rounded-lg bg-steel/10" />
+            <div className="h-10 w-16 rounded-lg bg-steel/10" />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -350,6 +370,7 @@ export default function GroupChatPage() {
 
       {/* Invite card — shown to the creator always */}
       {userId === group?.created_by && (
+        <AnimatedCard delay={0}>
         <div className="rounded-2xl border border-steel/30 bg-white p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-steel/10">
@@ -382,10 +403,12 @@ export default function GroupChatPage() {
             </button>
           </div>
         </div>
+        </AnimatedCard>
       )}
 
       {/* Today's devotion pin */}
       {devotion && (
+        <AnimatedCard delay={0.08}>
         <Link
           href={`/today?from=group&groupId=${id}`}
           className="relative rounded-2xl overflow-hidden shadow-sm block min-h-[100px]"
@@ -405,9 +428,11 @@ export default function GroupChatPage() {
             <p className="text-xs text-white/80 mt-0.5">{devotion.verse_reference}</p>
           </div>
         </Link>
+        </AnimatedCard>
       )}
 
       {/* Chat */}
+      <AnimatedCard delay={0.16}>
       <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
         <div ref={chatContainerRef} className="p-4 space-y-4 min-h-[300px] max-h-[50vh] overflow-y-auto">
           {messages.length === 0 ? (
@@ -541,6 +566,7 @@ export default function GroupChatPage() {
           </button>
         </form>
       </div>
+      </AnimatedCard>
 
       {/* Back to Groups — full width at the bottom */}
       <Link

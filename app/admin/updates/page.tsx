@@ -43,7 +43,31 @@ export default function AdminUpdatesPage() {
   }, [router])
 
   if (status === 'loading') {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Checking access…</div>
+    return (
+      <div className="space-y-8">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-3 w-40 rounded bg-white/20 animate-pulse" />
+            <div className="h-7 w-44 rounded bg-white/20 animate-pulse" />
+          </div>
+          <div className="h-9 w-24 rounded-lg bg-white/20 animate-pulse" />
+        </div>
+        <div className="rounded-2xl border border-steel/20 bg-white shadow-sm overflow-hidden animate-pulse">
+          <div className="px-5 py-3 border-b border-steel/10 bg-canvas flex gap-4">
+            <div className="h-3 flex-1 rounded bg-steel/10" />
+            <div className="h-3 w-[100px] rounded bg-steel/10" />
+            <div className="h-3 w-8 rounded bg-steel/10" />
+          </div>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-4 items-center px-5 py-3.5 border-b border-steel/10 last:border-0">
+              <div className="h-3 flex-1 rounded bg-steel/10" />
+              <div className="h-5 w-[80px] rounded-full bg-steel/10" />
+              <div className="h-3 w-8 rounded bg-steel/10" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   if (status === 'unauthorized') {

@@ -31,7 +31,15 @@ export default function AdminPage() {
 
   if (status === 'loading') {
     return (
-      <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Checking access…</div>
+      <div className="space-y-6">
+        <div className="h-8 w-24 rounded bg-white/20 animate-pulse" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-3 animate-pulse">
+            <div className="h-4 w-1/3 rounded bg-steel/10" />
+            <div className="h-3 w-2/3 rounded bg-steel/10" />
+          </div>
+        ))}
+      </div>
     )
   }
 

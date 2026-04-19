@@ -258,8 +258,26 @@ export default function ProfilePage() {
 
   if (profileLoading) {
     return (
-      <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">
-        Loading…
+      <div className="space-y-6">
+        <div className="h-8 w-24 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm flex flex-col items-center gap-4 animate-pulse">
+          <div className="h-3 w-12 rounded bg-steel/10 self-start" />
+          <div className="h-20 w-20 rounded-full bg-steel/10" />
+          <div className="h-3 w-32 rounded bg-steel/10" />
+        </div>
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5 animate-pulse">
+          <div className="h-3 w-24 rounded bg-steel/10" />
+          <div className="h-10 w-full rounded-lg bg-steel/10" />
+          <div className="h-20 w-full rounded-lg bg-steel/10" />
+          <div className="h-10 w-28 rounded-lg bg-steel/10" />
+        </div>
+        {[0, 1].map((i) => (
+          <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
+            <div className="h-3 w-28 rounded bg-steel/10" />
+            <div className="h-10 w-full rounded-lg bg-steel/10" />
+            <div className="h-10 w-28 rounded-lg bg-steel/10" />
+          </div>
+        ))}
       </div>
     )
   }

@@ -49,7 +49,26 @@ export default function GroupsPage() {
   }, [router])
 
   if (loading) {
-    return <div className="py-20 text-center text-white text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
+          <p className="text-sm text-white/80 text-shadow-hero mt-1 text-center">Read together. Reflect together. Stay connected.</p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 h-10 rounded-xl bg-white/20 animate-pulse" />
+          <div className="flex-1 h-10 rounded-xl bg-white/20 animate-pulse" />
+        </div>
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-2 animate-pulse">
+              <div className="h-4 w-2/5 rounded bg-steel/10" />
+              <div className="h-3 w-3/5 rounded bg-steel/10" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (

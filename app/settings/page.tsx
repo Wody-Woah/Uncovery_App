@@ -183,7 +183,23 @@ export default function SettingsPage() {
   }
 
   if (loading) {
-    return <div className="py-20 text-center text-white text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <div className="h-8 w-28 rounded bg-white/20 animate-pulse" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
+            <div className="h-3 w-24 rounded bg-steel/10" />
+            <div className="flex items-center justify-between">
+              <div className="space-y-1.5">
+                <div className="h-4 w-36 rounded bg-steel/10" />
+                <div className="h-3 w-48 rounded bg-steel/10" />
+              </div>
+              <div className="h-6 w-11 rounded-full bg-steel/10" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   const toggleClass = (on: boolean, disabled = false) =>

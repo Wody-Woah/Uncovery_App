@@ -102,7 +102,24 @@ export default function MembersPage() {
   }
 
   if (loading) {
-    return <div className="py-20 text-center text-white text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <div className="h-7 w-32 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden animate-pulse">
+          <div className="px-5 py-3 border-b border-steel/10">
+            <div className="h-3 w-20 rounded bg-steel/10" />
+          </div>
+          <div className="divide-y divide-steel/10">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+                <div className="h-8 w-8 rounded-full bg-steel/10 shrink-0" />
+                <div className="h-3 w-32 rounded bg-steel/10" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const myRole = members.find((m) => m.user_id === userId)?.role

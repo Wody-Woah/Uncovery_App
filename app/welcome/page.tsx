@@ -134,7 +134,17 @@ export default function WelcomePage() {
   }
 
   if (!ready) {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return (
+      <div className="space-y-5 py-4">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-3 animate-pulse">
+            <div className="h-4 w-1/2 rounded bg-steel/10" />
+            <div className="h-3 w-full rounded bg-steel/10" />
+            <div className="h-3 w-4/5 rounded bg-steel/10" />
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (

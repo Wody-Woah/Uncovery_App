@@ -166,7 +166,20 @@ function TodayPageInner() {
 
   if (loading) {
     return (
-      <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading today&apos;s devotion…</div>
+      <div className="space-y-8">
+        <div className="h-8 w-40 rounded-full bg-white/20 animate-pulse" />
+        <div className="rounded-2xl min-h-[180px] bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
+          <div className="h-4 w-1/3 rounded bg-steel/10" />
+          <div className="h-6 w-3/4 rounded bg-steel/10" />
+          <div className="space-y-2">
+            <div className="h-3 w-full rounded bg-steel/10" />
+            <div className="h-3 w-full rounded bg-steel/10" />
+            <div className="h-3 w-4/5 rounded bg-steel/10" />
+          </div>
+          <div className="h-10 w-36 rounded-xl bg-steel/10" />
+        </div>
+      </div>
     )
   }
 

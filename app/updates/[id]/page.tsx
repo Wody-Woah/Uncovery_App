@@ -51,7 +51,22 @@ export default function UpdateDetailPage() {
   }, [id, router])
 
   if (loading) {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <div className="h-4 w-24 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-6 animate-pulse">
+          <div className="space-y-2">
+            <div className="h-7 w-3/4 rounded bg-steel/10" />
+            <div className="h-3 w-28 rounded bg-steel/10" />
+          </div>
+          <div className="space-y-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className={`h-3 rounded bg-steel/10 ${i === 4 ? 'w-2/3' : 'w-full'}`} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (notFound || !update) {
