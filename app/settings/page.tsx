@@ -198,6 +198,18 @@ export default function SettingsPage() {
             </div>
           </div>
         ))}
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
+          <div className="h-3 w-12 rounded bg-steel/10" />
+          <div className="flex items-center justify-between py-1">
+            <div className="h-3.5 w-28 rounded bg-steel/10" />
+            <div className="h-3 w-3 rounded bg-steel/10" />
+          </div>
+          <div className="border-t border-steel/10" />
+          <div className="flex items-center justify-between py-1">
+            <div className="h-3.5 w-32 rounded bg-steel/10" />
+            <div className="h-3 w-3 rounded bg-steel/10" />
+          </div>
+        </div>
       </div>
     )
   }
