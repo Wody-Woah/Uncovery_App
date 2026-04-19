@@ -210,7 +210,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Settings</h1>
+      <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Settings</h1>
 
       {/* Dashboard Cards */}
       <AnimatedCard delay={0}>
@@ -359,6 +359,24 @@ export default function SettingsPage() {
             Open this page in Chrome on Android, or Safari on iPhone to install the app.
           </p>
         )}
+      </div>
+      </AnimatedCard>
+
+      {/* Legal */}
+      <AnimatedCard delay={0.24}>
+      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
+        <h2 className="text-xs uppercase tracking-widest text-steel mb-4">Legal</h2>
+        <div className="space-y-1">
+          <Link href="/privacy" className="flex items-center justify-between py-2 text-sm text-charcoal hover:text-steel transition-colors">
+            Privacy Policy
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40"><polyline points="9 18 15 12 9 6" /></svg>
+          </Link>
+          <div className="border-t border-steel/10" />
+          <Link href="/terms" className="flex items-center justify-between py-2 text-sm text-charcoal hover:text-steel transition-colors">
+            Terms of Service
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40"><polyline points="9 18 15 12 9 6" /></svg>
+          </Link>
+        </div>
       </div>
       </AnimatedCard>
     </div>

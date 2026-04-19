@@ -25,6 +25,12 @@ export default function JournalPage() {
   const [ready, setReady] = useState(false)
   const [notes, setNotes] = useState<JournalNote[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // New entry form state
+  const [showNewForm, setShowNewForm] = useState(false)
+  const [newNoteText, setNewNoteText] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -32,6 +38,8 @@ export default function JournalPage() {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+
+      setUserId(user.id)
 
       const { data } = await supabase
         .from('devotion_notes')
@@ -46,6 +54,34 @@ export default function JournalPage() {
     init()
   }, [router])
 
+  async function handleNewSave() {
+    if (!newNoteText.trim() || !userId) return
+    setSaving(true)
+
+    const now = new Date()
+    const month = now.getMonth() + 1
+    const day = now.getDate()
+
+    const { data, error } = await supabase
+      .from('devotion_notes')
+      .insert({ user_id: userId, month, day, note: newNoteText.trim(), selected_text: null })
+      .select('id, month, day, note, selected_text, created_at')
+      .single()
+
+    if (!error && data) {
+      setNotes((prev) => [data, ...prev])
+    }
+
+    setNewNoteText('')
+    setShowNewForm(false)
+    setSaving(false)
+  }
+
+  function handleNewCancel() {
+    setNewNoteText('')
+    setShowNewForm(false)
+  }
+
   async function handleDelete(id: string) {
     if (!window.confirm('Delete this note?')) return
     setDeletingId(id)
@@ -57,7 +93,10 @@ export default function JournalPage() {
   if (!ready) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Journal</h1>
+        <div className="relative flex items-center justify-center">
+          <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+          <div className="absolute right-0 h-8 w-24 rounded-lg bg-steel/10 animate-pulse" />
+        </div>
         <ul className="space-y-3">
           {[0, 1, 2].map((i) => (
             <li
@@ -86,9 +125,55 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Journal</h1>
+      {/* Header row */}
+      <div className="relative flex items-center justify-center">
+        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+        {!showNewForm && (
+          <button
+            onClick={() => setShowNewForm(true)}
+            className="absolute right-0 flex items-center gap-1.5 rounded-lg bg-steel px-3 py-1.5 text-xs font-medium text-white hover:bg-steel/90 transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            New Entry
+          </button>
+        )}
+      </div>
 
-      {notes.length === 0 ? (
+      {/* Inline new entry form */}
+      {showNewForm && (
+        <AnimatedCard>
+          <div className="rounded-2xl border border-steel/20 bg-white p-5 shadow-sm space-y-3">
+            <p className="text-xs uppercase tracking-widest text-steel">New Journal Entry</p>
+            <textarea
+              autoFocus
+              value={newNoteText}
+              onChange={(e) => setNewNoteText(e.target.value)}
+              placeholder="Write your reflection…"
+              rows={5}
+              className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-sm text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30 resize-none"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleNewSave}
+                disabled={saving || !newNoteText.trim()}
+                className="flex-1 rounded-lg bg-steel px-4 py-2 text-sm font-medium text-white hover:bg-steel/90 transition-colors disabled:opacity-60"
+              >
+                {saving ? 'Saving…' : 'Save Entry'}
+              </button>
+              <button
+                onClick={handleNewCancel}
+                className="rounded-lg border border-steel/20 bg-white px-4 py-2 text-sm font-medium text-charcoal hover:bg-canvas transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </AnimatedCard>
+      )}
+
+      {notes.length === 0 && !showNewForm ? (
         <AnimatedCard>
           <div className="rounded-2xl border border-steel/20 bg-white px-8 py-12 text-center shadow-sm space-y-4">
             <h2 className="text-xl font-semibold text-charcoal">Welcome to Your Journal</h2>
@@ -96,7 +181,7 @@ export default function JournalPage() {
               This is your private space — a place to capture what stirs in you as you read. Your thoughts, prayers, and reflections belong only to you and are never visible to anyone else.
             </p>
             <p className="text-sm text-muted leading-relaxed">
-              To write your first entry, open any devotion and tap <span className="font-medium text-steel">+ Add a Private Journal Entry</span> at the bottom of the page.
+              Tap <span className="font-medium text-steel">New Entry</span> above to write, or open any devotion and tap <span className="font-medium text-steel">+ Add a Private Journal Entry</span> at the bottom of the page.
             </p>
           </div>
         </AnimatedCard>
