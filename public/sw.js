@@ -4,7 +4,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title ?? 'Uncovery Devotional', {
       body: data.body ?? "Today's devotion is ready. Take a moment to read and reflect.",
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      badge: '/badge-72.png',
       data: { url: '/' },
     })
   )
