@@ -12,6 +12,7 @@ type Member = {
   role: string
   display_name: string
   avatar_url: string | null
+  bio: string | null
 }
 
 type Group = {
@@ -56,18 +57,19 @@ export default function MembersPage() {
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_url')
+        .select('id, display_name, avatar_url, bio')
         .in('id', memberIds)
 
-      const profileMap: Record<string, { display_name: string; avatar_url: string | null }> = {}
-      profilesData?.forEach((p: { id: string; display_name: string; avatar_url: string | null }) => {
-        profileMap[p.id] = { display_name: p.display_name ?? 'Unknown', avatar_url: p.avatar_url ?? null }
+      const profileMap: Record<string, { display_name: string; avatar_url: string | null; bio: string | null }> = {}
+      profilesData?.forEach((p: { id: string; display_name: string; avatar_url: string | null; bio: string | null }) => {
+        profileMap[p.id] = { display_name: p.display_name ?? 'Unknown', avatar_url: p.avatar_url ?? null, bio: p.bio ?? null }
       })
 
       const mapped: Member[] = (membersRes.data ?? []).map((m: { user_id: string; role: string }) => ({
         ...m,
         display_name: profileMap[m.user_id]?.display_name ?? 'Unknown',
         avatar_url: profileMap[m.user_id]?.avatar_url ?? null,
+        bio: profileMap[m.user_id]?.bio ?? null,
       }))
 
       // Sort: admins first
@@ -113,7 +115,10 @@ export default function MembersPage() {
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex items-center gap-3 px-5 py-3.5">
                 <div className="h-8 w-8 rounded-full bg-steel/10 shrink-0" />
-                <div className="h-3 w-32 rounded bg-steel/10" />
+                <div className="space-y-1.5">
+                  <div className="h-3 w-28 rounded bg-steel/10" />
+                  <div className="h-2.5 w-40 rounded bg-steel/10" />
+                </div>
               </div>
             ))}
           </div>
@@ -181,18 +186,23 @@ export default function MembersPage() {
           </div>
           <div className="divide-y divide-steel/10">
             {members.map((m) => (
-              <div key={m.user_id} className="flex items-center justify-between px-5 py-3.5">
-                <div className="flex items-center gap-3">
+              <div key={m.user_id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                <div className="flex items-center gap-3 min-w-0">
                   <Avatar avatarUrl={m.avatar_url} displayName={m.display_name} size="sm" />
-                  <p className="text-sm text-charcoal">
-                    {m.display_name}
-                    {m.user_id === userId && (
-                      <span className="text-muted"> (you)</span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-charcoal">
+                      {m.display_name}
+                      {m.user_id === userId && (
+                        <span className="text-muted"> (you)</span>
+                      )}
+                    </p>
+                    {m.bio && (
+                      <p className="text-xs text-muted mt-0.5 truncate">{m.bio}</p>
                     )}
-                  </p>
+                  </div>
                 </div>
                 {m.role === 'admin' && (
-                  <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5">
+                  <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5 shrink-0">
                     Admin
                   </span>
                 )}

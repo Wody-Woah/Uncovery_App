@@ -26,6 +26,8 @@ export default function ProfilePage() {
 
   // Profile fields
   const [userId, setUserId] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(null)
+  const [memberSince, setMemberSince] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -62,6 +64,8 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
+      setEmail(user.email ?? null)
+      setMemberSince(user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null)
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -275,6 +279,7 @@ export default function ProfilePage() {
         <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5 animate-pulse">
           <div className="h-3 w-24 rounded bg-steel/10" />
           <div className="h-10 w-full rounded-lg bg-steel/10" />
+          <div className="h-10 w-full rounded-lg bg-steel/10" />
           <div className="h-20 w-full rounded-lg bg-steel/10" />
           <div className="h-10 w-28 rounded-lg bg-steel/10" />
         </div>
@@ -432,6 +437,17 @@ export default function ProfilePage() {
             )}
 
             <div>
+              <label className={labelClass}>Email Address</label>
+              <input
+                type="email"
+                value={email ?? ''}
+                readOnly
+                className={`${inputClass} cursor-default select-all text-muted`}
+              />
+              <p className="text-xs text-muted mt-1.5">To change your email, please contact support.</p>
+            </div>
+
+            <div>
               <label className={labelClass}>Display Name</label>
               <input
                 type="text"
@@ -462,6 +478,12 @@ export default function ProfilePage() {
               {profileSaving ? 'Saving…' : 'Save Profile'}
             </button>
           </form>
+
+          {memberSince && (
+            <p className="text-xs text-muted mt-5 pt-5 border-t border-steel/10">
+              Member since {memberSince}
+            </p>
+          )}
         </div>
         </AnimatedCard>
 

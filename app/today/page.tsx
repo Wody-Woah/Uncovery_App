@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
 import AnimatedCard from '@/components/AnimatedCard'
+import DevotionCalendar from '@/components/DevotionCalendar'
 
 type Devotion = {
   id: string
@@ -26,15 +27,6 @@ type MonthTheme = {
   theme_title: string
   theme_scripture_reference: string
   theme_scripture_text: string | null
-}
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-
-function daysInMonth(m: number) {
-  return new Date(2024, m, 0).getDate()
 }
 
 function TodayPageInner() {
@@ -216,66 +208,30 @@ function TodayPageInner() {
           onClick={() => setShowDatePicker(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden space-y-5 p-6"
+            className="w-full max-w-sm rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden p-6 space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <div>
-              <p className="text-xs uppercase tracking-widest text-steel mb-0.5">Read a Different Day</p>
-              <p className="text-sm text-muted">Select a month and day to navigate to that devotion.</p>
-            </div>
-
-            <div className="space-y-4">
-              {/* Month */}
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-steel mb-2">Month</label>
-                <select
-                  value={pickerMonth}
-                  onChange={(e) => {
-                    const m = Number(e.target.value)
-                    setPickerMonth(m)
-                    const max = daysInMonth(m)
-                    if (pickerDay > max) setPickerDay(max)
-                  }}
-                  className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-base text-charcoal focus:outline-none focus:ring-2 focus:ring-steel/30"
-                >
-                  {MONTHS.map((name, i) => (
-                    <option key={i + 1} value={i + 1}>{name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Day */}
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-steel mb-2">Day</label>
-                <select
-                  value={pickerDay}
-                  onChange={(e) => setPickerDay(Number(e.target.value))}
-                  className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-base text-charcoal focus:outline-none focus:ring-2 focus:ring-steel/30"
-                >
-                  {Array.from({ length: daysInMonth(pickerMonth) }, (_, i) => i + 1).map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-widest text-steel">Read a Different Day</p>
               <button
                 onClick={() => setShowDatePicker(false)}
-                className="flex-1 rounded-xl border border-steel/20 px-4 py-2.5 text-sm font-medium text-charcoal hover:bg-canvas transition-colors"
+                className="text-muted hover:text-charcoal transition-colors"
+                aria-label="Close"
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowDatePicker(false)
-                  router.push(`/devotion/${pickerMonth}/${pickerDay}`)
-                }}
-                className="flex-1 rounded-xl bg-steel px-4 py-2.5 text-sm font-medium text-white hover:bg-steel/90 transition-colors"
-              >
-                Read Devotion
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
+
+            <DevotionCalendar
+              initialMonth={pickerMonth}
+              initialDay={pickerDay}
+              onSelect={(m, d) => {
+                setShowDatePicker(false)
+                router.push(`/devotion/${m}/${d}`)
+              }}
+            />
           </div>
         </div>
       )}
