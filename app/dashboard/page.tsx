@@ -419,7 +419,7 @@ export default function DashboardPage() {
           <SortableCard key="clean-date" id="clean-date" index={index} dark showHint={isFirst && showDragHint}>
             <div className="relative rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8)] min-h-[180px]" style={{ willChange: 'transform' }}>
               <Image src={imageUrl} alt="" fill className="object-cover" priority />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/75" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/55" />
               <div
                 className="relative z-10 p-5 space-y-3 text-center"
                 onTouchStart={(e) => { swipeStartX.current = e.touches[0].clientX }}
@@ -526,7 +526,7 @@ export default function DashboardPage() {
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/75" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/15 to-black/55" />
               <div className="relative z-10 p-5 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="text-xs uppercase tracking-widest text-white/70">Today</h2>
@@ -682,7 +682,7 @@ export default function DashboardPage() {
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/35 to-black/10" />
         <div className="relative z-10 p-5 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-white/80 mb-1">{dateLabel}</p>
