@@ -144,12 +144,12 @@ export default function Header() {
         </div>
       )}
 
-      <header className="border-b border-steel/20 bg-canvas fixed top-0 inset-x-0 z-40">
+      <header className="fixed top-0 inset-x-0 z-40 bg-canvas border-b border-steel/20">
         <div className="mx-auto max-w-reading px-4 py-4 flex items-center justify-between">
           {/* Brand */}
           <Link
             href="/dashboard"
-            className="text-steel font-semibold tracking-widest text-xs uppercase"
+            className="font-semibold tracking-widest text-xs uppercase text-steel"
           >
             The Uncovery Devotional
           </Link>
@@ -157,6 +157,7 @@ export default function Header() {
           {/* Nav — hidden on mobile (BottomNav handles mobile navigation) */}
           <nav className="hidden md:flex items-center gap-6">
             {user && navLink('/today', 'Today')}
+            {user && navLink('/journal', 'Journal')}
             {user && navLink('/groups', 'Groups')}
             {user && navLink('/search', 'Search')}
             {isAdmin && navLink('/admin', 'Admin')}
@@ -172,63 +173,18 @@ export default function Header() {
 
                 {showUserMenu && (
                   <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-steel/20 bg-white shadow-lg py-1 z-20">
-                    <Link
-                      href="/profile"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
-                    >
-                      Profile
-                    </Link>
-                    <Link
-                      href="/settings"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
-                    >
-                      Settings
-                    </Link>
-                    <Link
-                      href="/bookmarks"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
-                    >
-                      Bookmarks
-                    </Link>
-                    <Link
-                      href="/journal"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
-                    >
-                      Journal
-                    </Link>
-                    <Link
-                      href="/book"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
-                    >
-                      Book
-                    </Link>
+                    <Link href="/dashboard" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors">Dashboard</Link>
+                    <Link href="/browse" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors">Browse Devotions</Link>
+                    <Link href="/bookmarks" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors">Bookmarks</Link>
+                    <Link href="/book" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors">Book</Link>
                     <div className="border-t border-steel/10 my-1" />
-                    <Link
-                      href="/privacy"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-muted hover:bg-canvas transition-colors"
-                    >
-                      Privacy Policy
-                    </Link>
-                    <Link
-                      href="/terms"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-muted hover:bg-canvas transition-colors"
-                    >
-                      Terms of Service
-                    </Link>
+                    <Link href="/profile" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors">Profile</Link>
+                    <Link href="/settings" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors">Settings</Link>
                     <div className="border-t border-steel/10 my-1" />
-                    <button
-                      onClick={() => { setShowUserMenu(false); setShowSignOutModal(true) }}
-                      className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors"
-                    >
-                      Sign out
-                    </button>
+                    <Link href="/privacy" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-muted hover:bg-canvas transition-colors">Privacy Policy</Link>
+                    <Link href="/terms" onClick={() => setShowUserMenu(false)} className="flex w-full items-center px-4 py-2.5 text-sm text-muted hover:bg-canvas transition-colors">Terms of Service</Link>
+                    <div className="border-t border-steel/10 my-1" />
+                    <button onClick={() => { setShowUserMenu(false); setShowSignOutModal(true) }} className="flex w-full items-center px-4 py-2.5 text-sm text-charcoal hover:bg-canvas transition-colors">Sign out</button>
                   </div>
                 )}
               </div>

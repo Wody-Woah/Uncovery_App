@@ -239,9 +239,7 @@ export default function BottomNav() {
               href={href}
               className="flex flex-1 flex-col items-center gap-0.5 py-2"
             >
-              <span className={isActive(href) ? 'text-steel' : 'text-muted'}>
-                {icon}
-              </span>
+              <span className={isActive(href) ? 'text-steel' : 'text-muted'}>{icon}</span>
               <span className={`text-[10px] ${isActive(href) ? 'text-steel font-medium' : 'text-muted'}`}>
                 {label}
               </span>
@@ -253,12 +251,8 @@ export default function BottomNav() {
             onClick={() => setShowMore((v) => !v)}
             className="flex flex-1 flex-col items-center gap-0.5 py-2"
           >
-            <span className={showMore ? 'text-steel' : 'text-muted'}>
-              <DotsIcon />
-            </span>
-            <span className={`text-[10px] ${showMore ? 'text-steel font-medium' : 'text-muted'}`}>
-              More
-            </span>
+            <span className={showMore ? 'text-steel' : 'text-muted'}><DotsIcon /></span>
+            <span className={`text-[10px] ${showMore ? 'text-steel font-medium' : 'text-muted'}`}>More</span>
           </button>
         </div>
       </nav>

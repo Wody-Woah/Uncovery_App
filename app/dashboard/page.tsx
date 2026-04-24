@@ -369,28 +369,28 @@ export default function DashboardPage() {
   if (!ready) {
     return (
       <div className="space-y-4">
-        <div className="rounded-2xl min-h-[180px] bg-white/20 animate-pulse" />
-        <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3 animate-pulse">
-          <div className="h-3 w-24 rounded bg-steel/10" />
-          <div className="h-5 w-3/4 rounded bg-steel/10" />
-          <div className="h-3 w-2/5 rounded bg-steel/10" />
-          <div className="h-10 w-32 rounded-xl bg-steel/10" />
+        <div className="rounded-2xl min-h-[180px] bg-white/10 animate-pulse" />
+        <div className="rounded-2xl border border-white/10 bg-white/8 p-5 space-y-3 animate-pulse">
+          <div className="h-3 w-24 rounded bg-white/10" />
+          <div className="h-5 w-3/4 rounded bg-white/10" />
+          <div className="h-3 w-2/5 rounded bg-white/10" />
+          <div className="h-10 w-32 rounded-xl bg-white/10" />
         </div>
-        <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3 animate-pulse">
-          <div className="h-3 w-20 rounded bg-steel/10" />
+        <div className="rounded-2xl border border-white/10 bg-white/8 p-5 space-y-3 animate-pulse">
+          <div className="h-3 w-20 rounded bg-white/10" />
           <div className="flex gap-4 justify-center py-2">
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex flex-col items-center gap-1">
-                <div className="h-8 w-12 rounded bg-steel/10" />
-                <div className="h-2 w-10 rounded bg-steel/10" />
+                <div className="h-8 w-12 rounded bg-white/10" />
+                <div className="h-2 w-10 rounded bg-white/10" />
               </div>
             ))}
           </div>
         </div>
-        <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-3 animate-pulse">
-          <div className="h-3 w-28 rounded bg-steel/10" />
-          <div className="h-3 w-full rounded bg-steel/10" />
-          <div className="h-3 w-4/5 rounded bg-steel/10" />
+        <div className="rounded-2xl border border-white/10 bg-white/8 p-5 space-y-3 animate-pulse">
+          <div className="h-3 w-28 rounded bg-white/10" />
+          <div className="h-3 w-full rounded bg-white/10" />
+          <div className="h-3 w-4/5 rounded bg-white/10" />
         </div>
       </div>
     )
@@ -417,7 +417,7 @@ export default function DashboardPage() {
         const sinceLabel = cleanDateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         return (
           <SortableCard key="clean-date" id="clean-date" index={index} dark showHint={isFirst && showDragHint}>
-            <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
+            <div className="relative rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8)] min-h-[180px]" style={{ willChange: 'transform' }}>
               <Image src={imageUrl} alt="" fill className="object-cover" priority />
               <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/75" />
               <div
@@ -481,7 +481,7 @@ export default function DashboardPage() {
       case 'journey':
         return (
           <SortableCard key="journey" id="journey" index={index} dark showHint={isFirst && showDragHint}>
-            <div className="rounded-2xl p-5 shadow-sm space-y-4 bg-gradient-to-br from-[#1e3a52] to-steel">
+            <div className="rounded-2xl p-5 ring-1 ring-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8)] space-y-4 bg-gradient-to-br from-[#1e3a52] to-steel">
               <h2 className="text-xs uppercase tracking-widest text-white/70 pr-6">Your Journey</h2>
               <div className="grid grid-cols-3 gap-3">
                 {[
@@ -491,7 +491,7 @@ export default function DashboardPage() {
                 ].map(({ label, value }) => (
                   <div
                     key={label}
-                    className="rounded-xl bg-white/10 border border-white/15 p-3 text-center"
+                    className="rounded-xl bg-white/15 border border-white/20 p-3 text-center"
                   >
                     <p className="text-xl font-semibold text-white tabular-nums">{value}</p>
                     <p className="text-[11px] text-white/60 mt-0.5 leading-tight">{label}</p>
@@ -518,7 +518,7 @@ export default function DashboardPage() {
       case 'today':
         return (
           <SortableCard key="today" id="today" index={index} dark showHint={isFirst && showDragHint}>
-            <div className="relative rounded-2xl overflow-hidden shadow-sm min-h-[180px]" style={{ willChange: 'transform' }}>
+            <div className="relative rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8)] min-h-[180px]" style={{ willChange: 'transform' }}>
               <Image
                 src={supabase.storage.from('themes').getPublicUrl(`month-${String(month).padStart(2, '0')}.jpg`).data.publicUrl}
                 alt=""
@@ -562,30 +562,30 @@ export default function DashboardPage() {
 
       case 'author':
         return (
-          <SortableCard key="author" id="author" index={index} showHint={isFirst && showDragHint}>
-            <div className="rounded-2xl border border-steel/15 bg-canvas p-5 shadow-sm space-y-4">
+          <SortableCard key="author" id="author" index={index} dark showHint={isFirst && showDragHint}>
+            <div className="rounded-2xl border border-white/25 ring-1 ring-white/10 bg-white/8 backdrop-blur-sm p-5 space-y-4">
               <div className="pr-6">
-                <h2 className="text-xs uppercase tracking-widest text-steel">From the Author</h2>
-                <p className="text-xs text-muted mt-0.5">New reflections and recent messages.</p>
+                <h2 className="text-xs uppercase tracking-widest text-white/75">From the Author</h2>
+                <p className="text-xs text-white/60 mt-0.5">New reflections and recent messages.</p>
               </div>
               {updates.length === 0 ? (
-                <p className="text-sm text-muted">No messages yet.</p>
+                <p className="text-sm text-white/65">No messages yet.</p>
               ) : (
                 <ul className="space-y-4">
                   {updates.map((u) => (
-                    <li key={u.id} className="border-t border-steel/10 pt-4 first:border-0 first:pt-0">
-                      <p className="text-base font-semibold text-charcoal">{u.title}</p>
-                      <p className="text-xs text-muted mt-0.5">
+                    <li key={u.id} className="border-t border-white/10 pt-4 first:border-0 first:pt-0">
+                      <p className="text-base font-semibold text-white">{u.title}</p>
+                      <p className="text-xs text-white/60 mt-0.5">
                         {new Date(u.published_at ?? u.created_at).toLocaleDateString('en-US', {
                           month: 'short', day: 'numeric', year: 'numeric',
                         })}
                       </p>
-                      <p className="text-sm text-charcoal/70 mt-1 leading-relaxed">
+                      <p className="text-sm text-white/65 mt-1 leading-relaxed">
                         {updatePreview(u.body)}
                       </p>
                       <Link
                         href={`/updates/${u.id}`}
-                        className="inline-block mt-2 text-xs font-medium text-steel hover:underline"
+                        className="inline-block mt-2 text-xs font-medium text-white/70 hover:text-white transition-colors"
                       >
                         Read more →
                       </Link>
@@ -604,6 +604,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 pb-8">
+      {/* Dark navy background — covers the shared login-hero.jpg on this page only */}
+      <div className="fixed inset-0 -z-[5] bg-[#162845]" />
 
       {/* Groups announcement modal */}
       {showGroupsAnnouncement && (
@@ -645,22 +647,22 @@ export default function DashboardPage() {
 
       {/* Profile nudge — shown when user has no avatar */}
       {!avatarUrl && (
-        <div className="rounded-2xl border border-steel/30 bg-white p-5 shadow-sm space-y-4">
+        <div className="rounded-2xl border border-white/15 bg-white/8 backdrop-blur-sm p-5 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-steel/10">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-steel">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-white/70">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-charcoal">Personalize your profile</p>
-              <p className="text-xs text-muted mt-0.5">Add a photo and display name so your group members can recognize you.</p>
+              <p className="text-sm font-semibold text-white">Personalize your profile</p>
+              <p className="text-xs text-white/60 mt-0.5">Add a photo and display name so your group members can recognize you.</p>
             </div>
           </div>
           <Link
             href="/profile"
-            className="block w-full rounded-xl bg-steel px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-steel/90 transition-colors"
+            className="block w-full rounded-xl bg-white/20 border border-white/25 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-white/30 transition-colors backdrop-blur-sm"
           >
             Set Up Profile
           </Link>
@@ -669,7 +671,7 @@ export default function DashboardPage() {
 
       {/* Welcome card — pinned, not sortable */}
       <div
-        className="relative rounded-2xl overflow-hidden shadow-sm min-h-[100px]"
+        className="relative rounded-2xl overflow-hidden ring-1 ring-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8)] min-h-[100px]"
         style={{ willChange: 'transform' }}
       >
         <Image
@@ -701,7 +703,7 @@ export default function DashboardPage() {
       >
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
             </svg>
           </div>
@@ -709,8 +711,8 @@ export default function DashboardPage() {
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search devotions…"
-            className="w-full rounded-xl border border-steel/20 bg-white py-3 pl-10 pr-4 text-sm text-charcoal placeholder:text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-steel/30"
+            placeholder="Search devotions by keyword…"
+            className="w-full rounded-xl border border-white/30 bg-white/10 backdrop-blur-sm py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/30"
           />
         </div>
       </form>
