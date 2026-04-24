@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import AnimatedCard from '@/components/AnimatedCard'
@@ -24,10 +24,11 @@ function snippet(text: string, max = 120): string {
   return clean.length > max ? clean.slice(0, max).trimEnd() + '…' : clean
 }
 
-export default function SearchPage() {
+function SearchPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [ready, setReady] = useState(false)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [results, setResults] = useState<Result[]>([])
   const [searching, setSearching] = useState(false)
 
@@ -91,10 +92,8 @@ export default function SearchPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Search</h1>
+      <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Search</h1>
 
-      {/* Search input */}
       <input
         type="search"
         value={query}
@@ -104,7 +103,6 @@ export default function SearchPage() {
         className="w-full rounded-xl border border-steel/20 bg-white px-4 py-3 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30 shadow-sm"
       />
 
-      {/* States */}
       {query.length < 2 ? (
         <AnimatedCard>
           <div className="rounded-2xl border border-steel/15 bg-white p-8 shadow-sm space-y-5">
@@ -186,5 +184,13 @@ export default function SearchPage() {
         </ul>
       )}
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchPageInner />
+    </Suspense>
   )
 }

@@ -13,8 +13,8 @@ function daysInMonth(month: number) {
   return new Date(2024, month, 0).getDate() // 2024 = leap year, gives Feb 29
 }
 
-function firstWeekday(month: number) {
-  return new Date(new Date().getFullYear(), month - 1, 1).getDay()
+function firstWeekday(month: number, year: number) {
+  return new Date(year, month - 1, 1).getDay()
 }
 
 type Props = {
@@ -24,7 +24,9 @@ type Props = {
 }
 
 export default function DevotionCalendar({ initialMonth, initialDay, onSelect }: Props) {
+  const currentYear = new Date().getFullYear()
   const [viewMonth, setViewMonth] = useState(initialMonth)
+  const [viewYear, setViewYear] = useState(currentYear)
   const [selectedMonth, setSelectedMonth] = useState(initialMonth)
   const [selectedDay, setSelectedDay] = useState(initialDay)
   const touchStartX = useRef<number | null>(null)
@@ -32,12 +34,19 @@ export default function DevotionCalendar({ initialMonth, initialDay, onSelect }:
   const today = new Date()
   const todayMonth = today.getMonth() + 1
   const todayDay = today.getDate()
+  const todayYear = today.getFullYear()
 
   const totalDays = daysInMonth(viewMonth)
-  const startOffset = firstWeekday(viewMonth)
+  const startOffset = firstWeekday(viewMonth, viewYear)
 
-  function prevMonth() { setViewMonth(v => v === 1 ? 12 : v - 1) }
-  function nextMonth() { setViewMonth(v => v === 12 ? 1 : v + 1) }
+  function prevMonth() {
+    if (viewMonth === 1) { setViewMonth(12); setViewYear(y => y - 1) }
+    else setViewMonth(v => v - 1)
+  }
+  function nextMonth() {
+    if (viewMonth === 12) { setViewMonth(1); setViewYear(y => y + 1) }
+    else setViewMonth(v => v + 1)
+  }
 
   function handleDayClick(day: number) {
     setSelectedMonth(viewMonth)
@@ -81,7 +90,7 @@ export default function DevotionCalendar({ initialMonth, initialDay, onSelect }:
           </svg>
         </button>
 
-        <span className="text-sm font-semibold text-charcoal">{MONTH_NAMES[viewMonth - 1]}</span>
+        <span className="text-sm font-semibold text-charcoal">{MONTH_NAMES[viewMonth - 1]} {viewYear}</span>
 
         <button
           onClick={nextMonth}
@@ -109,7 +118,7 @@ export default function DevotionCalendar({ initialMonth, initialDay, onSelect }:
           if (!day) return <div key={i} />
 
           const isSelected = day === selectedDay && viewMonth === selectedMonth
-          const isToday = day === todayDay && viewMonth === todayMonth
+          const isToday = day === todayDay && viewMonth === todayMonth && viewYear === todayYear
 
           return (
             <button

@@ -602,8 +602,24 @@ export default function ProfilePage() {
         </div>
         </AnimatedCard>
 
-        {/* Account card */}
+        {/* Get the Book */}
         <AnimatedCard delay={0.40}>
+        <a
+          href="/book"
+          className="flex items-center justify-between rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors"
+        >
+          <div>
+            <h2 className="text-sm font-semibold text-charcoal">Get the Book</h2>
+            <p className="text-xs text-muted mt-0.5">Purchase The Uncovery Devotional on Amazon</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+        </AnimatedCard>
+
+        {/* Account card */}
+        <AnimatedCard delay={0.48}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Account</h2>
           <p className="text-sm text-muted mb-4">

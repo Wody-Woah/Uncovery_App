@@ -20,6 +20,15 @@ function HomeIcon() {
   )
 }
 
+function CalendarIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M3 10h18M8 2v4M16 2v4" />
+    </svg>
+  )
+}
+
 function BrowseIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -30,14 +39,6 @@ function BrowseIcon() {
 
 
 
-function SearchIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </svg>
-  )
-}
 
 function DotsIcon() {
   return (
@@ -112,9 +113,9 @@ function GroupsIcon() {
 
 const TABS = [
   { href: '/dashboard', label: 'Home',    icon: <HomeIcon /> },
-  { href: '/journal',   label: 'Journal', icon: <JournalIcon /> },
+  { href: '/today',     label: 'Today',   icon: <CalendarIcon /> },
   { href: '/groups',    label: 'Groups',  icon: <GroupsIcon /> },
-  { href: '/search',    label: 'Search',  icon: <SearchIcon /> },
+  { href: '/journal',   label: 'Journal', icon: <JournalIcon /> },
 ]
 
 export default function BottomNav() {

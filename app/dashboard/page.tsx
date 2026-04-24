@@ -137,14 +137,7 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-const QUICK_ACTIONS = [
-  { label: 'Today',     href: '/today' },
-  { label: 'Browse',    href: '/browse' },
-  { label: 'Bookmarks', href: '/bookmarks' },
-  { label: 'Journal',   href: '/journal' },
-]
-
-const DEFAULT_ORDER = ['journey', 'clean-date', 'today', 'author', 'quick-actions']
+const DEFAULT_ORDER = ['journey', 'clean-date', 'today', 'author']
 const STORAGE_KEY = 'dashboard_card_order'
 const DRAG_HINT_KEY = 'dashboard_drag_hint_seen'
 
@@ -229,6 +222,8 @@ export default function DashboardPage() {
   const [showJourneyCard, setShowJourneyCard] = useState(true)
   const [cleanDateView, setCleanDateView] = useState<'days' | 'breakdown'>('days')
   const swipeStartX = useRef<number | null>(null)
+
+  const [searchQuery, setSearchQuery] = useState('')
 
   const [showDragHint, setShowDragHint] = useState(() =>
     typeof window !== 'undefined' ? !localStorage.getItem(DRAG_HINT_KEY) : false
@@ -602,28 +597,6 @@ export default function DashboardPage() {
           </SortableCard>
         )
 
-      case 'quick-actions':
-        return (
-          <SortableCard key="quick-actions" id="quick-actions" index={index} showHint={isFirst && showDragHint}>
-            <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
-              <div className="px-4 pt-3 pb-3 pr-12">
-                <h2 className="text-xs uppercase tracking-widest text-steel">Quick Actions</h2>
-              </div>
-              <div className="px-3 pb-3 grid grid-cols-4 gap-2">
-                {QUICK_ACTIONS.map(({ label, href }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="rounded-xl border border-steel/15 bg-canvas px-2 py-3 text-center text-xs font-medium text-charcoal hover:bg-canvas/80 transition-colors"
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </SortableCard>
-        )
-
       default:
         return null
     }
@@ -718,6 +691,29 @@ export default function DashboardPage() {
           <Avatar avatarUrl={avatarUrl} displayName={displayName} size="lg" />
         </div>
       </div>
+
+      {/* Search bar */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          router.push(searchQuery.trim().length >= 2 ? `/search?q=${encodeURIComponent(searchQuery.trim())}` : '/search')
+        }}
+      >
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+          </div>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search devotions…"
+            className="w-full rounded-xl border border-steel/20 bg-white py-3 pl-10 pr-4 text-sm text-charcoal placeholder:text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-steel/30"
+          />
+        </div>
+      </form>
 
       {/* Sortable cards */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
