@@ -93,10 +93,8 @@ export default function JournalPage() {
   if (!ready) {
     return (
       <div className="space-y-6">
-        <div className="relative flex items-center justify-center">
-          <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
-          <div className="absolute right-0 h-8 w-24 rounded-lg bg-steel/10 animate-pulse" />
-        </div>
+        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+        <div className="h-11 w-full rounded-2xl bg-steel/10 animate-pulse" />
         <ul className="space-y-3">
           {[0, 1, 2].map((i) => (
             <li
@@ -125,21 +123,19 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header row */}
-      <div className="relative flex items-center justify-center">
-        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
-        {!showNewForm && (
-          <button
-            onClick={() => setShowNewForm(true)}
-            className="absolute right-0 flex items-center gap-1.5 rounded-lg bg-steel px-3 py-1.5 text-xs font-medium text-white hover:bg-steel/90 transition-colors"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            New Entry
-          </button>
-        )}
-      </div>
+      <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+
+      {!showNewForm && (
+        <button
+          onClick={() => setShowNewForm(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors shadow-sm"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          New Entry
+        </button>
+      )}
 
       {/* Inline new entry form */}
       {showNewForm && (

@@ -66,7 +66,7 @@ export default function DevotionCard({
   const sentinelRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState(false)
 
-  function handleCopy() {
+  async function handleShare() {
     const parts: string[] = []
     parts.push(devotion.title)
     parts.push(devotion.verse_reference)
@@ -74,9 +74,25 @@ export default function DevotionCard({
     parts.push(`\n${devotion.body}`)
     if (devotion.prayer) parts.push(`Prayer:\n${devotion.prayer}`)
     parts.push('\n— The Uncovery Devotional')
-    navigator.clipboard.writeText(parts.join('\n'))
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    const text = parts.join('\n')
+    const url = `https://uncoverydevotional.com/devotion/${devotion.month}/${devotion.day}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: devotion.title, text, url })
+      } catch (err) {
+        // Only fall back to clipboard if it wasn't a user cancel
+        if ((err as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(text)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
   }
 
   useEffect(() => {
@@ -105,7 +121,7 @@ export default function DevotionCard({
       {/* Action buttons — absolute top-right */}
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <button
-          onClick={handleCopy}
+          onClick={handleShare}
           aria-label="Copy devotion text"
           className="flex items-center gap-1.5 rounded-full border border-steel/20 bg-white px-3 py-1.5 text-xs font-medium text-muted hover:text-steel hover:border-steel/30 hover:bg-steel/5 transition-colors"
         >
