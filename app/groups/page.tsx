@@ -12,6 +12,29 @@ type Group = {
   description: string | null
 }
 
+const GROUP_COLORS = [
+  'bg-[#4f86c6] text-white',
+  'bg-[#e07b54] text-white',
+  'bg-[#5aab7e] text-white',
+  'bg-[#9b6bbf] text-white',
+  'bg-[#d4a843] text-white',
+  'bg-[#4eadb5] text-white',
+  'bg-[#c95f7a] text-white',
+  'bg-[#7a8fbf] text-white',
+]
+
+function groupColor(name: string) {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return GROUP_COLORS[Math.abs(hash) % GROUP_COLORS.length]
+}
+
+function groupInitials(name: string) {
+  const words = name.trim().split(/\s+/)
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return (words[0][0] + words[1][0]).toUpperCase()
+}
+
 export default function GroupsPage() {
   const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
@@ -52,7 +75,7 @@ export default function GroupsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
+          <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
           <p className="text-sm text-white/80 text-shadow-hero mt-1 text-center">Read together. Reflect together. Stay connected.</p>
         </div>
         <div className="flex gap-3">
@@ -74,7 +97,7 @@ export default function GroupsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
+        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
         <p className="text-sm text-white/80 text-shadow-hero mt-1 text-center">
           Read together. Reflect together. Stay connected.
         </p>
@@ -110,12 +133,20 @@ export default function GroupsPage() {
             <AnimatedCard key={group.id} delay={index * 0.06}>
               <Link
                 href={`/groups/${group.id}`}
-                className="block rounded-2xl border border-steel/15 bg-white p-5 shadow-sm hover:border-steel/30 transition-colors"
+                className="flex items-center gap-4 rounded-2xl border border-steel/15 bg-white p-4 shadow-sm hover:border-steel/30 hover:shadow-md transition-all"
               >
-                <p className="font-medium text-charcoal">{group.name}</p>
-                {group.description && (
-                  <p className="text-sm text-muted mt-0.5 line-clamp-1">{group.description}</p>
-                )}
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${groupColor(group.name)}`}>
+                  {groupInitials(group.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-charcoal">{group.name}</p>
+                  {group.description && (
+                    <p className="text-sm text-muted mt-0.5 line-clamp-1">{group.description}</p>
+                  )}
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
               </Link>
             </AnimatedCard>
           ))}

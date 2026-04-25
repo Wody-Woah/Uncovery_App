@@ -146,6 +146,12 @@ export default function GroupChatPage() {
       }
 
       setLoading(false)
+
+      // Mark all messages as read for this user
+      supabase.from('group_read_receipts').upsert(
+        { user_id: user.id, group_id: id, last_read_at: new Date().toISOString() },
+        { onConflict: 'user_id,group_id' }
+      ).then(() => {})
     }
 
     init()
@@ -186,6 +192,13 @@ export default function GroupChatPage() {
             if (prev.find((m) => m.id === msg.id)) return prev
             return [...prev, { ...msg, display_name }]
           })
+          // User is watching — keep their receipt current
+          if (userIdRef.current) {
+            supabase.from('group_read_receipts').upsert(
+              { user_id: userIdRef.current, group_id: id, last_read_at: new Date().toISOString() },
+              { onConflict: 'user_id,group_id' }
+            ).then(() => {})
+          }
         }
       )
       .on(
@@ -332,7 +345,13 @@ export default function GroupChatPage() {
   }
 
   function formatTime(ts: string) {
-    return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    const date = new Date(ts)
+    const now = new Date()
+    const isToday = date.toDateString() === now.toDateString()
+    const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    if (isToday) return `Today, ${time}`
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return `${dateStr}, ${time}`
   }
 
   if (loading) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
@@ -124,22 +124,91 @@ export default function BottomNav() {
   const [user, setUser] = useState<User | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showMore, setShowMore] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  const groupChannelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+
+  async function fetchUnreadCount(userId: string) {
+    const [receiptsRes, membershipsRes] = await Promise.all([
+      supabase.from('group_read_receipts').select('group_id, last_read_at').eq('user_id', userId),
+      supabase.from('group_members').select('group_id').eq('user_id', userId),
+    ])
+
+    const memberGroupIds = new Set((membershipsRes.data ?? []).map((m: { group_id: string }) => m.group_id))
+    const receipts = (receiptsRes.data ?? []).filter((r: { group_id: string }) => memberGroupIds.has(r.group_id))
+
+    if (!receipts.length) { setUnreadCount(0); return }
+
+    const counts = await Promise.all(receipts.map(async (r: { group_id: string; last_read_at: string }) => {
+      const { count } = await supabase
+        .from('group_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('group_id', r.group_id)
+        .neq('user_id', userId)
+        .gt('created_at', r.last_read_at)
+      return count ?? 0
+    }))
+    setUnreadCount(counts.reduce((a, b) => a + b, 0))
+  }
+
+  async function setupGroupChannels(userId: string) {
+    groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+    groupChannelsRef.current = []
+
+    const { data: memberships } = await supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', userId)
+
+    groupChannelsRef.current = (memberships ?? []).map(({ group_id }) =>
+      supabase
+        .channel(`unread_${group_id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_messages',
+          filter: `group_id=eq.${group_id}`,
+        }, () => fetchUnreadCount(userId))
+        .subscribe()
+    )
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      if (user) checkAdmin(user.id)
+      if (user) {
+        checkAdmin(user.id)
+        fetchUnreadCount(user.id)
+        setupGroupChannels(user.id)
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       const u = session?.user ?? null
       setUser(u)
-      if (u) checkAdmin(u.id)
-      else setIsAdmin(false)
+      if (u) {
+        checkAdmin(u.id)
+        fetchUnreadCount(u.id)
+        setupGroupChannels(u.id)
+      } else {
+        setIsAdmin(false)
+        setUnreadCount(0)
+        groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+        groupChannelsRef.current = []
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (user) fetchUnreadCount(user.id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   async function checkAdmin(userId: string) {
     const { data } = await supabase
@@ -239,7 +308,14 @@ export default function BottomNav() {
               href={href}
               className="flex flex-1 flex-col items-center gap-0.5 py-2"
             >
-              <span className={isActive(href) ? 'text-steel' : 'text-muted'}>{icon}</span>
+              <span className={`relative ${isActive(href) ? 'text-steel' : 'text-muted'}`}>
+                {icon}
+                {href === '/groups' && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-0.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </span>
               <span className={`text-[10px] ${isActive(href) ? 'text-steel font-medium' : 'text-muted'}`}>
                 {label}
               </span>

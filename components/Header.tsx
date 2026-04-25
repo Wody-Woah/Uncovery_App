@@ -17,7 +17,54 @@ export default function Header() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const groupChannelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+
+  async function fetchUnreadCount(userId: string) {
+    const [receiptsRes, membershipsRes] = await Promise.all([
+      supabase.from('group_read_receipts').select('group_id, last_read_at').eq('user_id', userId),
+      supabase.from('group_members').select('group_id').eq('user_id', userId),
+    ])
+
+    const memberGroupIds = new Set((membershipsRes.data ?? []).map((m: { group_id: string }) => m.group_id))
+    const receipts = (receiptsRes.data ?? []).filter((r: { group_id: string }) => memberGroupIds.has(r.group_id))
+
+    if (!receipts.length) { setUnreadCount(0); return }
+
+    const counts = await Promise.all(receipts.map(async (r: { group_id: string; last_read_at: string }) => {
+      const { count } = await supabase
+        .from('group_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('group_id', r.group_id)
+        .neq('user_id', userId)
+        .gt('created_at', r.last_read_at)
+      return count ?? 0
+    }))
+    setUnreadCount(counts.reduce((a, b) => a + b, 0))
+  }
+
+  async function setupGroupChannels(userId: string) {
+    groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+    groupChannelsRef.current = []
+
+    const { data: memberships } = await supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', userId)
+
+    groupChannelsRef.current = (memberships ?? []).map(({ group_id }) =>
+      supabase
+        .channel(`header_unread_${group_id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_messages',
+          filter: `group_id=eq.${group_id}`,
+        }, () => fetchUnreadCount(userId))
+        .subscribe()
+    )
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -25,6 +72,8 @@ export default function Header() {
       if (user) {
         checkAdmin(user.id)
         fetchProfile(user.id)
+        fetchUnreadCount(user.id)
+        setupGroupChannels(user.id)
       }
     })
 
@@ -36,15 +85,29 @@ export default function Header() {
       if (currentUser) {
         checkAdmin(currentUser.id)
         fetchProfile(currentUser.id)
+        fetchUnreadCount(currentUser.id)
+        setupGroupChannels(currentUser.id)
       } else {
         setIsAdmin(false)
         setDisplayName(null)
         setAvatarUrl(null)
+        setUnreadCount(0)
+        groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+        groupChannelsRef.current = []
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (user) fetchUnreadCount(user.id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   // ESC closes both the sign-out modal and the user menu
   useEffect(() => {
@@ -158,7 +221,24 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-6">
             {user && navLink('/today', 'Today')}
             {user && navLink('/journal', 'Journal')}
-            {user && navLink('/groups', 'Groups')}
+            {user && (
+              <Link
+                href="/groups"
+                className={cn(
+                  'relative text-sm transition-colors',
+                  pathname === '/groups' || pathname?.startsWith('/groups/')
+                    ? 'text-steel font-medium'
+                    : 'text-charcoal hover:text-steel'
+                )}
+              >
+                Groups
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-3.5 flex h-4 min-w-4 px-0.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
             {user && navLink('/search', 'Search')}
             {isAdmin && navLink('/admin', 'Admin')}
 
