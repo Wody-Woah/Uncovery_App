@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
@@ -39,6 +39,53 @@ export default function GroupsPage() {
   const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
+  const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+
+  async function fetchUnreadCounts(uid: string, groupIds: string[]) {
+    if (!groupIds.length) return
+
+    const { data: receipts } = await supabase
+      .from('group_read_receipts')
+      .select('group_id, last_read_at')
+      .eq('user_id', uid)
+      .in('group_id', groupIds)
+
+    const receiptMap = Object.fromEntries(
+      (receipts ?? []).map((r: { group_id: string; last_read_at: string }) => [r.group_id, r.last_read_at])
+    )
+
+    const counts = await Promise.all(
+      groupIds.map(async (gid) => {
+        const lastRead = receiptMap[gid]
+        if (!lastRead) return { gid, count: 0 }
+        const { count } = await supabase
+          .from('group_messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', gid)
+          .neq('user_id', uid)
+          .gt('created_at', lastRead)
+        return { gid, count: count ?? 0 }
+      })
+    )
+
+    setUnreadCounts(Object.fromEntries(counts.map(({ gid, count }) => [gid, count])))
+  }
+
+  function setupChannels(uid: string, groupIds: string[]) {
+    channelsRef.current.forEach((ch) => supabase.removeChannel(ch))
+    channelsRef.current = groupIds.map((gid) =>
+      supabase
+        .channel(`groups_page_unread_${gid}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_messages',
+          filter: `group_id=eq.${gid}`,
+        }, () => fetchUnreadCounts(uid, groupIds))
+        .subscribe()
+    )
+  }
 
   useEffect(() => {
     async function init() {
@@ -66,9 +113,17 @@ export default function GroupsPage() {
 
       setGroups(groupsData ?? [])
       setLoading(false)
+
+      fetchUnreadCounts(user.id, groupIds)
+      setupChannels(user.id, groupIds)
     }
 
     init()
+
+    return () => {
+      channelsRef.current.forEach((ch) => supabase.removeChannel(ch))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   if (loading) {
@@ -144,6 +199,11 @@ export default function GroupsPage() {
                     <p className="text-sm text-muted mt-0.5 line-clamp-1">{group.description}</p>
                   )}
                 </div>
+                {(unreadCounts[group.id] ?? 0) > 0 && (
+                  <span className="flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none shrink-0">
+                    {unreadCounts[group.id] > 99 ? '99+' : unreadCounts[group.id]}
+                  </span>
+                )}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
