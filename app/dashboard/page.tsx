@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
-import { isAdmin } from '@/lib/isAdmin'
 import { getTodayET } from '@/lib/getTodayET'
 import Image from 'next/image'
 import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
@@ -216,6 +215,7 @@ export default function DashboardPage() {
   const [streaks, setStreaks] = useState<Streaks>({ current: 0, longest: 0, total: 0 })
   const [readDates, setReadDates] = useState<string[]>([])
   const [updates, setUpdates] = useState<AuthorUpdate[]>([])
+  const [readUpdateIds, setReadUpdateIds] = useState<Set<string>>(new Set())
   const [showGroupsAnnouncement, setShowGroupsAnnouncement] = useState(false)
   const [cleanDate, setCleanDate] = useState<string | null>(null)
   const [showCleanDateCard, setShowCleanDateCard] = useState(false)
@@ -274,6 +274,11 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    const stored = localStorage.getItem('read_update_ids')
+    if (stored) setReadUpdateIds(new Set(JSON.parse(stored)))
+  }, [])
+
+  useEffect(() => {
     async function init() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -301,7 +306,7 @@ export default function DashboardPage() {
             .then(() => {})
         }
 
-        const [devotionRes, themeRes, readsRes, readsCountRes, adminResult, profileRes] = await Promise.all([
+        const [devotionRes, themeRes, readsRes, readsCountRes, profileRes] = await Promise.all([
           supabase
             .from('devotions')
             .select('title, verse_reference')
@@ -324,7 +329,6 @@ export default function DashboardPage() {
             .from('devotion_reads')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id),
-          isAdmin(),
           supabase
             .from('profiles')
             .select('display_name, avatar_url, clean_date, show_clean_date_card, show_journey_card')
@@ -352,7 +356,7 @@ export default function DashboardPage() {
           .order('published_at', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false })
           .limit(3)
-        if (!adminResult) updatesQuery = updatesQuery.eq('published', true)
+        updatesQuery = updatesQuery.eq('published', true)
         const updatesRes = await updatesQuery
         if (updatesRes.data) setUpdates(updatesRes.data)
       } catch {
@@ -574,7 +578,12 @@ export default function DashboardPage() {
                 <ul className="space-y-4">
                   {updates.map((u) => (
                     <li key={u.id} className="border-t border-white/10 pt-4 first:border-0 first:pt-0">
-                      <p className="text-base font-semibold text-white">{u.title}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-base font-semibold text-white">{u.title}</p>
+                        {!readUpdateIds.has(u.id) && (
+                          <span className="rounded-full bg-green-500/20 border border-green-400/30 px-2 py-0.5 text-[10px] font-semibold text-green-300 uppercase tracking-wide">New Post</span>
+                        )}
+                      </div>
                       <p className="text-xs text-white/60 mt-0.5">
                         {new Date(u.published_at ?? u.created_at).toLocaleDateString('en-US', {
                           month: 'short', day: 'numeric', year: 'numeric',

@@ -43,6 +43,11 @@ export default function UpdateDetailPage() {
         setNotFound(true)
       } else {
         setUpdate(data)
+        const stored = localStorage.getItem('read_update_ids')
+        const ids: string[] = stored ? JSON.parse(stored) : []
+        if (!ids.includes(id)) {
+          localStorage.setItem('read_update_ids', JSON.stringify([...ids, id]))
+        }
       }
       setLoading(false)
     }
