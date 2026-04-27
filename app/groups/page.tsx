@@ -130,7 +130,7 @@ export default function GroupsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
+          <h1 className="font-display text-5xl font-bold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
           <p className="text-sm text-white/80 text-shadow-hero mt-1 text-center">Read together. Reflect together. Stay connected.</p>
         </div>
         <div className="flex gap-3">
@@ -152,7 +152,7 @@ export default function GroupsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
+        <h1 className="font-display text-5xl font-bold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
         <p className="text-sm text-white/80 text-shadow-hero mt-1 text-center">
           Read together. Reflect together. Stay connected.
         </p>

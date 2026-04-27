@@ -56,7 +56,7 @@ export default function NewGroupPage() {
   return (
     <div className="space-y-4">
       <div className="text-center space-y-1">
-        <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero">Create a Group</h1>
+        <h1 className="font-display text-5xl font-bold text-brand-blue text-shadow-hero">Create a Group</h1>
         <p className="text-sm text-white/80 text-shadow-hero">
           You&apos;ll get an invite code to share after creating.
         </p>

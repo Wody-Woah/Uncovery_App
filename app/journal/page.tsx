@@ -93,7 +93,7 @@ export default function JournalPage() {
   if (!ready) {
     return (
       <div className="space-y-6">
-        <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+        <h1 className="font-display text-5xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
         <div className="h-11 w-full rounded-2xl bg-steel/10 animate-pulse" />
         <ul className="space-y-3">
           {[0, 1, 2].map((i) => (
@@ -123,7 +123,7 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+      <h1 className="font-display text-5xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
 
       {!showNewForm && (
         <button
