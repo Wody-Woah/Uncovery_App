@@ -72,7 +72,7 @@ export default function BookmarksPage() {
   if (!ready) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Bookmarks</h1>
+        <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Bookmarks</h1>
         <ul className="space-y-3">
           {[0, 1, 2].map((i) => (
             <li
@@ -94,7 +94,7 @@ export default function BookmarksPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Bookmarks</h1>
+      <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Bookmarks</h1>
 
       {bookmarks.length === 0 ? (
         <AnimatedCard>

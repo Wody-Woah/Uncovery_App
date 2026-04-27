@@ -16,6 +16,7 @@ const config: Config = {
       },
       fontFamily: {
         serif: ['Georgia', 'Cambria', '"Times New Roman"', 'serif'],
+        display: ['var(--font-lora)', 'Georgia', 'serif'],
       },
       maxWidth: {
         reading: '700px',

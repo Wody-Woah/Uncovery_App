@@ -46,7 +46,7 @@ export default function JoinGroupPage() {
   return (
     <div className="space-y-4">
       <div className="text-center space-y-1">
-        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero">Join a Group</h1>
+        <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero">Join a Group</h1>
         <p className="text-sm text-white/80 text-shadow-hero">
           Read together and share daily reflections with your community.
         </p>

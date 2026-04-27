@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Lora } from 'next/font/google'
 import Image from 'next/image'
 import './globals.css'
 import Header from '@/components/Header'
 import BottomNav from '@/components/BottomNav'
 
 const inter = Inter({ subsets: ['latin'] })
+const lora = Lora({ subsets: ['latin'], weight: ['700'], variable: '--font-lora' })
 
 export const metadata: Metadata = {
   title: 'The Uncovery Devotional',
@@ -48,7 +49,7 @@ export default function RootLayout({
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${lora.variable}`}>
         <div className="relative min-h-screen">
           {/* Fixed background: image + overlay sit behind all content */}
           <div className="fixed inset-0 -z-10">

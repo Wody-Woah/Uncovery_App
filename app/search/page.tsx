@@ -92,7 +92,7 @@ function SearchPageInner() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Search</h1>
+      <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Search</h1>
 
       <input
         type="search"

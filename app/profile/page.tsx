@@ -351,7 +351,7 @@ export default function ProfilePage() {
       )}
 
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Profile</h1>
+        <h1 className="font-display text-3xl font-bold text-brand-blue text-shadow-hero text-center">Profile</h1>
 
         {/* Settings link */}
         <AnimatedCard delay={0}>
