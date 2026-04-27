@@ -3,8 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Playfair_Display } from 'next/font/google'
 import { supabase } from '@/lib/supabaseClient'
 import AnimatedCard from '@/components/AnimatedCard'
+
+const playfair = Playfair_Display({ subsets: ['latin'], weight: ['700'] })
 
 const MONTHS = [
   '', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -93,7 +96,7 @@ export default function JournalPage() {
   if (!ready) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+        <h1 className={`text-3xl font-bold text-brand-blue text-shadow-hero text-center ${playfair.className}`}>Journal</h1>
         <div className="h-11 w-full rounded-2xl bg-steel/10 animate-pulse" />
         <ul className="space-y-3">
           {[0, 1, 2].map((i) => (
@@ -123,7 +126,7 @@ export default function JournalPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-brand-blue text-shadow-hero text-center">Journal</h1>
+      <h1 className={`text-3xl font-bold text-brand-blue text-shadow-hero text-center ${playfair.className}`}>Journal</h1>
 
       {!showNewForm && (
         <button
