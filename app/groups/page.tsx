@@ -12,6 +12,13 @@ type Group = {
   description: string | null
 }
 
+type LastMessage = {
+  content: string
+  created_at: string
+  user_id: string
+  display_name: string
+}
+
 const GROUP_COLORS = [
   'bg-[#4f86c6] text-white',
   'bg-[#e07b54] text-white',
@@ -35,12 +42,35 @@ function groupInitials(name: string) {
   return (words[0][0] + words[1][0]).toUpperCase()
 }
 
+function formatMessageTime(isoString: string): string {
+  const date = new Date(isoString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHr = Math.floor(diffMs / 3600000)
+  const diffDay = Math.floor(diffMs / 86400000)
+
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m`
+  if (diffHr < 24) return `${diffHr}h`
+  if (diffDay === 1) return 'Yesterday'
+  if (diffDay < 7) return date.toLocaleDateString('en-US', { weekday: 'short' })
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function truncate(text: string, max = 42): string {
+  const clean = text.replace(/\n+/g, ' ').trim()
+  return clean.length > max ? clean.slice(0, max).trimEnd() + '…' : clean
+}
+
 export default function GroupsPage() {
   const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
+  const [lastMessages, setLastMessages] = useState<Record<string, LastMessage>>({})
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+  const uidRef = useRef<string | null>(null)
 
   async function fetchUnreadCounts(uid: string, groupIds: string[]) {
     if (!groupIds.length) return
@@ -72,6 +102,46 @@ export default function GroupsPage() {
     setUnreadCounts(Object.fromEntries(counts.map(({ gid, count }) => [gid, count])))
   }
 
+  async function fetchLastMessages(uid: string, groupIds: string[]) {
+    if (!groupIds.length) return
+
+    const results = await Promise.all(
+      groupIds.map((gid) =>
+        supabase
+          .from('group_messages')
+          .select('group_id, content, created_at, user_id')
+          .eq('group_id', gid)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      )
+    )
+
+    const messages = results
+      .map((r) => r.data)
+      .filter((m): m is NonNullable<typeof m> => m !== null)
+
+    if (!messages.length) return
+
+    const senderIds = Array.from(new Set(messages.map((m) => m.user_id)))
+    const { data: names } = await supabase.rpc('get_member_display_names', { member_ids: senderIds })
+    const nameMap = Object.fromEntries(
+      (names ?? []).map((n: { id: string; display_name: string }) => [n.id, n.display_name])
+    )
+
+    const result: Record<string, LastMessage> = {}
+    for (const msg of messages) {
+      const isMe = msg.user_id === uid
+      result[msg.group_id] = {
+        content: msg.content,
+        created_at: msg.created_at,
+        user_id: msg.user_id,
+        display_name: isMe ? 'You' : (nameMap[msg.user_id] ?? 'Someone'),
+      }
+    }
+    setLastMessages(result)
+  }
+
   function setupChannels(uid: string, groupIds: string[]) {
     channelsRef.current.forEach((ch) => supabase.removeChannel(ch))
     channelsRef.current = groupIds.map((gid) =>
@@ -82,7 +152,10 @@ export default function GroupsPage() {
           schema: 'public',
           table: 'group_messages',
           filter: `group_id=eq.${gid}`,
-        }, () => fetchUnreadCounts(uid, groupIds))
+        }, () => {
+          fetchUnreadCounts(uid, groupIds)
+          fetchLastMessages(uid, groupIds)
+        })
         .subscribe()
     )
   }
@@ -91,8 +164,8 @@ export default function GroupsPage() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
+      uidRef.current = user.id
 
-      // Get group IDs the user belongs to
       const { data: memberRows } = await supabase
         .from('group_members')
         .select('group_id')
@@ -115,6 +188,7 @@ export default function GroupsPage() {
       setLoading(false)
 
       fetchUnreadCounts(user.id, groupIds)
+      fetchLastMessages(user.id, groupIds)
       setupChannels(user.id, groupIds)
     }
 
@@ -196,32 +270,45 @@ export default function GroupsPage() {
         </AnimatedCard>
       ) : (
         <div className="space-y-3">
-          {groups.map((group, index) => (
-            <AnimatedCard key={group.id} delay={index * 0.06}>
-              <Link
-                href={`/groups/${group.id}`}
-                className="flex items-center gap-4 rounded-2xl border border-steel/15 bg-white p-4 shadow-sm hover:border-steel/30 hover:shadow-md transition-all"
-              >
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${groupColor(group.name)}`}>
-                  {groupInitials(group.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-charcoal">{group.name}</p>
-                  {group.description && (
-                    <p className="text-sm text-muted mt-0.5 line-clamp-1">{group.description}</p>
-                  )}
-                </div>
-                {(unreadCounts[group.id] ?? 0) > 0 && (
-                  <span className="flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none shrink-0">
-                    {unreadCounts[group.id] > 99 ? '99+' : unreadCounts[group.id]}
-                  </span>
-                )}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </Link>
-            </AnimatedCard>
-          ))}
+          {groups.map((group, index) => {
+            const last = lastMessages[group.id]
+            return (
+              <AnimatedCard key={group.id} delay={index * 0.06}>
+                <Link
+                  href={`/groups/${group.id}`}
+                  className="flex items-center gap-4 rounded-2xl border border-steel/15 bg-white p-4 shadow-sm hover:border-steel/30 hover:shadow-md transition-all"
+                >
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${groupColor(group.name)}`}>
+                    {groupInitials(group.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-charcoal">{group.name}</p>
+                    {last ? (
+                      <p className="text-sm text-muted mt-0.5 truncate">
+                        <span className="font-medium text-charcoal/70">{last.display_name}:</span>{' '}
+                        {truncate(last.content)}
+                      </p>
+                    ) : group.description ? (
+                      <p className="text-sm text-muted mt-0.5 line-clamp-1">{group.description}</p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    {last && (
+                      <p className="text-[11px] text-muted">{formatMessageTime(last.created_at)}</p>
+                    )}
+                    {(unreadCounts[group.id] ?? 0) > 0 && (
+                      <span className="flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
+                        {unreadCounts[group.id] > 99 ? '99+' : unreadCounts[group.id]}
+                      </span>
+                    )}
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </Link>
+              </AnimatedCard>
+            )
+          })}
         </div>
       )}
     </div>
