@@ -1,0 +1,197 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabaseClient'
+
+export default function OnboardingPage() {
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState('')
+  const [cleanDate, setCleanDate] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+
+      const { data: flags } = await supabase
+        .from('user_flags')
+        .select('has_seen_onboarding')
+        .eq('user_id', user.id)
+        .single()
+
+      if (flags?.has_seen_onboarding) {
+        router.push('/dashboard')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, clean_date')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.display_name) setDisplayName(profile.display_name)
+      if (profile?.clean_date) setCleanDate(profile.clean_date)
+
+      setUserId(user.id)
+      setReady(true)
+    }
+    init()
+  }, [router])
+
+  async function completeOnboarding() {
+    if (!userId) return
+    await supabase
+      .from('user_flags')
+      .update({ has_seen_onboarding: true })
+      .eq('user_id', userId)
+    window.location.href = '/dashboard'
+  }
+
+  async function handleStep1Continue() {
+    if (!userId || saving) return
+    setSaving(true)
+    if (displayName.trim()) {
+      await supabase
+        .from('profiles')
+        .update({ display_name: displayName.trim(), updated_at: new Date().toISOString() })
+        .eq('id', userId)
+    }
+    setSaving(false)
+    setStep(2)
+  }
+
+  async function handleStep2Complete() {
+    if (!userId || saving) return
+    setSaving(true)
+    if (cleanDate) {
+      await supabase
+        .from('profiles')
+        .update({ clean_date: cleanDate, show_clean_date_card: true, updated_at: new Date().toISOString() })
+        .eq('id', userId)
+    }
+    setSaving(false)
+    await completeOnboarding()
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+
+  if (!ready) {
+    return (
+      <div className="space-y-5 py-4">
+        <div className="flex justify-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-white/60" />
+          <div className="h-2 w-2 rounded-full bg-white/25" />
+        </div>
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
+          <div className="space-y-2 text-center">
+            <div className="h-3 w-16 rounded bg-steel/10 mx-auto" />
+            <div className="h-5 w-48 rounded bg-steel/10 mx-auto" />
+            <div className="h-3 w-64 rounded bg-steel/10 mx-auto" />
+          </div>
+          <div className="h-10 w-full rounded-lg bg-steel/10" />
+          <div className="h-11 w-full rounded-xl bg-steel/10" />
+          <div className="h-8 w-full rounded-xl bg-steel/10" />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5 py-4">
+      {/* Progress dots */}
+      <div className="flex justify-center gap-2">
+        {[1, 2].map((s) => (
+          <div
+            key={s}
+            className={`h-2 w-2 rounded-full transition-colors duration-300 ${
+              s === step ? 'bg-white' : s < step ? 'bg-white/60' : 'bg-white/25'
+            }`}
+          />
+        ))}
+      </div>
+
+      {step === 1 && (
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5">
+          <div className="text-center space-y-1.5">
+            <p className="text-xs uppercase tracking-widest text-steel">Step 1 of 2</p>
+            <h2 className="text-xl font-semibold text-charcoal">What should we call you?</h2>
+            <p className="text-sm text-muted leading-relaxed">
+              This is how your name will appear to others in groups.
+            </p>
+          </div>
+
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleStep1Continue()}
+            placeholder="Your first name or nickname"
+            autoFocus
+            className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-charcoal placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-steel/30"
+          />
+
+          <div className="space-y-2">
+            <button
+              onClick={handleStep1Continue}
+              disabled={saving}
+              className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors disabled:opacity-60"
+            >
+              {saving ? 'Saving…' : 'Continue'}
+            </button>
+            <button
+              onClick={() => setStep(2)}
+              className="w-full rounded-xl px-4 py-2.5 text-sm text-muted hover:text-charcoal transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5">
+          <div className="text-center space-y-1.5">
+            <p className="text-xs uppercase tracking-widest text-steel">Step 2 of 2</p>
+            <h2 className="text-xl font-semibold text-charcoal">Do you have a sobriety date?</h2>
+            <p className="text-sm text-muted leading-relaxed">
+              If you do, we&apos;ll show a Days Clean counter on your home screen — a daily reminder of how far you&apos;ve come.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <input
+              type="date"
+              value={cleanDate}
+              onChange={(e) => setCleanDate(e.target.value)}
+              max={today}
+              className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2.5 text-charcoal focus:outline-none focus:ring-2 focus:ring-steel/30"
+            />
+            <p className="text-xs text-muted">You can always add or change this in your profile.</p>
+          </div>
+
+          <div className="space-y-2">
+            <button
+              onClick={handleStep2Complete}
+              disabled={saving}
+              className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors disabled:opacity-60"
+            >
+              {saving ? 'Saving…' : cleanDate ? 'Save & Go to App' : 'Go to App'}
+            </button>
+            <button
+              onClick={completeOnboarding}
+              className="w-full rounded-xl px-4 py-2.5 text-sm text-muted hover:text-charcoal transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

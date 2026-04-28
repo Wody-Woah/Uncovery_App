@@ -9,7 +9,7 @@ Planned improvements to deepen daily engagement, encourage return visits, and ma
 | # | Feature | Status |
 |---|---|---|
 | 1 | Streak milestone celebrations | ✅ Done |
-| 2 | Group last message preview | Pending |
+| 2 | Group last message preview | ✅ Done |
 | 3 | Reading progress bar | ✅ Done |
 | 4 | Onboarding improvements | Pending |
 | 5 | Empty state improvements | Pending |

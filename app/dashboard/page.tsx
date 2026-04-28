@@ -279,6 +279,7 @@ function SortableCard({ id, index = 0, dark, showHint, children }: { id: string;
 export default function DashboardPage() {
   const router = useRouter()
   const [ready, setReady] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [devotion, setDevotion] = useState<DevotionPreview>(null)
@@ -356,6 +357,7 @@ export default function DashboardPage() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) { router.push('/login'); return }
+        setUserId(user.id)
 
         const { data: flags } = await supabase
           .from('user_flags')
@@ -415,7 +417,8 @@ export default function DashboardPage() {
         setTotalPublishedDevotions(totalDevotionsRes.count ?? 0)
         setThisYearReadCount(dates.filter(d => d.startsWith(`${year}-`)).length)
 
-        const shownRaw = localStorage.getItem(MILESTONE_STORAGE_KEY)
+        const milestoneKey = `${MILESTONE_STORAGE_KEY}_${user.id}`
+        const shownRaw = localStorage.getItem(milestoneKey)
         const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
         const hit = STREAK_MILESTONES.find(m => m.days === computed.current && !shown.includes(m.days))
         if (hit) setActiveMilestone(hit)
@@ -473,10 +476,11 @@ export default function DashboardPage() {
   }
 
   function dismissMilestone() {
-    if (!activeMilestone) return
-    const shownRaw = localStorage.getItem(MILESTONE_STORAGE_KEY)
+    if (!activeMilestone || !userId) return
+    const milestoneKey = `${MILESTONE_STORAGE_KEY}_${userId}`
+    const shownRaw = localStorage.getItem(milestoneKey)
     const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
-    localStorage.setItem(MILESTONE_STORAGE_KEY, JSON.stringify([...shown, activeMilestone.days]))
+    localStorage.setItem(milestoneKey, JSON.stringify([...shown, activeMilestone.days]))
     setActiveMilestone(null)
   }
 
