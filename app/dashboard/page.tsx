@@ -287,7 +287,6 @@ export default function DashboardPage() {
   const [readDates, setReadDates] = useState<string[]>([])
   const [updates, setUpdates] = useState<AuthorUpdate[]>([])
   const [readUpdateIds, setReadUpdateIds] = useState<Set<string>>(new Set())
-  const [showGroupsAnnouncement, setShowGroupsAnnouncement] = useState(false)
   const [cleanDate, setCleanDate] = useState<string | null>(null)
   const [showCleanDateCard, setShowCleanDateCard] = useState(false)
   const [showJourneyCard, setShowJourneyCard] = useState(true)
@@ -360,24 +359,12 @@ export default function DashboardPage() {
 
         const { data: flags } = await supabase
           .from('user_flags')
-          .select('has_seen_welcome, groups_announcement_count')
+          .select('has_seen_welcome')
           .eq('user_id', user.id)
           .single()
         if (!flags || !flags.has_seen_welcome) {
           router.push('/welcome')
           return
-        }
-
-        const announcementCount = flags.groups_announcement_count ?? 0
-        const sessionKey = 'groups_announcement_shown'
-        if (announcementCount < 3 && !sessionStorage.getItem(sessionKey)) {
-          sessionStorage.setItem(sessionKey, '1')
-          setShowGroupsAnnouncement(true)
-          supabase
-            .from('user_flags')
-            .update({ groups_announcement_count: announcementCount + 1 })
-            .eq('user_id', user.id)
-            .then(() => {})
         }
 
         const [devotionRes, themeRes, readsRes, readsCountRes, profileRes, totalDevotionsRes] = await Promise.all([
@@ -758,44 +745,6 @@ export default function DashboardPage() {
                 className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors"
               >
                 Keep Going →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Groups announcement modal */}
-      {showGroupsAnnouncement && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="pt-8 px-6 pb-6 space-y-4 overflow-y-auto flex-1">
-              <div>
-                <p className="text-xs uppercase tracking-widest text-steel mb-1">Something New Is Here</p>
-                <h2 className="text-lg font-semibold text-charcoal">Small Groups</h2>
-              </div>
-              <div className="font-serif text-[15px] text-charcoal leading-[1.85] space-y-3">
-                <p>One of the things I&apos;ve learned in recovery is that we were never meant to do this alone.</p>
-                <p>That&apos;s why I&apos;m excited to share something new with you — <span className="font-semibold not-italic">Small Groups</span>.</p>
-                <p>You can now create or join a small group right here in the app. Each day, your group will have a space to reflect together on that day&apos;s devotion. To ask questions. To share what&apos;s stirring. To remind each other that someone else is in it with you.</p>
-                <p>The opposite of addiction is connection — and this is one more way to build it.</p>
-                <p>To get started, tap the <span className="font-semibold not-italic">Groups</span> tab in the navigation.</p>
-                <p>I&apos;m glad you&apos;re here. Now let&apos;s do this together.</p>
-                <p className="text-muted text-sm">— George</p>
-              </div>
-            </div>
-            <div className="border-t border-steel/10 p-4 flex flex-col gap-2">
-              <Link
-                href="/groups"
-                onClick={() => setShowGroupsAnnouncement(false)}
-                className="block w-full rounded-xl bg-steel px-4 py-3 text-center text-sm font-medium text-white hover:bg-steel/90 transition-colors"
-              >
-                Take me to Groups
-              </Link>
-              <button
-                onClick={() => setShowGroupsAnnouncement(false)}
-                className="w-full rounded-xl px-4 py-2.5 text-sm text-muted hover:text-charcoal transition-colors"
-              >
-                Got it
               </button>
             </div>
           </div>

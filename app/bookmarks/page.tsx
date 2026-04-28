@@ -107,9 +107,9 @@ export default function BookmarksPage() {
               </div>
             </div>
             <div>
-              <p className="text-charcoal font-semibold text-sm">Nothing saved yet</p>
+              <p className="text-charcoal font-semibold text-base">Save what speaks to you</p>
               <p className="text-muted text-sm mt-1 leading-relaxed">
-                When a devotion resonates with you, tap the bookmark icon while reading to save it here.
+                When something in a devotion stays with you, tap the bookmark icon while reading to keep it here.
               </p>
             </div>
           </div>
