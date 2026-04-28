@@ -65,6 +65,9 @@ User profile data. Row auto-created by `handle_new_user` trigger on signup.
 | display_name | text | nullable, set from user metadata on signup |
 | bio | text | nullable |
 | avatar_url | text | nullable, public URL to profile photo in Supabase Storage |
+| clean_date | date | nullable, user's sobriety date |
+| show_journey_card | bool | default true, controls dashboard card visibility |
+| show_clean_date_card | bool | default false, controls dashboard card visibility |
 | updated_at | timestamptz | |
 
 RLS:
@@ -213,6 +216,39 @@ Emoji reactions on group messages.
 
 Constraints: UNIQUE (message_id, user_id, emoji)
 RLS: authenticated users can SELECT, INSERT, DELETE own reactions.
+
+---
+
+### group_read_receipts
+Tracks the last time a user read messages in a group (for unread badge counts).
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PRIMARY KEY |
+| group_id | uuid | references groups |
+| user_id | uuid | references auth.users |
+| last_read_at | timestamptz | updated on every group visit |
+
+Constraints: UNIQUE (group_id, user_id)
+RLS: own rows only.
+
+---
+
+### push_subscriptions
+Web Push API subscriptions for daily reminder notifications.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PRIMARY KEY |
+| user_id | uuid | references auth.users |
+| endpoint | text | Push subscription endpoint URL |
+| p256dh | text | Public key |
+| auth | text | Auth secret |
+| reminder_hour | int | Hour (UTC) to send daily reminder, 0–23 |
+| created_at | timestamptz | default now() |
+
+Constraints: UNIQUE (user_id, endpoint)
+RLS: own rows only.
 
 ---
 
