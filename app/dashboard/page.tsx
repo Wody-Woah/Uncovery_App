@@ -293,6 +293,8 @@ export default function DashboardPage() {
   const [showJourneyCard, setShowJourneyCard] = useState(true)
   const [cleanDateView, setCleanDateView] = useState<'days' | 'breakdown'>('days')
   const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(null)
+  const [totalPublishedDevotions, setTotalPublishedDevotions] = useState(0)
+  const [thisYearReadCount, setThisYearReadCount] = useState(0)
   const swipeStartX = useRef<number | null>(null)
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -378,7 +380,7 @@ export default function DashboardPage() {
             .then(() => {})
         }
 
-        const [devotionRes, themeRes, readsRes, readsCountRes, profileRes] = await Promise.all([
+        const [devotionRes, themeRes, readsRes, readsCountRes, profileRes, totalDevotionsRes] = await Promise.all([
           supabase
             .from('devotions')
             .select('title, verse_reference')
@@ -406,6 +408,10 @@ export default function DashboardPage() {
             .select('display_name, avatar_url, clean_date, show_clean_date_card, show_journey_card')
             .eq('id', user.id)
             .single(),
+          supabase
+            .from('devotions')
+            .select('*', { count: 'exact', head: true })
+            .eq('published', true),
         ])
 
         if (devotionRes.data) setDevotion(devotionRes.data)
@@ -419,6 +425,8 @@ export default function DashboardPage() {
         setReadDates(dates)
         const computed = computeStreaks(dates, todayStr, yesterdayStr, readsCountRes.count ?? dates.length)
         setStreaks(computed)
+        setTotalPublishedDevotions(totalDevotionsRes.count ?? 0)
+        setThisYearReadCount(dates.filter(d => d.startsWith(`${year}-`)).length)
 
         const shownRaw = localStorage.getItem(MILESTONE_STORAGE_KEY)
         const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
@@ -591,6 +599,24 @@ export default function DashboardPage() {
                 <p className="text-center text-[11px] text-white/45 leading-snug -mt-1">
                   Scroll to the end of today&apos;s devotion to count it toward your streak.
                 </p>
+              )}
+              {totalPublishedDevotions > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] text-white/60">
+                      {thisYearReadCount} of {totalPublishedDevotions} devotions read this year
+                    </p>
+                    <p className="text-[11px] text-white/60 tabular-nums">
+                      {Math.round((thisYearReadCount / totalPublishedDevotions) * 100)}%
+                    </p>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-white/60 transition-all duration-500"
+                      style={{ width: `${Math.min((thisYearReadCount / totalPublishedDevotions) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
               )}
               <div className="border-t border-white/15 pt-4">
                 <MonthlyStreakGrid
