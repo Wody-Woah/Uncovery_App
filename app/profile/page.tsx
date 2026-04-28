@@ -263,7 +263,7 @@ export default function ProfilePage() {
   if (profileLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-24 rounded bg-white/20 animate-pulse" />
+        <div className="h-14 w-48 rounded bg-white/20 animate-pulse mx-auto" />
         <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm flex items-center justify-between animate-pulse">
           <div className="space-y-1.5">
             <div className="h-3.5 w-16 rounded bg-steel/10" />

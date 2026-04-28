@@ -70,7 +70,7 @@ function SearchPageInner() {
   if (!ready) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-24 rounded bg-white/20 animate-pulse mx-auto" />
+        <div className="h-14 w-48 rounded bg-white/20 animate-pulse mx-auto" />
         <div className="h-12 w-full rounded-xl bg-white/20 animate-pulse" />
         <div className="rounded-2xl border border-steel/15 bg-white p-8 shadow-sm space-y-5 animate-pulse">
           <div className="flex flex-col items-center gap-3">

@@ -131,6 +131,77 @@ function computeStreaks(reads: string[], todayStr: string, yesterdayStr: string,
 // Constants
 // ---------------------------------------------------------------------------
 
+const STREAK_MILESTONES = [
+  {
+    days: 1,
+    title: 'Awakened',
+    message: 'Something has begun.',
+    scripture: '"Wake up, sleeper, rise from the dead, and Christ will shine on you."',
+    reference: 'Ephesians 5:14',
+    congratulations: "I'm proud of you for showing up—this is where everything starts.",
+  },
+  {
+    days: 7,
+    title: 'Turning Toward the Light',
+    message: "You're not who you were.",
+    scripture: '"The path of the righteous is like the morning sun, shining ever brighter till the full light of day."',
+    reference: 'Proverbs 4:18',
+    congratulations: "You stayed with it this week—and that's no small thing.",
+  },
+  {
+    days: 14,
+    title: 'Returning',
+    message: 'Every morning, you come back. That\'s how transformation happens.',
+    scripture: '"His mercies are new every morning; great is your faithfulness."',
+    reference: 'Lamentations 3:23',
+    congratulations: "Two weeks in—this is more than a streak. It's a practice.",
+  },
+  {
+    days: 30,
+    title: 'Planted',
+    message: 'Stay where growth can happen.',
+    scripture: '"Blessed is the one… whose roots go down deep into the water."',
+    reference: 'Jeremiah 17:7–8',
+    congratulations: "A month in—you're not just trying anymore, you're becoming.",
+  },
+  {
+    days: 60,
+    title: 'Being Formed',
+    message: "God is doing more than you can see.",
+    scripture: '"We are the clay, you are the potter; we are all the work of your hand."',
+    reference: 'Isaiah 64:8',
+    congratulations: "You've stayed through the process—even when it's not easy to see.",
+  },
+  {
+    days: 90,
+    title: 'Renewed Mind',
+    message: 'Truth is taking root.',
+    scripture: '"Be transformed by the renewing of your mind."',
+    reference: 'Romans 12:2',
+    congratulations: "You're thinking differently now—and that changes everything.",
+  },
+  {
+    days: 180,
+    title: 'Established',
+    message: 'You are not easily shaken anymore.',
+    scripture: '"Continue to live your lives in him, rooted and built up in him, strengthened in the faith."',
+    reference: 'Colossians 2:6–7',
+    congratulations: "Six months in—you're stronger than you realize.",
+  },
+  {
+    days: 365,
+    title: 'Transformed',
+    message: 'Christ in you is being revealed.',
+    scripture: '"If anyone is in Christ, the new creation has come."',
+    reference: '2 Corinthians 5:17',
+    congratulations: "A year later—this is real transformation, and you're living it.",
+  },
+] as const
+
+type Milestone = typeof STREAK_MILESTONES[number]
+
+const MILESTONE_STORAGE_KEY = 'shown_streak_milestones'
+
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -221,6 +292,7 @@ export default function DashboardPage() {
   const [showCleanDateCard, setShowCleanDateCard] = useState(false)
   const [showJourneyCard, setShowJourneyCard] = useState(true)
   const [cleanDateView, setCleanDateView] = useState<'days' | 'breakdown'>('days')
+  const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(null)
   const swipeStartX = useRef<number | null>(null)
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -343,11 +415,15 @@ export default function DashboardPage() {
         if (profileRes.data?.clean_date) setCleanDate(profileRes.data.clean_date)
         if (profileRes.data?.show_clean_date_card) setShowCleanDateCard(profileRes.data.show_clean_date_card)
         setShowJourneyCard(profileRes.data?.show_journey_card ?? true)
-        if (readsRes.data) {
-          const dates = readsRes.data.map((r: { read_on: string }) => r.read_on)
-          setReadDates(dates)
-          setStreaks(computeStreaks(dates, todayStr, yesterdayStr, readsCountRes.count ?? dates.length))
-        }
+        const dates = (readsRes.data ?? []).map((r: { read_on: string }) => r.read_on)
+        setReadDates(dates)
+        const computed = computeStreaks(dates, todayStr, yesterdayStr, readsCountRes.count ?? dates.length)
+        setStreaks(computed)
+
+        const shownRaw = localStorage.getItem(MILESTONE_STORAGE_KEY)
+        const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
+        const hit = STREAK_MILESTONES.find(m => m.days === computed.current && !shown.includes(m.days))
+        if (hit) setActiveMilestone(hit)
 
         let updatesQuery = supabase
           .from('author_updates')
@@ -372,7 +448,8 @@ export default function DashboardPage() {
 
   if (!ready) {
     return (
-      <div className="space-y-4">
+      <div className="-mt-[22px] space-y-4">
+        <div className="fixed inset-0 -z-[5] bg-[#162845]" />
         <div className="rounded-2xl min-h-[180px] bg-white/10 animate-pulse" />
         <div className="rounded-2xl border border-white/10 bg-white/8 p-5 space-y-3 animate-pulse">
           <div className="h-3 w-24 rounded bg-white/10" />
@@ -398,6 +475,14 @@ export default function DashboardPage() {
         </div>
       </div>
     )
+  }
+
+  function dismissMilestone() {
+    if (!activeMilestone) return
+    const shownRaw = localStorage.getItem(MILESTONE_STORAGE_KEY)
+    const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
+    localStorage.setItem(MILESTONE_STORAGE_KEY, JSON.stringify([...shown, activeMilestone.days]))
+    setActiveMilestone(null)
   }
 
   const activeCardOrder = cardOrder.filter((id) => {
@@ -612,9 +697,46 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="-mt-[22px] space-y-4 pb-8">
       {/* Dark navy background — covers the shared login-hero.jpg on this page only */}
       <div className="fixed inset-0 -z-[5] bg-[#162845]" />
+
+      {/* Streak milestone celebration overlay */}
+      {activeMilestone && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
+            {/* Header band */}
+            <div className="bg-gradient-to-br from-[#1e3a52] to-[#2a5280] px-6 pt-8 pb-6 text-center space-y-1">
+              <div className="flex items-center justify-center mb-3">
+                <span className="rounded-full border border-yellow-300/40 bg-yellow-400/20 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-yellow-200">
+                  {activeMilestone.days === 180 ? '6-Month' : activeMilestone.days === 365 ? '1-Year' : `${activeMilestone.days}-Day`} Streak
+                </span>
+              </div>
+              <h2 className="font-display text-2xl font-bold text-white">{activeMilestone.title}</h2>
+              <p className="text-sm text-white/70">{activeMilestone.message}</p>
+            </div>
+
+            {/* Body */}
+            <div className="bg-white px-6 py-6 space-y-5">
+              <blockquote className="space-y-1 text-center">
+                <p className="font-serif text-[15px] text-charcoal leading-relaxed italic">{activeMilestone.scripture}</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-steel">{activeMilestone.reference}</p>
+              </blockquote>
+
+              <div className="rounded-xl bg-canvas border border-steel/15 px-4 py-3 text-center">
+                <p className="text-sm text-charcoal leading-relaxed">{activeMilestone.congratulations}</p>
+              </div>
+
+              <button
+                onClick={dismissMilestone}
+                className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors"
+              >
+                Keep Going →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Groups announcement modal */}
       {showGroupsAnnouncement && (

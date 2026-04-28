@@ -185,7 +185,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-28 rounded bg-white/20 animate-pulse" />
+        <div className="h-14 w-48 rounded bg-white/20 animate-pulse mx-auto" />
         {[0, 1, 2].map((i) => (
           <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
             <div className="h-3 w-24 rounded bg-steel/10" />

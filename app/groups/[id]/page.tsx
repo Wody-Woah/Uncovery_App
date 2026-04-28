@@ -151,7 +151,9 @@ export default function GroupChatPage() {
       supabase.from('group_read_receipts').upsert(
         { user_id: user.id, group_id: id, last_read_at: new Date().toISOString() },
         { onConflict: 'user_id,group_id' }
-      ).then(() => {})
+      ).then(() => {
+        window.dispatchEvent(new CustomEvent('uncovery:group-read', { detail: { groupId: id } }))
+      })
     }
 
     init()

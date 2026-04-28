@@ -210,6 +210,14 @@ export default function BottomNav() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
+  useEffect(() => {
+    if (!user) return
+    function handleGroupRead() { fetchUnreadCount(user!.id) }
+    window.addEventListener('uncovery:group-read', handleGroupRead)
+    return () => window.removeEventListener('uncovery:group-read', handleGroupRead)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
   async function checkAdmin(userId: string) {
     const { data } = await supabase
       .from('admins')
@@ -250,6 +258,14 @@ export default function BottomNav() {
 
             <div className="px-4 py-2 space-y-1">
               <Link
+                href="/profile"
+                onClick={() => setShowMore(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
+              >
+                <span className="text-muted"><ProfileIcon /></span>
+                Profile & Settings
+              </Link>
+              <Link
                 href="/browse"
                 onClick={() => setShowMore(false)}
                 className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
@@ -264,14 +280,6 @@ export default function BottomNav() {
               >
                 <span className="text-muted"><BookmarkIcon /></span>
                 Bookmarks
-              </Link>
-              <Link
-                href="/profile"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
-              >
-                <span className="text-muted"><ProfileIcon /></span>
-                Profile & Settings
               </Link>
               {isAdmin && (
                 <Link

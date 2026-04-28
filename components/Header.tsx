@@ -109,6 +109,14 @@ export default function Header() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
+  useEffect(() => {
+    if (!user) return
+    function handleGroupRead() { fetchUnreadCount(user!.id) }
+    window.addEventListener('uncovery:group-read', handleGroupRead)
+    return () => window.removeEventListener('uncovery:group-read', handleGroupRead)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
   // ESC closes both the sign-out modal and the user menu
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

@@ -126,6 +126,15 @@ export default function GroupsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
+  useEffect(() => {
+    function handleGroupRead(e: Event) {
+      const { groupId } = (e as CustomEvent).detail
+      setUnreadCounts((prev) => ({ ...prev, [groupId]: 0 }))
+    }
+    window.addEventListener('uncovery:group-read', handleGroupRead)
+    return () => window.removeEventListener('uncovery:group-read', handleGroupRead)
+  }, [])
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -139,9 +148,12 @@ export default function GroupsPage() {
         </div>
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm space-y-2 animate-pulse">
-              <div className="h-4 w-2/5 rounded bg-steel/10" />
-              <div className="h-3 w-3/5 rounded bg-steel/10" />
+            <div key={i} className="rounded-2xl border border-steel/15 bg-white p-4 shadow-sm flex items-center gap-4 animate-pulse">
+              <div className="h-11 w-11 rounded-full bg-steel/10 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-2/5 rounded bg-steel/10" />
+                <div className="h-3 w-3/5 rounded bg-steel/10" />
+              </div>
             </div>
           ))}
         </div>

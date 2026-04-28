@@ -158,7 +158,7 @@ function TodayPageInner() {
 
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-4">
         <div className="h-8 w-40 rounded-full bg-white/20 animate-pulse" />
         <div className="rounded-2xl min-h-[180px] bg-white/20 animate-pulse" />
         <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
@@ -176,7 +176,7 @@ function TodayPageInner() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Back to group button — only shown when navigated from a group chat */}
       {fromGroupId && (
         <Link
