@@ -220,7 +220,7 @@ export default function Header() {
           {/* Brand */}
           <Link
             href="/dashboard"
-            className="font-semibold tracking-widest text-xs uppercase text-steel"
+            className="font-semibold tracking-widest text-xs uppercase text-steel flex-1 text-center md:flex-none md:text-left"
           >
             The Uncovery Devotional
           </Link>
