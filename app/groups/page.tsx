@@ -363,24 +363,33 @@ export default function GroupsPage() {
           <p className="text-xs uppercase tracking-[0.15em] text-white/70 text-shadow-hero">Open Community</p>
           {publicGroups.map((group, index) => (
             <AnimatedCard key={group.id} delay={index * 0.06}>
-              <div className="rounded-2xl border border-steel/15 bg-white p-4 shadow-sm space-y-3">
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${groupColor(group.name)}`}>
-                    {groupInitials(group.name)}
+              <div className="relative rounded-2xl overflow-hidden ring-1 ring-white/30 shadow-md">
+                <Image src="/community.jpg" alt="" fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/25 to-black/65" />
+                <div className="relative z-10 p-4 space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
+                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] uppercase tracking-widest text-white/80 mb-0.5 text-shadow-hero">Open Community</p>
+                      <p className="font-semibold text-white text-shadow-hero">{group.name}</p>
+                      {group.description && (
+                        <p className="text-sm text-white/75 mt-0.5 line-clamp-2 text-shadow-hero">{group.description}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-charcoal">{group.name}</p>
-                    {group.description && (
-                      <p className="text-sm text-muted mt-0.5 line-clamp-2">{group.description}</p>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => setShowRulesModal(group.id)}
+                    className="w-full rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-white/30 transition-colors"
+                  >
+                    Join Community
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowRulesModal(group.id)}
-                  className="w-full rounded-xl bg-steel px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-steel/90 transition-colors"
-                >
-                  Join Community
-                </button>
               </div>
             </AnimatedCard>
           ))}

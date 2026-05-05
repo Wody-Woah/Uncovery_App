@@ -74,6 +74,8 @@ export default function GroupChatPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
   const [reportingMessage, setReportingMessage] = useState<Message | null>(null)
+  const [reportReason, setReportReason] = useState<string | null>(null)
+  const [reportNote, setReportNote] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [reportSuccess, setReportSuccess] = useState(false)
   const [actionMenu, setActionMenu] = useState<{ msg: Message; isOwn: boolean } | null>(null)
@@ -351,7 +353,7 @@ export default function GroupChatPage() {
   }
 
   async function handleReport(msg: Message) {
-    if (!userId || reportSubmitting) return
+    if (!userId || reportSubmitting || !reportReason) return
     setReportSubmitting(true)
     await supabase.from('group_reports').insert({
       group_id: id,
@@ -359,6 +361,8 @@ export default function GroupChatPage() {
       reported_user_id: msg.user_id,
       message_id: msg.id,
       message_content: msg.content,
+      reason: reportReason,
+      reason_note: reportNote.trim() || null,
       status: 'pending',
     })
     setReportSubmitting(false)
@@ -366,6 +370,8 @@ export default function GroupChatPage() {
     setTimeout(() => {
       setReportingMessage(null)
       setReportSuccess(false)
+      setReportReason(null)
+      setReportNote('')
     }, 2000)
   }
 
@@ -407,8 +413,8 @@ export default function GroupChatPage() {
       {/* Report modal */}
       {reportingMessage && (
         <div
-          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-charcoal/50 px-4 pb-4 sm:pb-0"
-          onClick={() => { setReportingMessage(null); setReportSuccess(false) }}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/50 px-4 pt-24"
+          onClick={() => { setReportingMessage(null); setReportSuccess(false); setReportReason(null); setReportNote('') }}
         >
           <div
             className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white p-6 shadow-xl space-y-4"
@@ -424,23 +430,51 @@ export default function GroupChatPage() {
                 <div>
                   <h2 className="text-base font-semibold text-charcoal">Report this message?</h2>
                   <p className="text-xs text-muted mt-1">From {reportingMessage.display_name}</p>
-                  <p className="text-sm text-charcoal/70 mt-2 bg-canvas rounded-lg px-3 py-2 line-clamp-3 italic">
+                  <p className="text-sm text-charcoal/70 mt-2 bg-canvas rounded-lg px-3 py-2 line-clamp-2 italic">
                     &ldquo;{reportingMessage.content}&rdquo;
                   </p>
                 </div>
-                <p className="text-xs text-muted leading-relaxed">
-                  Reports are anonymous and reviewed by our moderation team. Members who violate community guidelines may be removed.
-                </p>
+
+                {/* Reason categories */}
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-charcoal">Why are you reporting this?</p>
+                  {['Harassment', 'Spam', 'Inappropriate content', 'Harmful language', 'Other'].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setReportReason(r)}
+                      className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                        reportReason === r
+                          ? 'border-steel bg-steel/8 text-charcoal font-medium'
+                          : 'border-steel/20 text-charcoal hover:bg-canvas'
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Optional note */}
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-charcoal">Additional context <span className="text-muted font-normal">(optional)</span></p>
+                  <textarea
+                    value={reportNote}
+                    onChange={(e) => setReportNote(e.target.value)}
+                    placeholder="Anything else we should know…"
+                    rows={2}
+                    className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2 text-sm text-charcoal placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-steel/30 resize-none"
+                  />
+                </div>
+
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleReport(reportingMessage)}
-                    disabled={reportSubmitting}
+                    disabled={reportSubmitting || !reportReason}
                     className="rounded-lg bg-sunrise px-4 py-2 text-white text-sm font-medium hover:bg-sunrise/90 transition-colors disabled:opacity-50"
                   >
                     {reportSubmitting ? 'Submitting…' : 'Submit Report'}
                   </button>
                   <button
-                    onClick={() => setReportingMessage(null)}
+                    onClick={() => { setReportingMessage(null); setReportReason(null); setReportNote('') }}
                     className="text-sm text-muted hover:text-charcoal transition-colors"
                   >
                     Cancel

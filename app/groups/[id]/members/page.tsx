@@ -101,6 +101,7 @@ export default function MembersPage() {
     await Promise.all([
       supabase.from('group_bans').insert({ group_id: id, user_id: member.user_id, banned_by: userId, reason: 'Removed by admin' }),
       supabase.from('group_members').delete().eq('group_id', id).eq('user_id', member.user_id),
+      supabase.from('group_messages').delete().eq('group_id', id).eq('user_id', member.user_id),
     ])
     setMembers((prev) => prev.filter((m) => m.user_id !== member.user_id))
     setConfirmAction(null)

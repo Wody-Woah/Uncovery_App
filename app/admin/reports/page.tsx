@@ -14,6 +14,8 @@ type Report = {
   reported_display_name: string
   reported_user_id: string
   message_content: string | null
+  reason: string | null
+  reason_note: string | null
   status: string
   created_at: string
 }
@@ -46,7 +48,7 @@ export default function AdminReportsPage() {
   async function fetchReports() {
     const { data: reportsData } = await supabase
       .from('group_reports')
-      .select('id, group_id, reporter_user_id, reported_user_id, message_content, status, created_at')
+      .select('id, group_id, reporter_user_id, reported_user_id, message_content, reason, reason_note, status, created_at')
       .order('created_at', { ascending: false })
 
     if (!reportsData?.length) { setReports([]); return }
@@ -75,6 +77,8 @@ export default function AdminReportsPage() {
       reported_display_name: profileMap[r.reported_user_id] ?? 'Unknown',
       reported_user_id: r.reported_user_id,
       message_content: r.message_content,
+      reason: r.reason ?? null,
+      reason_note: r.reason_note ?? null,
       status: r.status,
       created_at: r.created_at,
     })))
@@ -97,6 +101,7 @@ export default function AdminReportsPage() {
         { onConflict: 'group_id,user_id' }
       ),
       supabase.from('group_members').delete().eq('group_id', report.group_id).eq('user_id', report.reported_user_id),
+      supabase.from('group_messages').delete().eq('group_id', report.group_id).eq('user_id', report.reported_user_id),
       supabase.from('group_reports').update({ status: 'resolved' }).eq('id', report.id),
     ])
     setBans((prev) => [...prev, { group_id: report.group_id, user_id: report.reported_user_id }])
@@ -199,6 +204,16 @@ export default function AdminReportsPage() {
                     <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5 shrink-0">Resolved</span>
                   )}
                 </div>
+
+                {/* Reason */}
+                {report.reason && (
+                  <div className="space-y-1">
+                    <span className="inline-block text-xs font-medium text-steel bg-steel/10 rounded-full px-2.5 py-0.5">{report.reason}</span>
+                    {report.reason_note && (
+                      <p className="text-xs text-muted leading-relaxed">{report.reason_note}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Message snapshot */}
                 {report.message_content && (
