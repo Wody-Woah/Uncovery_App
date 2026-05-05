@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import AnimatedCard from '@/components/AnimatedCard'
 
@@ -10,6 +11,7 @@ type Group = {
   id: string
   name: string
   description: string | null
+  is_public?: boolean
 }
 
 type LastMessage = {
@@ -184,7 +186,7 @@ export default function GroupsPage() {
 
       const [memberRows, allPublicRes] = await Promise.all([
         supabase.from('group_members').select('group_id').eq('user_id', user.id),
-        supabase.from('groups').select('id, name, description').eq('is_public', true),
+        supabase.from('groups').select('id, name, description, is_public').eq('is_public', true),
       ])
 
       const groupIds = memberRows.data?.map((r) => r.group_id) ?? []
@@ -210,11 +212,13 @@ export default function GroupsPage() {
 
       const { data: groupsData } = await supabase
         .from('groups')
-        .select('id, name, description')
+        .select('id, name, description, is_public')
         .in('id', groupIds)
         .order('created_at', { ascending: false })
 
-      setGroups(groupsData ?? [])
+      // Pin public (community) groups to the top
+      const sorted = (groupsData ?? []).sort((a, b) => (a.is_public === b.is_public ? 0 : a.is_public ? -1 : 1))
+      setGroups(sorted)
       setLoading(false)
 
       fetchUnreadCounts(user.id, groupIds)
@@ -294,7 +298,7 @@ export default function GroupsPage() {
       {/* Community rules modal */}
       {showRulesModal && (
         <div
-          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-charcoal/50 px-4 pb-4 sm:pb-0"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/50 px-4 pt-24"
           onClick={() => setShowRulesModal(null)}
         >
           <div
@@ -396,8 +400,50 @@ export default function GroupsPage() {
         <div className="space-y-3">
           {groups.map((group, index) => {
             const last = lastMessages[group.id]
+            const isCommunity = group.is_public === true
             return (
               <AnimatedCard key={group.id} delay={index * 0.06}>
+                {isCommunity ? (
+                  <Link
+                    href={`/groups/${group.id}`}
+                    className="relative block rounded-2xl overflow-hidden ring-1 ring-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_6px_24px_rgba(0,0,0,0.45)] transition-all min-h-[100px]"
+                  >
+                    <Image src="/community.jpg" alt="" fill className="object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/25 to-black/60" />
+                    <div className="relative z-10 flex items-center gap-4 px-4 py-5">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-widest text-white/80 mb-0.5 text-shadow-hero">Open Community</p>
+                        <p className="text-[16px] font-semibold text-white leading-snug text-shadow-hero">{group.name}</p>
+                        {last ? (
+                          <p className="text-sm text-white/80 mt-0.5 truncate text-shadow-hero">
+                            <span className="font-medium text-white">{last.display_name}:</span>{' '}
+                            {truncate(last.content)}
+                          </p>
+                        ) : group.description ? (
+                          <p className="text-sm text-white/80 mt-0.5 line-clamp-1 text-shadow-hero">{group.description}</p>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        {last && <p className="text-[11px] text-white/70 text-shadow-hero">{formatMessageTime(last.created_at)}</p>}
+                        {(unreadCounts[group.id] ?? 0) > 0 && (
+                          <span className="flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
+                            {unreadCounts[group.id] > 99 ? '99+' : unreadCounts[group.id]}
+                          </span>
+                        )}
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60 shrink-0 drop-shadow">
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </div>
+                  </Link>
+                ) : (
                 <Link
                   href={`/groups/${group.id}`}
                   className="flex items-center gap-4 rounded-2xl border border-steel/15 bg-white p-4 shadow-sm hover:border-steel/30 hover:shadow-md transition-all"
@@ -417,9 +463,7 @@ export default function GroupsPage() {
                     ) : null}
                   </div>
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    {last && (
-                      <p className="text-[11px] text-muted">{formatMessageTime(last.created_at)}</p>
-                    )}
+                    {last && <p className="text-[11px] text-muted">{formatMessageTime(last.created_at)}</p>}
                     {(unreadCounts[group.id] ?? 0) > 0 && (
                       <span className="flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
                         {unreadCounts[group.id] > 99 ? '99+' : unreadCounts[group.id]}
@@ -430,6 +474,7 @@ export default function GroupsPage() {
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </Link>
+                )}
               </AnimatedCard>
             )
           })}

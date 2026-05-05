@@ -17,6 +17,7 @@ type Group = {
   description: string | null
   created_by: string
   invite_code: string
+  is_public: boolean
 }
 
 type Message = {
@@ -75,6 +76,7 @@ export default function GroupChatPage() {
   const [reportingMessage, setReportingMessage] = useState<Message | null>(null)
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [reportSuccess, setReportSuccess] = useState(false)
+  const [actionMenu, setActionMenu] = useState<{ msg: Message; isOwn: boolean } | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -106,7 +108,7 @@ export default function GroupChatPage() {
       if (!membership) { router.push('/groups'); return }
 
       const [groupRes, membersRes, messagesRes, devotionRes] = await Promise.all([
-        supabase.from('groups').select('id, name, description, created_by, invite_code').eq('id', id).single(),
+        supabase.from('groups').select('id, name, description, created_by, invite_code, is_public').eq('id', id).single(),
         supabase.from('group_members').select('user_id').eq('group_id', id),
         supabase.from('group_messages').select('id, user_id, content, created_at, updated_at').eq('group_id', id).order('created_at', { ascending: true }).limit(100),
         supabase.from('devotions').select('title, verse_reference, month, day').eq('month', month).eq('day', day).eq('published', true).single(),
@@ -300,10 +302,9 @@ export default function GroupChatPage() {
     }
   }
 
-  function handlePressStart(msgId: string, content: string) {
+  function handlePressStart(msg: Message, isOwn: boolean) {
     longPressTimer.current = setTimeout(() => {
-      setEditingId(msgId)
-      setEditText(content)
+      setActionMenu({ msg, isOwn })
     }, 500)
   }
 
@@ -451,6 +452,52 @@ export default function GroupChatPage() {
         </div>
       )}
 
+      {/* Long-press action sheet */}
+      {actionMenu && (
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-charcoal/40 px-4 pb-6"
+          onClick={() => setActionMenu(null)}
+        >
+          <div
+            className="w-full max-w-sm space-y-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-steel/10">
+                <p className="text-xs text-muted text-center line-clamp-1 italic">&ldquo;{actionMenu.msg.content}&rdquo;</p>
+              </div>
+              <button
+                onClick={() => { setPickerOpen(actionMenu.msg.id); setActionMenu(null) }}
+                className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors border-b border-steel/10 text-left"
+              >
+                React
+              </button>
+              {actionMenu.isOwn ? (
+                <button
+                  onClick={() => { setEditingId(actionMenu.msg.id); setEditText(actionMenu.msg.content); setActionMenu(null) }}
+                  className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors text-left"
+                >
+                  Edit
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setReportingMessage(actionMenu.msg); setActionMenu(null) }}
+                  className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors text-left"
+                >
+                  Report
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setActionMenu(null)}
+              className="w-full rounded-2xl bg-white border border-steel/15 py-4 text-sm font-semibold text-charcoal hover:bg-canvas transition-colors shadow-xl"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header — sticky so group name is always visible */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1e3a52] to-steel px-4 py-3 shadow-md">
         <h1 className="text-base font-semibold text-white flex-1 text-center">{group?.name}</h1>
@@ -459,8 +506,8 @@ export default function GroupChatPage() {
         </Link>
       </div>
 
-      {/* Invite card — shown to the creator always */}
-      {userId === group?.created_by && (
+      {/* Invite card — shown to the creator for private groups only */}
+      {userId === group?.created_by && !group?.is_public && (
         <AnimatedCard delay={0}>
         <div className="rounded-2xl border border-steel/30 bg-white p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
@@ -580,16 +627,16 @@ export default function GroupChatPage() {
                       </div>
                     ) : (
                     <div
-                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed select-none ${
-                        isOwn ? 'bg-steel text-white rounded-br-sm cursor-pointer active:opacity-80' : 'bg-canvas text-charcoal rounded-bl-sm'
+                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed select-none cursor-pointer active:opacity-80 touch-pan-y ${
+                        isOwn ? 'bg-steel text-white rounded-br-sm' : 'bg-canvas text-charcoal rounded-bl-sm'
                       }`}
-                      onTouchStart={isOwn ? () => handlePressStart(msg.id, msg.content) : undefined}
-                      onTouchEnd={isOwn ? handlePressEnd : undefined}
-                      onTouchMove={isOwn ? handlePressEnd : undefined}
-                      onMouseDown={isOwn ? () => handlePressStart(msg.id, msg.content) : undefined}
-                      onMouseUp={isOwn ? handlePressEnd : undefined}
-                      onMouseLeave={isOwn ? handlePressEnd : undefined}
-                      onContextMenu={isOwn ? (e) => e.preventDefault() : undefined}
+                      onTouchStart={() => handlePressStart(msg, isOwn)}
+                      onTouchEnd={handlePressEnd}
+                      onTouchMove={handlePressEnd}
+                      onMouseDown={() => handlePressStart(msg, isOwn)}
+                      onMouseUp={handlePressEnd}
+                      onMouseLeave={handlePressEnd}
+                      onContextMenu={(e) => e.preventDefault()}
                     >
                       {msg.content}
                     </div>
@@ -610,12 +657,6 @@ export default function GroupChatPage() {
                           {emoji} {count}
                         </button>
                       ))}
-                      <button
-                        onClick={() => setPickerOpen(pickerOpen === msg.id ? null : msg.id)}
-                        className="w-6 h-6 flex items-center justify-center rounded-full border border-steel/15 bg-white text-muted text-xs hover:bg-canvas transition-colors"
-                      >
-                        +
-                      </button>
                     </div>
 
                     {/* Emoji picker */}
@@ -633,16 +674,6 @@ export default function GroupChatPage() {
                       </div>
                     )}
 
-                    {/* Report button — other users only */}
-                    {!isOwn && (
-                      <button
-                        onClick={() => setReportingMessage(msg)}
-                        className="mt-0.5 px-1 text-[10px] text-muted/40 hover:text-muted transition-colors"
-                        title="Report message"
-                      >
-                        Report
-                      </button>
-                    )}
                   </div>
                 </div>
               )
