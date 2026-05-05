@@ -26,12 +26,15 @@ export default function MembersPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [leaving, setLeaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<{ type: 'remove' | 'ban'; member: Member } | null>(null)
+  const [actioning, setActioning] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -39,17 +42,12 @@ export default function MembersPage() {
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
 
-      const [groupRes, membersRes] = await Promise.all([
-        supabase
-          .from('groups')
-          .select('id, name, invite_code, created_by')
-          .eq('id', id)
-          .single(),
-        supabase
-          .from('group_members')
-          .select('user_id, role')
-          .eq('group_id', id),
+      const [groupRes, membersRes, adminRes] = await Promise.all([
+        supabase.from('groups').select('id, name, invite_code, created_by').eq('id', id).single(),
+        supabase.from('group_members').select('user_id, role').eq('group_id', id),
+        supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle(),
       ])
+      setIsAdmin(!!adminRes.data)
 
       if (!groupRes.data) { router.push('/groups'); return }
       setGroup(groupRes.data)
@@ -86,6 +84,34 @@ export default function MembersPage() {
     setDeleting(true)
     await supabase.from('groups').delete().eq('id', id)
     router.push('/groups')
+  }
+
+  async function handleRemoveMember(member: Member) {
+    if (actioning) return
+    setActioning(true)
+    await supabase.from('group_members').delete().eq('group_id', id).eq('user_id', member.user_id)
+    setMembers((prev) => prev.filter((m) => m.user_id !== member.user_id))
+    setConfirmAction(null)
+    setActioning(false)
+  }
+
+  async function handleBanMember(member: Member) {
+    if (actioning) return
+    setActioning(true)
+    await Promise.all([
+      supabase.from('group_bans').insert({ group_id: id, user_id: member.user_id, banned_by: userId, reason: 'Removed by admin' }),
+      supabase.from('group_members').delete().eq('group_id', id).eq('user_id', member.user_id),
+    ])
+    setMembers((prev) => prev.filter((m) => m.user_id !== member.user_id))
+    setConfirmAction(null)
+    setActioning(false)
+  }
+
+  async function handleUnban(member: Member) {
+    if (actioning) return
+    setActioning(true)
+    await supabase.from('group_bans').delete().eq('group_id', id).eq('user_id', member.user_id)
+    setActioning(false)
   }
 
   async function handleLeave() {
@@ -129,8 +155,49 @@ export default function MembersPage() {
 
   const myRole = members.find((m) => m.user_id === userId)?.role
 
+  const canModerate = isAdmin || userId === group?.created_by
+
   return (
     <div className="space-y-6">
+
+      {/* Remove/ban confirmation modal */}
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4"
+          onClick={() => setConfirmAction(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white p-6 shadow-lg space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h2 className="text-base font-semibold text-charcoal">
+                {confirmAction.type === 'ban' ? 'Ban' : 'Remove'} {confirmAction.member.display_name}?
+              </h2>
+              <p className="text-sm text-muted mt-1">
+                {confirmAction.type === 'ban'
+                  ? 'This will remove them from the group and prevent them from rejoining. You can unban them from the admin reports page.'
+                  : 'This will remove them from the group. They can still rejoin if the group is public.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={() => confirmAction.type === 'ban' ? handleBanMember(confirmAction.member) : handleRemoveMember(confirmAction.member)}
+                disabled={actioning}
+                className="rounded-lg bg-sunrise px-4 py-2 text-white text-sm font-medium hover:bg-sunrise/90 transition-colors disabled:opacity-50"
+              >
+                {actioning ? 'Working…' : confirmAction.type === 'ban' ? 'Ban Member' : 'Remove Member'}
+              </button>
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="text-sm text-muted hover:text-charcoal transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (
@@ -192,20 +259,32 @@ export default function MembersPage() {
                   <div className="min-w-0">
                     <p className="text-sm text-charcoal">
                       {m.display_name}
-                      {m.user_id === userId && (
-                        <span className="text-muted"> (you)</span>
-                      )}
+                      {m.user_id === userId && <span className="text-muted"> (you)</span>}
                     </p>
-                    {m.bio && (
-                      <p className="text-xs text-muted mt-0.5 truncate">{m.bio}</p>
-                    )}
+                    {m.bio && <p className="text-xs text-muted mt-0.5 truncate">{m.bio}</p>}
                   </div>
                 </div>
-                {m.role === 'admin' && (
-                  <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5 shrink-0">
-                    Admin
-                  </span>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  {m.role === 'admin' && (
+                    <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5">Admin</span>
+                  )}
+                  {canModerate && m.user_id !== userId && (
+                    <>
+                      <button
+                        onClick={() => setConfirmAction({ type: 'remove', member: m })}
+                        className="text-xs text-muted hover:text-charcoal transition-colors px-2 py-1 rounded-lg hover:bg-canvas"
+                      >
+                        Remove
+                      </button>
+                      <button
+                        onClick={() => setConfirmAction({ type: 'ban', member: m })}
+                        className="text-xs text-sunrise hover:text-sunrise/80 transition-colors px-2 py-1 rounded-lg hover:bg-canvas"
+                      >
+                        Ban
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </div>

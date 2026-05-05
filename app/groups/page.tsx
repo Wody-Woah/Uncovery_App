@@ -63,12 +63,27 @@ function truncate(text: string, max = 42): string {
   return clean.length > max ? clean.slice(0, max).trimEnd() + '…' : clean
 }
 
+const COMMUNITY_RULES = `This is an open community for anyone on the recovery journey. All are welcome here.
+
+To keep this a safe space for everyone:
+• Treat every member with kindness and respect
+• No harassment, threats, or harmful content
+• No sharing of personal contact information
+• Keep conversations rooted in support and encouragement
+• Lift one another up — we are all on this journey together
+
+Members who do not follow these guidelines may be removed at any time.`
+
 export default function GroupsPage() {
   const router = useRouter()
+  const [userId, setUserId] = useState<string | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
+  const [publicGroups, setPublicGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const [lastMessages, setLastMessages] = useState<Record<string, LastMessage>>({})
+  const [showRulesModal, setShowRulesModal] = useState<string | null>(null)
+  const [joining, setJoining] = useState(false)
   const channelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
   const uidRef = useRef<string | null>(null)
 
@@ -165,13 +180,28 @@ export default function GroupsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       uidRef.current = user.id
+      setUserId(user.id)
 
-      const { data: memberRows } = await supabase
-        .from('group_members')
-        .select('group_id')
-        .eq('user_id', user.id)
+      const [memberRows, allPublicRes] = await Promise.all([
+        supabase.from('group_members').select('group_id').eq('user_id', user.id),
+        supabase.from('groups').select('id, name, description').eq('is_public', true),
+      ])
 
-      const groupIds = memberRows?.map((r) => r.group_id) ?? []
+      const groupIds = memberRows.data?.map((r) => r.group_id) ?? []
+      const joinedSet = new Set(groupIds)
+
+      // Public groups user hasn't joined — filtered by bans
+      const unjoinedPublic = (allPublicRes.data ?? []).filter((g: Group) => !joinedSet.has(g.id))
+      if (unjoinedPublic.length > 0) {
+        const pubIds = unjoinedPublic.map((g: Group) => g.id)
+        const { data: bans } = await supabase
+          .from('group_bans')
+          .select('group_id')
+          .eq('user_id', user.id)
+          .in('group_id', pubIds)
+        const bannedIds = new Set((bans ?? []).map((b: { group_id: string }) => b.group_id))
+        setPublicGroups(unjoinedPublic.filter((g: Group) => !bannedIds.has(g.id)))
+      }
 
       if (groupIds.length === 0) {
         setLoading(false)
@@ -209,6 +239,30 @@ export default function GroupsPage() {
     return () => window.removeEventListener('uncovery:group-read', handleGroupRead)
   }, [])
 
+  async function handleJoinPublicGroup(groupId: string) {
+    if (!userId || joining) return
+    setJoining(true)
+    const { data: ban } = await supabase
+      .from('group_bans')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (ban) { setJoining(false); setShowRulesModal(null); return }
+    await supabase.from('group_members').insert({ group_id: groupId, user_id: userId, role: 'member' })
+    await supabase.from('group_read_receipts').upsert(
+      { user_id: userId, group_id: groupId, last_read_at: new Date().toISOString() },
+      { onConflict: 'user_id,group_id' }
+    )
+    const joined = publicGroups.find((g) => g.id === groupId)
+    if (joined) {
+      setGroups((prev) => [joined, ...prev])
+      setPublicGroups((prev) => prev.filter((g) => g.id !== groupId))
+    }
+    setShowRulesModal(null)
+    setJoining(false)
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -237,6 +291,46 @@ export default function GroupsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Community rules modal */}
+      {showRulesModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-charcoal/50 px-4 pb-4 sm:pb-0"
+          onClick={() => setShowRulesModal(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 pt-6 pb-4 border-b border-steel/10">
+              <p className="text-xs uppercase tracking-widest text-steel mb-1">Before you join</p>
+              <h2 className="text-lg font-semibold text-charcoal">Community Guidelines</h2>
+            </div>
+            <div className="px-6 py-4 max-h-64 overflow-y-auto">
+              {COMMUNITY_RULES.split('\n').map((line, i) => (
+                <p key={i} className={`text-sm text-charcoal leading-relaxed ${line === '' ? 'mt-3' : ''}`}>
+                  {line}
+                </p>
+              ))}
+            </div>
+            <div className="px-6 pb-6 pt-2 space-y-2">
+              <button
+                onClick={() => handleJoinPublicGroup(showRulesModal)}
+                disabled={joining}
+                className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors disabled:opacity-60"
+              >
+                {joining ? 'Joining…' : 'I Agree — Join Community'}
+              </button>
+              <button
+                onClick={() => setShowRulesModal(null)}
+                className="w-full rounded-xl px-4 py-2.5 text-sm text-muted hover:text-charcoal transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <h1 className="font-display text-5xl font-bold text-brand-blue text-shadow-hero text-center">Small Groups</h1>
         <p className="text-sm text-white/80 text-shadow-hero mt-1 text-center">
@@ -258,6 +352,36 @@ export default function GroupsPage() {
           Join with code
         </Link>
       </div>
+
+      {/* Open community groups */}
+      {publicGroups.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.15em] text-white/70 text-shadow-hero">Open Community</p>
+          {publicGroups.map((group, index) => (
+            <AnimatedCard key={group.id} delay={index * 0.06}>
+              <div className="rounded-2xl border border-steel/15 bg-white p-4 shadow-sm space-y-3">
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${groupColor(group.name)}`}>
+                    {groupInitials(group.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-charcoal">{group.name}</p>
+                    {group.description && (
+                      <p className="text-sm text-muted mt-0.5 line-clamp-2">{group.description}</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowRulesModal(group.id)}
+                  className="w-full rounded-xl bg-steel px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-steel/90 transition-colors"
+                >
+                  Join Community
+                </button>
+              </div>
+            </AnimatedCard>
+          ))}
+        </div>
+      )}
 
       {groups.length === 0 ? (
         <AnimatedCard>

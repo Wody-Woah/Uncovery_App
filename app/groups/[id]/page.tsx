@@ -72,6 +72,9 @@ export default function GroupChatPage() {
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
+  const [reportingMessage, setReportingMessage] = useState<Message | null>(null)
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [reportSuccess, setReportSuccess] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -346,6 +349,25 @@ export default function GroupChatPage() {
     setSending(false)
   }
 
+  async function handleReport(msg: Message) {
+    if (!userId || reportSubmitting) return
+    setReportSubmitting(true)
+    await supabase.from('group_reports').insert({
+      group_id: id,
+      reporter_user_id: userId,
+      reported_user_id: msg.user_id,
+      message_id: msg.id,
+      message_content: msg.content,
+      status: 'pending',
+    })
+    setReportSubmitting(false)
+    setReportSuccess(true)
+    setTimeout(() => {
+      setReportingMessage(null)
+      setReportSuccess(false)
+    }, 2000)
+  }
+
   function formatTime(ts: string) {
     const date = new Date(ts)
     const now = new Date()
@@ -381,6 +403,54 @@ export default function GroupChatPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Report modal */}
+      {reportingMessage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-charcoal/50 px-4 pb-4 sm:pb-0"
+          onClick={() => { setReportingMessage(null); setReportSuccess(false) }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white p-6 shadow-xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {reportSuccess ? (
+              <div className="text-center py-2 space-y-1">
+                <p className="text-sm font-semibold text-charcoal">Report submitted</p>
+                <p className="text-xs text-muted">Thank you. We&apos;ll review this message.</p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <h2 className="text-base font-semibold text-charcoal">Report this message?</h2>
+                  <p className="text-xs text-muted mt-1">From {reportingMessage.display_name}</p>
+                  <p className="text-sm text-charcoal/70 mt-2 bg-canvas rounded-lg px-3 py-2 line-clamp-3 italic">
+                    &ldquo;{reportingMessage.content}&rdquo;
+                  </p>
+                </div>
+                <p className="text-xs text-muted leading-relaxed">
+                  Reports are anonymous and reviewed by our moderation team. Members who violate community guidelines may be removed.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleReport(reportingMessage)}
+                    disabled={reportSubmitting}
+                    className="rounded-lg bg-sunrise px-4 py-2 text-white text-sm font-medium hover:bg-sunrise/90 transition-colors disabled:opacity-50"
+                  >
+                    {reportSubmitting ? 'Submitting…' : 'Submit Report'}
+                  </button>
+                  <button
+                    onClick={() => setReportingMessage(null)}
+                    className="text-sm text-muted hover:text-charcoal transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header — sticky so group name is always visible */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1e3a52] to-steel px-4 py-3 shadow-md">
         <h1 className="text-base font-semibold text-white flex-1 text-center">{group?.name}</h1>
@@ -561,6 +631,17 @@ export default function GroupChatPage() {
                           </button>
                         ))}
                       </div>
+                    )}
+
+                    {/* Report button — other users only */}
+                    {!isOwn && (
+                      <button
+                        onClick={() => setReportingMessage(msg)}
+                        className="mt-0.5 px-1 text-[10px] text-muted/40 hover:text-muted transition-colors"
+                        title="Report message"
+                      >
+                        Report
+                      </button>
                     )}
                   </div>
                 </div>
