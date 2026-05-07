@@ -79,6 +79,7 @@ export default function GroupChatPage() {
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [reportSuccess, setReportSuccess] = useState(false)
   const [actionMenu, setActionMenu] = useState<{ msg: Message; isOwn: boolean } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -334,6 +335,14 @@ export default function GroupChatPage() {
     }
   }
 
+  async function handleDeleteMessage(msgId: string) {
+    if (!userId) return
+    await supabase.from('group_messages').delete().eq('id', msgId).eq('user_id', userId)
+    setMessages((prev) => prev.filter((m) => m.id !== msgId))
+    setActionMenu(null)
+    setConfirmDelete(false)
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim() || !userId || sending) return
@@ -490,7 +499,7 @@ export default function GroupChatPage() {
       {actionMenu && (
         <div
           className="fixed inset-0 z-[70] flex items-end justify-center bg-charcoal/40 px-4 pb-6"
-          onClick={() => setActionMenu(null)}
+          onClick={() => { setActionMenu(null); setConfirmDelete(false) }}
         >
           <div
             className="w-full max-w-sm space-y-2"
@@ -500,30 +509,59 @@ export default function GroupChatPage() {
               <div className="px-4 py-3 border-b border-steel/10">
                 <p className="text-xs text-muted text-center line-clamp-1 italic">&ldquo;{actionMenu.msg.content}&rdquo;</p>
               </div>
-              <button
-                onClick={() => { setPickerOpen(actionMenu.msg.id); setActionMenu(null) }}
-                className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors border-b border-steel/10 text-left"
-              >
-                React
-              </button>
-              {actionMenu.isOwn ? (
-                <button
-                  onClick={() => { setEditingId(actionMenu.msg.id); setEditText(actionMenu.msg.content); setActionMenu(null) }}
-                  className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors text-left"
-                >
-                  Edit
-                </button>
+
+              {confirmDelete ? (
+                <>
+                  <p className="px-5 py-4 text-sm font-medium text-charcoal border-b border-steel/10">Delete this message?</p>
+                  <button
+                    onClick={() => handleDeleteMessage(actionMenu.msg.id)}
+                    className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors border-b border-steel/10 text-left"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors text-left"
+                  >
+                    Back
+                  </button>
+                </>
               ) : (
-                <button
-                  onClick={() => { setReportingMessage(actionMenu.msg); setActionMenu(null) }}
-                  className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors text-left"
-                >
-                  Report
-                </button>
+                <>
+                  <button
+                    onClick={() => { setPickerOpen(actionMenu.msg.id); setActionMenu(null) }}
+                    className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors border-b border-steel/10 text-left"
+                  >
+                    React
+                  </button>
+                  {actionMenu.isOwn ? (
+                    <>
+                      <button
+                        onClick={() => { setEditingId(actionMenu.msg.id); setEditText(actionMenu.msg.content); setActionMenu(null) }}
+                        className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors border-b border-steel/10 text-left"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(true)}
+                        className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors text-left"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => { setReportingMessage(actionMenu.msg); setActionMenu(null) }}
+                      className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors text-left"
+                    >
+                      Report
+                    </button>
+                  )}
+                </>
               )}
             </div>
             <button
-              onClick={() => setActionMenu(null)}
+              onClick={() => { setActionMenu(null); setConfirmDelete(false) }}
               className="w-full rounded-2xl bg-white border border-steel/15 py-4 text-sm font-semibold text-charcoal hover:bg-canvas transition-colors shadow-xl"
             >
               Cancel

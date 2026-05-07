@@ -164,9 +164,10 @@ Small groups.
 | description | text | nullable |
 | created_by | uuid | references auth.users |
 | invite_code | text | UNIQUE, 6-character code |
+| is_public | bool | default false — open community groups anyone can join |
 | created_at | timestamptz | default now() |
 
-RLS: SELECT/UPDATE for members only (via `get_my_group_ids()` security definer).
+RLS: SELECT/UPDATE for members only (via `get_my_group_ids()` security definer); public groups readable by all authenticated users via "Anyone can view public groups" policy.
 
 ---
 
@@ -182,7 +183,10 @@ Membership in small groups.
 | joined_at | timestamptz | default now() |
 
 Constraints: UNIQUE (group_id, user_id)
-RLS: members can SELECT their group's rows; DELETE via `is_group_admin()` security definer.
+RLS:
+- SELECT: members can view their group's rows
+- INSERT: users can join groups (own user_id only)
+- DELETE: `is_group_admin()` for group-level admins; "Users can leave groups" for own row; "App admins can remove any member" for app admins
 
 ---
 
@@ -198,8 +202,12 @@ Chat messages in small groups.
 | month | int | |
 | day | int | |
 | created_at | timestamptz | default now() |
+| updated_at | timestamptz | nullable, set when message is edited |
 
-RLS: members of the group can SELECT and INSERT.
+RLS:
+- SELECT/INSERT: group members only
+- UPDATE: own messages only
+- DELETE: own messages, group-level admins for their group, app admins for any group
 
 ---
 
@@ -231,6 +239,47 @@ Tracks the last time a user read messages in a group (for unread badge counts).
 
 Constraints: UNIQUE (group_id, user_id)
 RLS: own rows only.
+
+---
+
+### group_bans
+Users banned from a specific group.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PRIMARY KEY |
+| group_id | uuid | references groups |
+| user_id | uuid | references auth.users — the banned user |
+| banned_by | uuid | nullable, references auth.users — who issued the ban |
+| reason | text | nullable |
+| created_at | timestamptz | default now() |
+
+Constraints: UNIQUE (group_id, user_id)
+Ban = INSERT, Unban = DELETE (no status column).
+RLS:
+- ALL: app admins (admins table)
+- INSERT/DELETE: group creators and group-level admins ("Group moderators can manage bans")
+- SELECT: users can check own ban status
+
+---
+
+### group_reports
+User reports of messages in group chats.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PRIMARY KEY |
+| group_id | uuid | references groups |
+| reporter_user_id | uuid | references auth.users |
+| reported_user_id | uuid | references auth.users |
+| message_id | uuid | nullable, references group_messages |
+| message_content | text | nullable, snapshot of reported message |
+| reason | text | nullable — selected category (Harassment, Spam, Inappropriate content, Harmful language, Other) |
+| reason_note | text | nullable — optional free-text context from reporter |
+| status | text | 'pending' or 'resolved' |
+| created_at | timestamptz | default now() |
+
+RLS: authenticated users can INSERT; app admins can SELECT/UPDATE all.
 
 ---
 

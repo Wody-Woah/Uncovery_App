@@ -44,11 +44,11 @@ A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by
 - `/journal` — private journal entries
 - `/profile` — edit display name, bio, avatar, clean date, change password
 - `/settings` — dashboard card visibility toggles, notifications, PWA install, legal links
-- `/groups` — list of user's small groups
+- `/groups` — list of user's small groups + open community discovery
 - `/groups/new` — create a new group
 - `/groups/join` — join a group via invite code
-- `/groups/[id]` — group chat with realtime messages and emoji reactions
-- `/groups/[id]/members` — members list, invite code, leave/delete group
+- `/groups/[id]` — group chat with realtime messages, emoji reactions, long-press actions
+- `/groups/[id]/members` — members list, invite code, leave/delete group, remove/ban members
 - `/updates/[id]` — full author update detail page
 - `/search` — search devotions by keyword (title, verse, body)
 - `/book` — "Get the Book" page with book cover image and Amazon purchase link
@@ -131,6 +131,33 @@ A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by
 - Member display names fetched via `get_member_display_names()` security definer function
 - Unread message badge on nav bar (sum across all groups) and on each group card (per-group)
 - Badge clears immediately when opening a group (custom `uncovery:group-read` browser event)
+- Long press any message → action sheet with React / Edit (own) / Report (others)
+- Message editing inline with Cancel/Save
+
+### Open Community Group
+- Public group (`is_public = true`) discoverable on `/groups` without an invite code
+- Community card shows `community.jpg` background image with gradient overlay
+- Always pinned to the top of the joined groups list
+- Users must accept community rules modal before joining
+- Banned users are filtered from the join card and cannot rejoin
+- Invite code card hidden inside public groups (no invite needed)
+
+### Group Moderation
+- Group creators and group-level admins can Remove or Ban members from `/groups/[id]/members`
+- Banning: inserts to `group_bans`, removes from `group_members`, deletes all their messages in that group
+- Unbanning: deletes from `group_bans`
+- App admins can moderate any group regardless of membership role
+
+### Message Reporting
+- Long press → Report opens a modal with predefined reason categories + optional note
+- Categories: Harassment, Spam, Inappropriate content, Harmful language, Other
+- Reports stored in `group_reports` with status 'pending' or 'resolved'
+- Reports are anonymous to other users
+
+### Admin — Reports Page (`/admin/reports`)
+- Filter by pending / resolved
+- Shows reporter, reported user, group, reason category, optional note, message snapshot
+- Actions: Dismiss (resolves), Ban & Remove (bans + removes + deletes messages + resolves), Unban
 
 ### Author Updates
 - George can post messages to all users (admin panel)
