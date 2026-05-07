@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -59,6 +60,7 @@ export default function ResetPasswordPage() {
           <p className="text-sm text-white/70 mt-1">Choose a new password for your account.</p>
         </div>
 
+        <AnimatedCard>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           {success ? (
             <div className="text-center space-y-3">
@@ -127,6 +129,7 @@ export default function ResetPasswordPage() {
             </form>
           )}
         </div>
+        </AnimatedCard>
       </div>
     </div>
   )

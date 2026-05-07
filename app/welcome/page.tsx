@@ -130,11 +130,21 @@ export default function WelcomePage() {
     await supabase
       .from('user_flags')
       .upsert({ user_id: userId, has_seen_welcome: true }, { onConflict: 'user_id' })
-    window.location.href = '/dashboard'
+    window.location.href = '/onboarding'
   }
 
   if (!ready) {
-    return <div className="py-20 text-center text-muted text-sm">Loading…</div>
+    return (
+      <div className="space-y-5 py-4">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-3 animate-pulse">
+            <div className="h-4 w-1/2 rounded bg-steel/10" />
+            <div className="h-3 w-full rounded bg-steel/10" />
+            <div className="h-3 w-4/5 rounded bg-steel/10" />
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -159,14 +169,39 @@ export default function WelcomePage() {
       {/* Author message */}
       <motion.div
         variants={itemVariants}
-        className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm"
+        className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden"
       >
-        <p className="text-xs uppercase tracking-widest text-steel mb-4">From George</p>
-        <p
-          className="font-serif text-charcoal leading-[1.85] whitespace-pre-wrap text-[15px]"
-        >
-          {AUTHOR_MESSAGE}
-        </p>
+        {/* Letter header */}
+        <div className="px-6 pt-6 pb-4 border-b border-steel/10">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-steel/70">A Personal Note</p>
+          <p className="font-display text-2xl font-semibold text-charcoal mt-1">From George</p>
+        </div>
+
+        {/* Letter body */}
+        <div className="px-6 py-6 space-y-5">
+          {AUTHOR_MESSAGE.split('\n\n').map((para, i, arr) => {
+            const lines = para.split('\n')
+            const isSignature = i === arr.length - 1
+            if (isSignature) {
+              return (
+                <div key={i} className="pt-1 space-y-0.5">
+                  <p className="font-display italic text-[15px] text-charcoal/70">{lines[0]}</p>
+                  <p className="font-display text-2xl font-semibold text-charcoal">{lines[1]}</p>
+                </div>
+              )
+            }
+            return (
+              <p key={i} className="font-display text-[15.5px] text-charcoal leading-[1.9]">
+                {lines.map((line, j) => (
+                  <span key={j}>
+                    {line}
+                    {j < lines.length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
+            )
+          })}
+        </div>
       </motion.div>
 
       {/* Book cover */}

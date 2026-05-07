@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Devotion = {
   id: string
@@ -111,7 +112,28 @@ export default function DevotionPage() {
   }, [month, day])
 
   if (loading) {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <div className="h-4 w-20 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5 animate-pulse">
+          <div className="space-y-2">
+            <div className="h-3 w-24 rounded bg-steel/10" />
+            <div className="h-6 w-3/4 rounded bg-steel/10" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-2/5 rounded bg-steel/10" />
+            <div className="h-3 w-full rounded bg-steel/10" />
+            <div className="h-3 w-4/5 rounded bg-steel/10" />
+          </div>
+          <div className="space-y-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className={`h-3 rounded bg-steel/10 ${i === 3 ? 'w-2/3' : 'w-full'}`} />
+            ))}
+          </div>
+          <div className="h-10 w-36 rounded-xl bg-steel/10" />
+        </div>
+      </div>
+    )
   }
 
   const monthName = MONTH_NAMES[month] ?? ''
@@ -122,11 +144,13 @@ export default function DevotionPage() {
         <button onClick={() => router.back()} className="text-sm text-brand-blue hover:underline text-shadow-hero">
           ← Back
         </button>
-        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
-          <p className="text-muted text-sm">
-            No devotion found for {monthName} {day}.
-          </p>
-        </div>
+        <AnimatedCard>
+          <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
+            <p className="text-muted text-sm">
+              No devotion found for {monthName} {day}.
+            </p>
+          </div>
+        </AnimatedCard>
       </div>
     )
   }
@@ -145,17 +169,19 @@ export default function DevotionPage() {
       </div>
 
       {/* Devotion Card */}
-      <DevotionCard
-        devotion={devotion}
-        userId={userId}
-        bookmarked={bookmarked}
-        bookmarking={bookmarking}
-        onBookmarkToggle={handleBookmarkToggle}
-        marked={marked}
-        marking={marking}
-        onMarkRead={handleMarkRead}
-        showStreakMessage={false}
-      />
+      <AnimatedCard>
+        <DevotionCard
+          devotion={devotion}
+          userId={userId}
+          bookmarked={bookmarked}
+          bookmarking={bookmarking}
+          onBookmarkToggle={handleBookmarkToggle}
+          marked={marked}
+          marking={marking}
+          onMarkRead={handleMarkRead}
+          showStreakMessage={false}
+        />
+      </AnimatedCard>
     </div>
   )
 }

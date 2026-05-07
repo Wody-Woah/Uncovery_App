@@ -6,6 +6,7 @@ import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
 import { supabase } from '@/lib/supabaseClient'
 import Avatar from '@/components/Avatar'
+import AnimatedCard from '@/components/AnimatedCard'
 
 async function getCroppedBlob(imageSrc: string, pixelCrop: Area): Promise<Blob> {
   const img = await createImageBitmap(await fetch(imageSrc).then((r) => r.blob()))
@@ -25,6 +26,8 @@ export default function ProfilePage() {
 
   // Profile fields
   const [userId, setUserId] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(null)
+  const [memberSince, setMemberSince] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
@@ -61,6 +64,8 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
+      setEmail(user.email ?? null)
+      setMemberSince(user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null)
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -257,8 +262,34 @@ export default function ProfilePage() {
 
   if (profileLoading) {
     return (
-      <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">
-        Loading…
+      <div className="space-y-6">
+        <div className="h-14 w-48 rounded bg-white/20 animate-pulse mx-auto" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm flex items-center justify-between animate-pulse">
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-16 rounded bg-steel/10" />
+            <div className="h-3 w-40 rounded bg-steel/10" />
+          </div>
+          <div className="h-4 w-4 rounded bg-steel/10" />
+        </div>
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm flex flex-col items-center gap-4 animate-pulse">
+          <div className="h-3 w-12 rounded bg-steel/10 self-start" />
+          <div className="h-20 w-20 rounded-full bg-steel/10" />
+          <div className="h-3 w-32 rounded bg-steel/10" />
+        </div>
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5 animate-pulse">
+          <div className="h-3 w-24 rounded bg-steel/10" />
+          <div className="h-10 w-full rounded-lg bg-steel/10" />
+          <div className="h-10 w-full rounded-lg bg-steel/10" />
+          <div className="h-20 w-full rounded-lg bg-steel/10" />
+          <div className="h-10 w-28 rounded-lg bg-steel/10" />
+        </div>
+        {[0, 1].map((i) => (
+          <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-4 animate-pulse">
+            <div className="h-3 w-28 rounded bg-steel/10" />
+            <div className="h-10 w-full rounded-lg bg-steel/10" />
+            <div className="h-10 w-28 rounded-lg bg-steel/10" />
+          </div>
+        ))}
       </div>
     )
   }
@@ -320,9 +351,23 @@ export default function ProfilePage() {
       )}
 
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold text-brand-blue text-shadow-hero">Profile</h1>
+        <h1 className="font-display text-5xl font-bold text-brand-blue text-shadow-hero text-center">Profile</h1>
+
+        {/* Settings link */}
+        <AnimatedCard delay={0}>
+        <a href="/settings" className="flex items-center justify-between rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors">
+          <div>
+            <h2 className="text-sm font-semibold text-charcoal">Settings</h2>
+            <p className="text-xs text-muted mt-0.5">Notifications, app preferences, and more</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+        </AnimatedCard>
 
         {/* Avatar card */}
+        <AnimatedCard delay={0.08}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm flex flex-col items-center gap-4">
           <p className="text-xs uppercase tracking-widest text-steel self-start">Photo</p>
 
@@ -372,8 +417,10 @@ export default function ProfilePage() {
             </button>
           )}
         </div>
+        </AnimatedCard>
 
         {/* Profile card */}
+        <AnimatedCard delay={0.08}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Your Profile</h2>
 
@@ -388,6 +435,17 @@ export default function ProfilePage() {
                 Profile saved.
               </div>
             )}
+
+            <div>
+              <label className={labelClass}>Email Address</label>
+              <input
+                type="email"
+                value={email ?? ''}
+                readOnly
+                className={`${inputClass} cursor-default select-all text-muted`}
+              />
+              <p className="text-xs text-muted mt-1.5">To change your email, please contact support.</p>
+            </div>
 
             <div>
               <label className={labelClass}>Display Name</label>
@@ -420,9 +478,17 @@ export default function ProfilePage() {
               {profileSaving ? 'Saving…' : 'Save Profile'}
             </button>
           </form>
+
+          {memberSince && (
+            <p className="text-xs text-muted mt-5 pt-5 border-t border-steel/10">
+              Member since {memberSince}
+            </p>
+          )}
         </div>
+        </AnimatedCard>
 
         {/* Clean Date card */}
+        <AnimatedCard delay={0.16}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-1">Clean Date</h2>
           <p className="text-sm text-muted mb-5">Track your sobriety and display a Days Clean card on your dashboard.</p>
@@ -482,8 +548,26 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+        </AnimatedCard>
+
+        {/* Get the Book */}
+        <AnimatedCard delay={0.24}>
+        <a
+          href="/book"
+          className="flex items-center justify-between rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors"
+        >
+          <div>
+            <h2 className="text-sm font-semibold text-charcoal">Get the Book</h2>
+            <p className="text-xs text-muted mt-0.5">Purchase The Uncovery Devotional on Amazon</p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-steel/40 shrink-0">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </a>
+        </AnimatedCard>
 
         {/* Security card */}
+        <AnimatedCard delay={0.32}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Security</h2>
 
@@ -532,8 +616,10 @@ export default function ProfilePage() {
             </button>
           </form>
         </div>
+        </AnimatedCard>
 
         {/* Account card */}
+        <AnimatedCard delay={0.40}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <h2 className="text-xs uppercase tracking-widest text-steel mb-5">Account</h2>
           <p className="text-sm text-muted mb-4">
@@ -546,6 +632,7 @@ export default function ProfilePage() {
             Delete my account →
           </a>
         </div>
+        </AnimatedCard>
 
       </div>
     </>

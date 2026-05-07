@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
+import AnimatedCard from '@/components/AnimatedCard'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -38,6 +39,7 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
+        <AnimatedCard>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           {sent ? (
             <div className="space-y-4 text-center">
@@ -87,6 +89,7 @@ export default function ForgotPasswordPage() {
             </form>
           )}
         </div>
+        </AnimatedCard>
 
         <p className="text-center text-sm text-white/90 mt-6">
           Remember your password?{' '}

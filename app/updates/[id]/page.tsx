@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type AuthorUpdate = {
   id: string
@@ -42,6 +43,11 @@ export default function UpdateDetailPage() {
         setNotFound(true)
       } else {
         setUpdate(data)
+        const stored = localStorage.getItem('read_update_ids')
+        const ids: string[] = stored ? JSON.parse(stored) : []
+        if (!ids.includes(id)) {
+          localStorage.setItem('read_update_ids', JSON.stringify([...ids, id]))
+        }
       }
       setLoading(false)
     }
@@ -50,7 +56,22 @@ export default function UpdateDetailPage() {
   }, [id, router])
 
   if (loading) {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <div className="h-4 w-24 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-6 animate-pulse">
+          <div className="space-y-2">
+            <div className="h-7 w-3/4 rounded bg-steel/10" />
+            <div className="h-3 w-28 rounded bg-steel/10" />
+          </div>
+          <div className="space-y-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className={`h-3 rounded bg-steel/10 ${i === 4 ? 'w-2/3' : 'w-full'}`} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (notFound || !update) {
@@ -59,9 +80,11 @@ export default function UpdateDetailPage() {
         <Link href="/dashboard" className="text-sm text-brand-blue hover:underline text-shadow-hero">
           ← Dashboard
         </Link>
-        <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
-          <p className="text-muted text-sm">Update not found.</p>
-        </div>
+        <AnimatedCard>
+          <div className="rounded-2xl border border-steel/20 bg-white p-10 text-center shadow-sm">
+            <p className="text-muted text-sm">Update not found.</p>
+          </div>
+        </AnimatedCard>
       </div>
     )
   }
@@ -78,15 +101,17 @@ export default function UpdateDetailPage() {
         ← Dashboard
       </Link>
 
-      <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-charcoal mb-1">{update.title}</h1>
-          <p className="text-sm text-muted">{dateStr}</p>
+      <AnimatedCard>
+        <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-charcoal mb-1">{update.title}</h1>
+            <p className="text-sm text-muted">{dateStr}</p>
+          </div>
+          <div className="font-serif text-charcoal leading-[1.85] whitespace-pre-wrap text-[1.0625rem]">
+            {update.body}
+          </div>
         </div>
-        <div className="font-serif text-charcoal leading-[1.85] whitespace-pre-wrap text-[1.0625rem]">
-          {update.body}
-        </div>
-      </div>
+      </AnimatedCard>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 # Claude Code — Instructions for The Uncovery Devotional
 
 ## Critical Rules (Never Break These)
-- **NEVER push to any repo without the user explicitly saying to push.** Always ask first.
+- **NEVER commit, push, or deploy without the user explicitly saying to.** Always wait for instruction.
 - **Always run `npm run build` before pushing** to catch ESLint/TypeScript errors locally.
 - **Never use `router.push()`** after login, signup, or welcome completion — use `window.location.href` to ensure full session initialization.
 - Apostrophes in JSX must use `&apos;` — raw `'` will fail ESLint.
@@ -13,12 +13,12 @@
 
 Two remotes, always push to both:
 - `origin` → `git@github.com:Wody-Woah/Uncovery_App.git` → `dev` branch
-- `vercel` → `git@github.com:Wody-Woah/uncovery-app.git` → `main` branch
+- `vercel` → `git@github.com:Wody-Woah/uncovery-app.git` → `dev` branch
 
 Push commands:
 ```bash
 git push origin dev
-git push vercel dev:main
+git push vercel dev
 vercel --prod
 ```
 
@@ -31,7 +31,8 @@ GitHub auto-deploy webhook is not working. Always run `vercel --prod` after push
 - TypeScript
 - Tailwind CSS with custom colors (see UI_STYLE.md)
 - Supabase (`@supabase/supabase-js`) — Auth, PostgreSQL, Realtime
-- Framer Motion — used on welcome page only
+- Framer Motion — used on welcome page and AnimatedCard component
+- @dnd-kit — drag-to-reorder on dashboard
 - Vercel — hosting
 
 ---
@@ -83,22 +84,40 @@ Use `crypto.randomUUID()` client-side for the group ID to avoid 403 on `.select(
 ### Date / Time
 Always use `getTodayET()` from `lib/getTodayET.ts` — never `new Date()` directly for devotion queries. App uses Eastern Time.
 
+### Cross-Component Events
+Custom browser events are used to sync state between components without global state:
+- `uncovery:group-read` — dispatched when a group is opened; Header and BottomNav listen to clear unread badge immediately
+```tsx
+window.dispatchEvent(new CustomEvent('uncovery:group-read', { detail: { groupId: id } }))
+```
+
+### localStorage Keys
+| Key | Purpose |
+|---|---|
+| `dashboard_card_order` | Saved order of dashboard cards |
+| `dashboard_drag_hint_seen` | Whether the drag-to-reorder hint has been dismissed |
+| `shown_streak_milestones` | Array of milestone day counts already shown to the user |
+| `read_update_ids` | Array of author update IDs the user has opened |
+
 ---
 
 ## File Structure Notes
 - `app/` — all pages (Next.js App Router)
-- `components/` — shared components (Header, BottomNav, DevotionCard, MonthlyStreakGrid, Avatar, DevotionNotes)
+- `components/` — shared components (Header, BottomNav, DevotionCard, MonthlyStreakGrid, Avatar, AnimatedCard, DevotionNotes)
 - `lib/` — utilities (supabaseClient, isAdmin, getTodayET)
-- `public/` — static assets (images, manifest.json, icons, assetlinks.json)
+- `public/` — static assets (images, manifest.json, icons, assetlinks.json, sw.js)
 - `docs/` — spec files (this file and others)
 
 ---
 
 ## Style
 See `docs/UI_STYLE.md` for full style guide.
+- Page headings: `font-display text-5xl font-bold text-brand-blue text-shadow-hero text-center`
 - Use `text-shadow-hero` on white text over the dark background image
 - All pages have the fixed dark hero background (set in layout.tsx)
+- Dashboard overrides background with `bg-[#162845]` fixed div at `-z-[5]`
 - Bottom navigation bar on mobile (`components/BottomNav.tsx`)
+- `AnimatedCard` wraps most list items for staggered entrance animation
 
 ---
 
@@ -106,3 +125,4 @@ See `docs/UI_STYLE.md` for full style guide.
 - App features and routes: `docs/APP_SPEC.md`
 - Database tables and functions: `docs/DB_SCHEMA.md`
 - Colors and typography: `docs/UI_STYLE.md`
+- Planned engagement improvements: `docs/ENGAGEMENT_ROADMAP.md`

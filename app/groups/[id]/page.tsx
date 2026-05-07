@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import { getTodayET } from '@/lib/getTodayET'
 import Avatar from '@/components/Avatar'
+import AnimatedCard from '@/components/AnimatedCard'
 
 const EMOJIS = ['🙏', '❤️', '👍', '🕊️', '✝️', '💙', '🔥']
 
@@ -16,6 +17,7 @@ type Group = {
   description: string | null
   created_by: string
   invite_code: string
+  is_public: boolean
 }
 
 type Message = {
@@ -65,13 +67,19 @@ export default function GroupChatPage() {
   const [reactions, setReactions] = useState<ReactionsMap>({})
   const [pickerOpen, setPickerOpen] = useState<string | null>(null)
   const [devotion, setDevotion] = useState<TodayDevotion | null>(null)
-  const [memberCount, setMemberCount] = useState(0)
   const [codeCopied, setCodeCopied] = useState(false)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
+  const [reportingMessage, setReportingMessage] = useState<Message | null>(null)
+  const [reportReason, setReportReason] = useState<string | null>(null)
+  const [reportNote, setReportNote] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [reportSuccess, setReportSuccess] = useState(false)
+  const [actionMenu, setActionMenu] = useState<{ msg: Message; isOwn: boolean } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -103,7 +111,7 @@ export default function GroupChatPage() {
       if (!membership) { router.push('/groups'); return }
 
       const [groupRes, membersRes, messagesRes, devotionRes] = await Promise.all([
-        supabase.from('groups').select('id, name, description, created_by, invite_code').eq('id', id).single(),
+        supabase.from('groups').select('id, name, description, created_by, invite_code, is_public').eq('id', id).single(),
         supabase.from('group_members').select('user_id').eq('group_id', id),
         supabase.from('group_messages').select('id, user_id, content, created_at, updated_at').eq('group_id', id).order('created_at', { ascending: true }).limit(100),
         supabase.from('devotions').select('title, verse_reference, month, day').eq('month', month).eq('day', day).eq('published', true).single(),
@@ -114,7 +122,6 @@ export default function GroupChatPage() {
       setDevotion(devotionRes.data)
 
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
-      setMemberCount(memberIds.length)
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id, display_name, avatar_url')
@@ -147,6 +154,14 @@ export default function GroupChatPage() {
       }
 
       setLoading(false)
+
+      // Mark all messages as read for this user
+      supabase.from('group_read_receipts').upsert(
+        { user_id: user.id, group_id: id, last_read_at: new Date().toISOString() },
+        { onConflict: 'user_id,group_id' }
+      ).then(() => {
+        window.dispatchEvent(new CustomEvent('uncovery:group-read', { detail: { groupId: id } }))
+      })
     }
 
     init()
@@ -187,6 +202,13 @@ export default function GroupChatPage() {
             if (prev.find((m) => m.id === msg.id)) return prev
             return [...prev, { ...msg, display_name }]
           })
+          // User is watching — keep their receipt current
+          if (userIdRef.current) {
+            supabase.from('group_read_receipts').upsert(
+              { user_id: userIdRef.current, group_id: id, last_read_at: new Date().toISOString() },
+              { onConflict: 'user_id,group_id' }
+            ).then(() => {})
+          }
         }
       )
       .on(
@@ -283,10 +305,9 @@ export default function GroupChatPage() {
     }
   }
 
-  function handlePressStart(msgId: string, content: string) {
+  function handlePressStart(msg: Message, isOwn: boolean) {
     longPressTimer.current = setTimeout(() => {
-      setEditingId(msgId)
-      setEditText(content)
+      setActionMenu({ msg, isOwn })
     }, 500)
   }
 
@@ -314,6 +335,14 @@ export default function GroupChatPage() {
     }
   }
 
+  async function handleDeleteMessage(msgId: string) {
+    if (!userId) return
+    await supabase.from('group_messages').delete().eq('id', msgId).eq('user_id', userId)
+    setMessages((prev) => prev.filter((m) => m.id !== msgId))
+    setActionMenu(null)
+    setConfirmDelete(false)
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim() || !userId || sending) return
@@ -332,16 +361,215 @@ export default function GroupChatPage() {
     setSending(false)
   }
 
+  async function handleReport(msg: Message) {
+    if (!userId || reportSubmitting || !reportReason) return
+    setReportSubmitting(true)
+    await supabase.from('group_reports').insert({
+      group_id: id,
+      reporter_user_id: userId,
+      reported_user_id: msg.user_id,
+      message_id: msg.id,
+      message_content: msg.content,
+      reason: reportReason,
+      reason_note: reportNote.trim() || null,
+      status: 'pending',
+    })
+    setReportSubmitting(false)
+    setReportSuccess(true)
+    setTimeout(() => {
+      setReportingMessage(null)
+      setReportSuccess(false)
+      setReportReason(null)
+      setReportNote('')
+    }, 2000)
+  }
+
   function formatTime(ts: string) {
-    return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    const date = new Date(ts)
+    const now = new Date()
+    const isToday = date.toDateString() === now.toDateString()
+    const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    if (isToday) return `Today, ${time}`
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return `${dateStr}, ${time}`
   }
 
   if (loading) {
-    return <div className="py-20 text-center text-white text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-2xl h-12 bg-white/20 animate-pulse" />
+        <div className="rounded-2xl min-h-[100px] bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden animate-pulse">
+          <div className="p-4 min-h-[300px] space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={`flex gap-2 ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
+                <div className="h-8 w-8 rounded-full bg-steel/10 shrink-0 self-end" />
+                <div className={`h-12 w-2/3 rounded-2xl bg-steel/10 ${i % 2 === 0 ? 'rounded-bl-sm' : 'rounded-br-sm'}`} />
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-steel/10 p-3 flex gap-2">
+            <div className="h-10 flex-1 rounded-lg bg-steel/10" />
+            <div className="h-10 w-16 rounded-lg bg-steel/10" />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Report modal */}
+      {reportingMessage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/50 px-4 pt-24"
+          onClick={() => { setReportingMessage(null); setReportSuccess(false); setReportReason(null); setReportNote('') }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white p-6 shadow-xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {reportSuccess ? (
+              <div className="text-center py-2 space-y-1">
+                <p className="text-sm font-semibold text-charcoal">Report submitted</p>
+                <p className="text-xs text-muted">Thank you. We&apos;ll review this message.</p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <h2 className="text-base font-semibold text-charcoal">Report this message?</h2>
+                  <p className="text-xs text-muted mt-1">From {reportingMessage.display_name}</p>
+                  <p className="text-sm text-charcoal/70 mt-2 bg-canvas rounded-lg px-3 py-2 line-clamp-2 italic">
+                    &ldquo;{reportingMessage.content}&rdquo;
+                  </p>
+                </div>
+
+                {/* Reason categories */}
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-charcoal">Why are you reporting this?</p>
+                  {['Harassment', 'Spam', 'Inappropriate content', 'Harmful language', 'Other'].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setReportReason(r)}
+                      className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                        reportReason === r
+                          ? 'border-steel bg-steel/8 text-charcoal font-medium'
+                          : 'border-steel/20 text-charcoal hover:bg-canvas'
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Optional note */}
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-charcoal">Additional context <span className="text-muted font-normal">(optional)</span></p>
+                  <textarea
+                    value={reportNote}
+                    onChange={(e) => setReportNote(e.target.value)}
+                    placeholder="Anything else we should know…"
+                    rows={2}
+                    className="w-full rounded-lg border border-steel/20 bg-canvas px-3 py-2 text-sm text-charcoal placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-steel/30 resize-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleReport(reportingMessage)}
+                    disabled={reportSubmitting || !reportReason}
+                    className="rounded-lg bg-sunrise px-4 py-2 text-white text-sm font-medium hover:bg-sunrise/90 transition-colors disabled:opacity-50"
+                  >
+                    {reportSubmitting ? 'Submitting…' : 'Submit Report'}
+                  </button>
+                  <button
+                    onClick={() => { setReportingMessage(null); setReportReason(null); setReportNote('') }}
+                    className="text-sm text-muted hover:text-charcoal transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Long-press action sheet */}
+      {actionMenu && (
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-charcoal/40 px-4 pb-6"
+          onClick={() => { setActionMenu(null); setConfirmDelete(false) }}
+        >
+          <div
+            className="w-full max-w-sm space-y-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rounded-2xl border border-steel/15 bg-white shadow-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-steel/10">
+                <p className="text-xs text-muted text-center line-clamp-1 italic">&ldquo;{actionMenu.msg.content}&rdquo;</p>
+              </div>
+
+              {confirmDelete ? (
+                <>
+                  <p className="px-5 py-4 text-sm font-medium text-charcoal border-b border-steel/10">Delete this message?</p>
+                  <button
+                    onClick={() => handleDeleteMessage(actionMenu.msg.id)}
+                    className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors border-b border-steel/10 text-left"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors text-left"
+                  >
+                    Back
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => { setPickerOpen(actionMenu.msg.id); setActionMenu(null) }}
+                    className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors border-b border-steel/10 text-left"
+                  >
+                    React
+                  </button>
+                  {actionMenu.isOwn ? (
+                    <>
+                      <button
+                        onClick={() => { setEditingId(actionMenu.msg.id); setEditText(actionMenu.msg.content); setActionMenu(null) }}
+                        className="w-full px-5 py-4 text-sm font-medium text-charcoal hover:bg-canvas transition-colors border-b border-steel/10 text-left"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(true)}
+                        className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors text-left"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => { setReportingMessage(actionMenu.msg); setActionMenu(null) }}
+                      className="w-full px-5 py-4 text-sm font-medium text-sunrise hover:bg-canvas transition-colors text-left"
+                    >
+                      Report
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => { setActionMenu(null); setConfirmDelete(false) }}
+              className="w-full rounded-2xl bg-white border border-steel/15 py-4 text-sm font-semibold text-charcoal hover:bg-canvas transition-colors shadow-xl"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header — sticky so group name is always visible */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#1e3a52] to-steel px-4 py-3 shadow-md">
         <h1 className="text-base font-semibold text-white flex-1 text-center">{group?.name}</h1>
@@ -350,8 +578,9 @@ export default function GroupChatPage() {
         </Link>
       </div>
 
-      {/* Invite card — shown to the creator only when no one else has joined yet */}
-      {userId === group?.created_by && memberCount === 1 && (
+      {/* Invite card — shown to the creator for private groups only */}
+      {userId === group?.created_by && !group?.is_public && (
+        <AnimatedCard delay={0}>
         <div className="rounded-2xl border border-steel/30 bg-white p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-steel/10">
@@ -384,10 +613,12 @@ export default function GroupChatPage() {
             </button>
           </div>
         </div>
+        </AnimatedCard>
       )}
 
       {/* Today's devotion pin */}
       {devotion && (
+        <AnimatedCard delay={0.08}>
         <Link
           href={`/today?from=group&groupId=${id}`}
           className="relative rounded-2xl overflow-hidden shadow-sm block min-h-[100px]"
@@ -407,9 +638,11 @@ export default function GroupChatPage() {
             <p className="text-xs text-white/80 mt-0.5">{devotion.verse_reference}</p>
           </div>
         </Link>
+        </AnimatedCard>
       )}
 
       {/* Chat */}
+      <AnimatedCard delay={0.16}>
       <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
         <div ref={chatContainerRef} className="p-4 space-y-4 min-h-[300px] max-h-[50vh] overflow-y-auto">
           {messages.length === 0 ? (
@@ -466,16 +699,16 @@ export default function GroupChatPage() {
                       </div>
                     ) : (
                     <div
-                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed select-none ${
-                        isOwn ? 'bg-steel text-white rounded-br-sm cursor-pointer active:opacity-80' : 'bg-canvas text-charcoal rounded-bl-sm'
+                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed select-none cursor-pointer active:opacity-80 touch-pan-y ${
+                        isOwn ? 'bg-steel text-white rounded-br-sm' : 'bg-canvas text-charcoal rounded-bl-sm'
                       }`}
-                      onTouchStart={isOwn ? () => handlePressStart(msg.id, msg.content) : undefined}
-                      onTouchEnd={isOwn ? handlePressEnd : undefined}
-                      onTouchMove={isOwn ? handlePressEnd : undefined}
-                      onMouseDown={isOwn ? () => handlePressStart(msg.id, msg.content) : undefined}
-                      onMouseUp={isOwn ? handlePressEnd : undefined}
-                      onMouseLeave={isOwn ? handlePressEnd : undefined}
-                      onContextMenu={isOwn ? (e) => e.preventDefault() : undefined}
+                      onTouchStart={() => handlePressStart(msg, isOwn)}
+                      onTouchEnd={handlePressEnd}
+                      onTouchMove={handlePressEnd}
+                      onMouseDown={() => handlePressStart(msg, isOwn)}
+                      onMouseUp={handlePressEnd}
+                      onMouseLeave={handlePressEnd}
+                      onContextMenu={(e) => e.preventDefault()}
                     >
                       {msg.content}
                     </div>
@@ -496,12 +729,6 @@ export default function GroupChatPage() {
                           {emoji} {count}
                         </button>
                       ))}
-                      <button
-                        onClick={() => setPickerOpen(pickerOpen === msg.id ? null : msg.id)}
-                        className="w-6 h-6 flex items-center justify-center rounded-full border border-steel/15 bg-white text-muted text-xs hover:bg-canvas transition-colors"
-                      >
-                        +
-                      </button>
                     </div>
 
                     {/* Emoji picker */}
@@ -518,6 +745,7 @@ export default function GroupChatPage() {
                         ))}
                       </div>
                     )}
+
                   </div>
                 </div>
               )
@@ -543,6 +771,7 @@ export default function GroupChatPage() {
           </button>
         </form>
       </div>
+      </AnimatedCard>
 
       {/* Back to Groups — full width at the bottom */}
       <Link

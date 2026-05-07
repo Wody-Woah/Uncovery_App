@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.uncoverydevotional.twa",
       "sha256_cert_fingerprints": [
-        "77:FE:3B:69:00:2A:3D:AA:4F:49:73:6A:88:1B:AC:B5:7D:13:93:27:52:43:9E:FF:58:83:E5:74:40:98:21:1A"
+        "77:FE:3B:69:00:2A:3D:AA:4F:49:73:6A:88:1B:AC:B5:7D:13:93:27:52:43:9E:FF:58:83:E5:74:40:98:21:1A",
+        "F9:70:F7:81:80:23:62:DE:E5:EC:DD:A4:4F:2A:98:F2:F0:1D:F0:7E:DB:AD:5B:A7:9A:98:7A:5C:31:47:86:BA"
       ]
     }
   }

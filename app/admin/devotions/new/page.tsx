@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Status = 'loading' | 'unauthorized' | 'ready'
 
@@ -88,7 +89,19 @@ export default function NewDevotionPage() {
   }
 
   if (status === 'loading') {
-    return <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Checking access…</div>
+    return (
+      <div className="space-y-8">
+        <div className="h-7 w-40 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-5 animate-pulse">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-3 w-24 rounded bg-steel/10" />
+              <div className={`w-full rounded-lg bg-steel/10 ${i >= 2 ? 'h-24' : 'h-10'}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   if (status === 'unauthorized') {
@@ -128,6 +141,7 @@ export default function NewDevotionPage() {
         )}
 
         {/* Date */}
+        <AnimatedCard delay={0}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-5">
           <p className={labelClass}>Date</p>
           <div className="grid grid-cols-2 gap-4">
@@ -161,8 +175,10 @@ export default function NewDevotionPage() {
             </div>
           </div>
         </div>
+        </AnimatedCard>
 
         {/* Content */}
+        <AnimatedCard delay={0.08}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm space-y-5">
           <p className={labelClass}>Content</p>
 
@@ -234,8 +250,10 @@ export default function NewDevotionPage() {
             />
           </div>
         </div>
+        </AnimatedCard>
 
         {/* Settings */}
+        <AnimatedCard delay={0.16}>
         <div className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -258,6 +276,7 @@ export default function NewDevotionPage() {
             </button>
           </div>
         </div>
+        </AnimatedCard>
 
         {/* Actions */}
         <div className="flex items-center gap-4 pb-10">

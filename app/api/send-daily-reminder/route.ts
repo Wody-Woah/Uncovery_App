@@ -8,7 +8,7 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 )
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,9 +19,12 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  const currentHour = new Date().getUTCHours()
+
   const { data: subscriptions, error } = await supabase
     .from('push_subscriptions')
     .select('id, endpoint, p256dh, auth')
+    .eq('reminder_hour', currentHour)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!subscriptions || subscriptions.length === 0) {

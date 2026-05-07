@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Status = 'loading' | 'unauthenticated' | 'unauthorized' | 'admin'
 
@@ -30,7 +31,15 @@ export default function AdminPage() {
 
   if (status === 'loading') {
     return (
-      <div className="py-20 text-center text-white font-semibold text-sm text-shadow-hero">Checking access…</div>
+      <div className="space-y-6">
+        <div className="h-8 w-24 rounded bg-white/20 animate-pulse" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-2xl border border-steel/15 bg-white p-6 shadow-sm space-y-3 animate-pulse">
+            <div className="h-4 w-1/3 rounded bg-steel/10" />
+            <div className="h-3 w-2/3 rounded bg-steel/10" />
+          </div>
+        ))}
+      </div>
     )
   }
 
@@ -72,49 +81,57 @@ export default function AdminPage() {
 
       {/* Action cards */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/admin/devotions/new"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Create</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            New Devotion
-          </h2>
-          <p className="text-sm text-muted mt-1">Write and publish a new daily devotion.</p>
-        </Link>
+        <AnimatedCard delay={0}>
+          <Link
+            href="/admin/devotions"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              All Devotions
+            </h2>
+            <p className="text-sm text-muted mt-1">View, edit, or unpublish existing devotions.</p>
+          </Link>
+        </AnimatedCard>
 
-        <Link
-          href="/admin/devotions"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            All Devotions
-          </h2>
-          <p className="text-sm text-muted mt-1">View, edit, or unpublish existing devotions.</p>
-        </Link>
+        <AnimatedCard delay={0.08}>
+          <Link
+            href="/admin/updates"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Author</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              From the Author
+            </h2>
+            <p className="text-sm text-muted mt-1">Create and manage author updates.</p>
+          </Link>
+        </AnimatedCard>
 
-        <Link
-          href="/admin/updates"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Author</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            From the Author
-          </h2>
-          <p className="text-sm text-muted mt-1">Create and manage author updates.</p>
-        </Link>
+        <AnimatedCard delay={0.16}>
+          <Link
+            href="/admin/users"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              Users
+            </h2>
+            <p className="text-sm text-muted mt-1">View, search, and manage user accounts.</p>
+          </Link>
+        </AnimatedCard>
 
-        <Link
-          href="/admin/users"
-          className="rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
-        >
-          <p className="text-xs uppercase tracking-widest text-steel mb-2">Manage</p>
-          <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
-            Users
-          </h2>
-          <p className="text-sm text-muted mt-1">View, search, and manage user accounts.</p>
-        </Link>
+        <AnimatedCard delay={0.24}>
+          <Link
+            href="/admin/reports"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Moderation</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              Reports
+            </h2>
+            <p className="text-sm text-muted mt-1">Review and act on user reports from group chats.</p>
+          </Link>
+        </AnimatedCard>
       </div>
     </div>
   )

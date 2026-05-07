@@ -5,12 +5,14 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import Avatar from '@/components/Avatar'
+import AnimatedCard from '@/components/AnimatedCard'
 
 type Member = {
   user_id: string
   role: string
   display_name: string
   avatar_url: string | null
+  bio: string | null
 }
 
 type Group = {
@@ -24,12 +26,15 @@ export default function MembersPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [leaving, setLeaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<{ type: 'remove' | 'ban'; member: Member } | null>(null)
+  const [actioning, setActioning] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -37,17 +42,12 @@ export default function MembersPage() {
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
 
-      const [groupRes, membersRes] = await Promise.all([
-        supabase
-          .from('groups')
-          .select('id, name, invite_code, created_by')
-          .eq('id', id)
-          .single(),
-        supabase
-          .from('group_members')
-          .select('user_id, role')
-          .eq('group_id', id),
+      const [groupRes, membersRes, adminRes] = await Promise.all([
+        supabase.from('groups').select('id, name, invite_code, created_by').eq('id', id).single(),
+        supabase.from('group_members').select('user_id, role').eq('group_id', id),
+        supabase.from('admins').select('user_id').eq('user_id', user.id).maybeSingle(),
       ])
+      setIsAdmin(!!adminRes.data)
 
       if (!groupRes.data) { router.push('/groups'); return }
       setGroup(groupRes.data)
@@ -55,18 +55,19 @@ export default function MembersPage() {
       const memberIds = (membersRes.data ?? []).map((m: { user_id: string }) => m.user_id)
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_url')
+        .select('id, display_name, avatar_url, bio')
         .in('id', memberIds)
 
-      const profileMap: Record<string, { display_name: string; avatar_url: string | null }> = {}
-      profilesData?.forEach((p: { id: string; display_name: string; avatar_url: string | null }) => {
-        profileMap[p.id] = { display_name: p.display_name ?? 'Unknown', avatar_url: p.avatar_url ?? null }
+      const profileMap: Record<string, { display_name: string; avatar_url: string | null; bio: string | null }> = {}
+      profilesData?.forEach((p: { id: string; display_name: string; avatar_url: string | null; bio: string | null }) => {
+        profileMap[p.id] = { display_name: p.display_name ?? 'Unknown', avatar_url: p.avatar_url ?? null, bio: p.bio ?? null }
       })
 
       const mapped: Member[] = (membersRes.data ?? []).map((m: { user_id: string; role: string }) => ({
         ...m,
         display_name: profileMap[m.user_id]?.display_name ?? 'Unknown',
         avatar_url: profileMap[m.user_id]?.avatar_url ?? null,
+        bio: profileMap[m.user_id]?.bio ?? null,
       }))
 
       // Sort: admins first
@@ -85,6 +86,35 @@ export default function MembersPage() {
     router.push('/groups')
   }
 
+  async function handleRemoveMember(member: Member) {
+    if (actioning) return
+    setActioning(true)
+    await supabase.from('group_members').delete().eq('group_id', id).eq('user_id', member.user_id)
+    setMembers((prev) => prev.filter((m) => m.user_id !== member.user_id))
+    setConfirmAction(null)
+    setActioning(false)
+  }
+
+  async function handleBanMember(member: Member) {
+    if (actioning) return
+    setActioning(true)
+    await Promise.all([
+      supabase.from('group_bans').insert({ group_id: id, user_id: member.user_id, banned_by: userId, reason: 'Removed by admin' }),
+      supabase.from('group_members').delete().eq('group_id', id).eq('user_id', member.user_id),
+      supabase.from('group_messages').delete().eq('group_id', id).eq('user_id', member.user_id),
+    ])
+    setMembers((prev) => prev.filter((m) => m.user_id !== member.user_id))
+    setConfirmAction(null)
+    setActioning(false)
+  }
+
+  async function handleUnban(member: Member) {
+    if (actioning) return
+    setActioning(true)
+    await supabase.from('group_bans').delete().eq('group_id', id).eq('user_id', member.user_id)
+    setActioning(false)
+  }
+
   async function handleLeave() {
     if (!userId || leaving) return
     setLeaving(true)
@@ -101,13 +131,74 @@ export default function MembersPage() {
   }
 
   if (loading) {
-    return <div className="py-20 text-center text-white text-sm text-shadow-hero">Loading…</div>
+    return (
+      <div className="space-y-6">
+        <div className="h-7 w-32 rounded bg-white/20 animate-pulse" />
+        <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden animate-pulse">
+          <div className="px-5 py-3 border-b border-steel/10">
+            <div className="h-3 w-20 rounded bg-steel/10" />
+          </div>
+          <div className="divide-y divide-steel/10">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+                <div className="h-8 w-8 rounded-full bg-steel/10 shrink-0" />
+                <div className="space-y-1.5">
+                  <div className="h-3 w-28 rounded bg-steel/10" />
+                  <div className="h-2.5 w-40 rounded bg-steel/10" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const myRole = members.find((m) => m.user_id === userId)?.role
 
+  const canModerate = isAdmin || userId === group?.created_by
+
   return (
     <div className="space-y-6">
+
+      {/* Remove/ban confirmation modal */}
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-charcoal/40 px-4"
+          onClick={() => setConfirmAction(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-steel/20 bg-white p-6 shadow-lg space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h2 className="text-base font-semibold text-charcoal">
+                {confirmAction.type === 'ban' ? 'Ban' : 'Remove'} {confirmAction.member.display_name}?
+              </h2>
+              <p className="text-sm text-muted mt-1">
+                {confirmAction.type === 'ban'
+                  ? 'This will remove them from the group and prevent them from rejoining. You can unban them from the admin reports page.'
+                  : 'This will remove them from the group. They can still rejoin if the group is public.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={() => confirmAction.type === 'ban' ? handleBanMember(confirmAction.member) : handleRemoveMember(confirmAction.member)}
+                disabled={actioning}
+                className="rounded-lg bg-sunrise px-4 py-2 text-white text-sm font-medium hover:bg-sunrise/90 transition-colors disabled:opacity-50"
+              >
+                {actioning ? 'Working…' : confirmAction.type === 'ban' ? 'Ban Member' : 'Remove Member'}
+              </button>
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="text-sm text-muted hover:text-charcoal transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (
@@ -154,33 +245,52 @@ export default function MembersPage() {
       </div>
 
       {/* Member list */}
-      <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-steel/10">
-          <p className="text-xs uppercase tracking-widest text-steel">
-            {members.length} {members.length === 1 ? 'Member' : 'Members'}
-          </p>
-        </div>
-        <div className="divide-y divide-steel/10">
-          {members.map((m) => (
-            <div key={m.user_id} className="flex items-center justify-between px-5 py-3.5">
-              <div className="flex items-center gap-3">
-                <Avatar avatarUrl={m.avatar_url} displayName={m.display_name} size="sm" />
-                <p className="text-sm text-charcoal">
-                  {m.display_name}
-                  {m.user_id === userId && (
-                    <span className="text-muted"> (you)</span>
+      <AnimatedCard>
+        <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
+          <div className="px-5 py-3 border-b border-steel/10">
+            <p className="text-xs uppercase tracking-widest text-steel">
+              {members.length} {members.length === 1 ? 'Member' : 'Members'}
+            </p>
+          </div>
+          <div className="divide-y divide-steel/10">
+            {members.map((m) => (
+              <div key={m.user_id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar avatarUrl={m.avatar_url} displayName={m.display_name} size="sm" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-charcoal">
+                      {m.display_name}
+                      {m.user_id === userId && <span className="text-muted"> (you)</span>}
+                    </p>
+                    {m.bio && <p className="text-xs text-muted mt-0.5 truncate">{m.bio}</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {m.role === 'admin' && (
+                    <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5">Admin</span>
                   )}
-                </p>
+                  {canModerate && m.user_id !== userId && (
+                    <>
+                      <button
+                        onClick={() => setConfirmAction({ type: 'remove', member: m })}
+                        className="text-xs text-muted hover:text-charcoal transition-colors px-2 py-1 rounded-lg hover:bg-canvas"
+                      >
+                        Remove
+                      </button>
+                      <button
+                        onClick={() => setConfirmAction({ type: 'ban', member: m })}
+                        className="text-xs text-sunrise hover:text-sunrise/80 transition-colors px-2 py-1 rounded-lg hover:bg-canvas"
+                      >
+                        Ban
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              {m.role === 'admin' && (
-                <span className="text-xs text-steel bg-steel/10 rounded-full px-2.5 py-0.5">
-                  Admin
-                </span>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      </AnimatedCard>
 
       {/* Leave group — only shown to non-admins */}
       {myRole !== 'admin' && (

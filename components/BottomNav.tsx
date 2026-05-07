@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
@@ -10,11 +10,12 @@ import type { User } from '@supabase/supabase-js'
 // Icons (inline SVG, 20×20)
 // ---------------------------------------------------------------------------
 
+
 function HomeIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 10L12 3l9 7v10a1 1 0 01-1 1H5a1 1 0 01-1-1V10z" />
-      <path d="M9 21V12h6v9" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   )
 }
@@ -28,15 +29,16 @@ function CalendarIcon() {
   )
 }
 
-
-function SearchIcon() {
+function BrowseIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h16M4 10h16M4 14h10M4 18h6" />
     </svg>
   )
 }
+
+
+
 
 function DotsIcon() {
   return (
@@ -75,14 +77,6 @@ function ProfileIcon() {
   )
 }
 
-function SettingsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-    </svg>
-  )
-}
 
 function AdminIcon() {
   return (
@@ -93,14 +87,6 @@ function AdminIcon() {
   )
 }
 
-function BookIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-    </svg>
-  )
-}
 
 function SignOutIcon() {
   return (
@@ -126,10 +112,10 @@ function GroupsIcon() {
 }
 
 const TABS = [
-  { href: '/dashboard', label: 'Home',   icon: <HomeIcon /> },
-  { href: '/today',     label: 'Today',  icon: <CalendarIcon /> },
-  { href: '/groups',    label: 'Groups', icon: <GroupsIcon /> },
-  { href: '/search',    label: 'Search', icon: <SearchIcon /> },
+  { href: '/dashboard', label: 'Home',    icon: <HomeIcon /> },
+  { href: '/today',     label: 'Today',   icon: <CalendarIcon /> },
+  { href: '/groups',    label: 'Groups',  icon: <GroupsIcon /> },
+  { href: '/journal',   label: 'Journal', icon: <JournalIcon /> },
 ]
 
 export default function BottomNav() {
@@ -138,22 +124,99 @@ export default function BottomNav() {
   const [user, setUser] = useState<User | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showMore, setShowMore] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  const groupChannelsRef = useRef<ReturnType<typeof supabase.channel>[]>([])
+
+  async function fetchUnreadCount(userId: string) {
+    const [receiptsRes, membershipsRes] = await Promise.all([
+      supabase.from('group_read_receipts').select('group_id, last_read_at').eq('user_id', userId),
+      supabase.from('group_members').select('group_id').eq('user_id', userId),
+    ])
+
+    const memberGroupIds = new Set((membershipsRes.data ?? []).map((m: { group_id: string }) => m.group_id))
+    const receipts = (receiptsRes.data ?? []).filter((r: { group_id: string }) => memberGroupIds.has(r.group_id))
+
+    if (!receipts.length) { setUnreadCount(0); return }
+
+    const counts = await Promise.all(receipts.map(async (r: { group_id: string; last_read_at: string }) => {
+      const { count } = await supabase
+        .from('group_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('group_id', r.group_id)
+        .neq('user_id', userId)
+        .gt('created_at', r.last_read_at)
+      return count ?? 0
+    }))
+    setUnreadCount(counts.reduce((a, b) => a + b, 0))
+  }
+
+  async function setupGroupChannels(userId: string) {
+    groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+    groupChannelsRef.current = []
+
+    const { data: memberships } = await supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', userId)
+
+    groupChannelsRef.current = (memberships ?? []).map(({ group_id }) =>
+      supabase
+        .channel(`unread_${group_id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_messages',
+          filter: `group_id=eq.${group_id}`,
+        }, () => fetchUnreadCount(userId))
+        .subscribe()
+    )
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
-      if (user) checkAdmin(user.id)
+      if (user) {
+        checkAdmin(user.id)
+        fetchUnreadCount(user.id)
+        setupGroupChannels(user.id)
+      }
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       const u = session?.user ?? null
       setUser(u)
-      if (u) checkAdmin(u.id)
-      else setIsAdmin(false)
+      if (u) {
+        checkAdmin(u.id)
+        fetchUnreadCount(u.id)
+        setupGroupChannels(u.id)
+      } else {
+        setIsAdmin(false)
+        setUnreadCount(0)
+        groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+        groupChannelsRef.current = []
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      groupChannelsRef.current.forEach((ch: ReturnType<typeof supabase.channel>) => supabase.removeChannel(ch))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (user) fetchUnreadCount(user.id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
+  useEffect(() => {
+    if (!user) return
+    function handleGroupRead() { fetchUnreadCount(user!.id) }
+    window.addEventListener('uncovery:group-read', handleGroupRead)
+    return () => window.removeEventListener('uncovery:group-read', handleGroupRead)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   async function checkAdmin(userId: string) {
     const { data } = await supabase
@@ -195,44 +258,28 @@ export default function BottomNav() {
 
             <div className="px-4 py-2 space-y-1">
               <Link
+                href="/profile"
+                onClick={() => setShowMore(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
+              >
+                <span className="text-muted"><ProfileIcon /></span>
+                Profile & Settings
+              </Link>
+              <Link
+                href="/browse"
+                onClick={() => setShowMore(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
+              >
+                <span className="text-muted"><BrowseIcon /></span>
+                Browse Devotions
+              </Link>
+              <Link
                 href="/bookmarks"
                 onClick={() => setShowMore(false)}
                 className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
               >
                 <span className="text-muted"><BookmarkIcon /></span>
                 Bookmarks
-              </Link>
-              <Link
-                href="/journal"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
-              >
-                <span className="text-muted"><JournalIcon /></span>
-                Journal
-              </Link>
-              <Link
-                href="/profile"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
-              >
-                <span className="text-muted"><ProfileIcon /></span>
-                Profile
-              </Link>
-              <Link
-                href="/settings"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
-              >
-                <span className="text-muted"><SettingsIcon /></span>
-                Settings
-              </Link>
-              <Link
-                href="/book"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-charcoal hover:bg-white transition-colors"
-              >
-                <span className="text-muted"><BookIcon /></span>
-                Book
               </Link>
               {isAdmin && (
                 <Link
@@ -244,21 +291,6 @@ export default function BottomNav() {
                   Admin
                 </Link>
               )}
-              <div className="border-t border-steel/10 my-1" />
-              <Link
-                href="/privacy"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted hover:bg-white transition-colors"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
-                onClick={() => setShowMore(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-muted hover:bg-white transition-colors"
-              >
-                Terms of Service
-              </Link>
               <div className="border-t border-steel/10 my-1" />
               <button
                 onClick={handleSignOut}
@@ -284,8 +316,13 @@ export default function BottomNav() {
               href={href}
               className="flex flex-1 flex-col items-center gap-0.5 py-2"
             >
-              <span className={isActive(href) ? 'text-steel' : 'text-muted'}>
+              <span className={`relative ${isActive(href) ? 'text-steel' : 'text-muted'}`}>
                 {icon}
+                {href === '/groups' && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 px-0.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white leading-none">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </span>
               <span className={`text-[10px] ${isActive(href) ? 'text-steel font-medium' : 'text-muted'}`}>
                 {label}
@@ -298,12 +335,8 @@ export default function BottomNav() {
             onClick={() => setShowMore((v) => !v)}
             className="flex flex-1 flex-col items-center gap-0.5 py-2"
           >
-            <span className={showMore ? 'text-steel' : 'text-muted'}>
-              <DotsIcon />
-            </span>
-            <span className={`text-[10px] ${showMore ? 'text-steel font-medium' : 'text-muted'}`}>
-              More
-            </span>
+            <span className={showMore ? 'text-steel' : 'text-muted'}><DotsIcon /></span>
+            <span className={`text-[10px] ${showMore ? 'text-steel font-medium' : 'text-muted'}`}>More</span>
           </button>
         </div>
       </nav>
