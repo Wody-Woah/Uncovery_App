@@ -116,6 +116,8 @@ lib/
   getTodayET.ts           # Eastern Time date helper
   utils.ts                # cn() utility (clsx + tailwind-merge) for conditional class merging
   types.ts                # Shared TypeScript types (Devotion, etc.)
+  constants.ts            # Shared constants (MONTHS array)
+  pushUtils.ts            # Push notification utilities (VAPID key conversion, time zone helpers)
 
 public/
   manifest.json           # PWA manifest
