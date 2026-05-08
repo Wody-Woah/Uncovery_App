@@ -1,11 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
+import { MONTHS } from '@/lib/constants'
 
 const DAY_HEADERS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
@@ -90,7 +86,7 @@ export default function DevotionCalendar({ initialMonth, initialDay, onSelect }:
           </svg>
         </button>
 
-        <span className="text-sm font-semibold text-charcoal">{MONTH_NAMES[viewMonth - 1]} {viewYear}</span>
+        <span className="text-sm font-semibold text-charcoal">{MONTHS[viewMonth - 1]} {viewYear}</span>
 
         <button
           onClick={nextMonth}

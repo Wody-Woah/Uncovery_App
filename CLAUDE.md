@@ -47,7 +47,7 @@ GitHub auto-deploy webhook is not working. Always run `vercel --prod` after push
 ### RLS Workarounds
 When RLS causes recursion or blocks legitimate cross-user reads, use **security definer functions** (RPCs) that bypass RLS. Existing ones:
 - `get_my_group_ids()` — user's group IDs
-- `is_group_admin(gid)` — admin check for groups
+- `is_group_admin(gid)` — admin check for groups (checks `group_members.role = 'admin'` only, does NOT check the `admins` table)
 - `get_group_id_by_invite_code(code)` — join group without membership
 - `get_member_display_names(member_ids)` — names with auth.users email fallback
 - `admin_get_users()`, `admin_delete_user()`, `admin_toggle_admin()` — admin panel
@@ -91,6 +91,13 @@ Custom browser events are used to sync state between components without global s
 window.dispatchEvent(new CustomEvent('uncovery:group-read', { detail: { groupId: id } }))
 ```
 
+### Group Message Actions (Long Press)
+Long-pressing a message opens an action sheet. Own messages: React / Edit / Delete. Others' messages: React / Report.
+- Delete uses an inline confirm step (`confirmDelete` state) — no separate modal
+- Edit is inline with Cancel/Save
+- Users can only delete their own messages (`group_messages` DELETE RLS: `auth.uid() = user_id`)
+- Moderators/admins can delete any message in their group via separate RLS policies
+
 ### localStorage Keys
 | Key | Purpose |
 |---|---|
@@ -106,7 +113,7 @@ window.dispatchEvent(new CustomEvent('uncovery:group-read', { detail: { groupId:
 - `components/` — shared components (Header, BottomNav, DevotionCard, MonthlyStreakGrid, Avatar, AnimatedCard, DevotionNotes)
 - `lib/` — utilities (supabaseClient, isAdmin, getTodayET)
 - `public/` — static assets (images, manifest.json, icons, assetlinks.json, sw.js)
-- `docs/` — spec files (this file and others)
+- `docs/` — spec files
 
 ---
 

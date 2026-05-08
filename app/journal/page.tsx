@@ -5,11 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import AnimatedCard from '@/components/AnimatedCard'
-
-const MONTHS = [
-  '', 'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
+import { MONTHS } from '@/lib/constants'
 
 type JournalNote = {
   id: string
@@ -190,7 +186,7 @@ export default function JournalPage() {
                   {/* Meta row */}
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs uppercase tracking-widest text-steel">
-                      {MONTHS[n.month]} {n.day}
+                      {MONTHS[n.month - 1]} {n.day}
                     </p>
                     <p className="text-[11px] text-muted">
                       {new Date(n.created_at).toLocaleDateString('en-US', {

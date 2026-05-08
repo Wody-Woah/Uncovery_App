@@ -5,11 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import AnimatedCard from '@/components/AnimatedCard'
-
-const MONTHS = [
-  '', 'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
+import { MONTHS } from '@/lib/constants'
 
 type BookmarkCard = {
   month: number
@@ -122,7 +118,7 @@ export default function BookmarksPage() {
                 <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-xs uppercase tracking-widest text-steel mb-1">
-                      {MONTHS[b.month]} {b.day}
+                      {MONTHS[b.month - 1]} {b.day}
                     </p>
                     <p className="text-base font-semibold text-charcoal truncate">{b.title}</p>
                     <p className="text-sm text-muted mt-0.5 truncate">{b.verse_reference}</p>

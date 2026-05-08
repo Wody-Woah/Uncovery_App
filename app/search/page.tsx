@@ -5,11 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import AnimatedCard from '@/components/AnimatedCard'
-
-const MONTHS = [
-  '', 'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
+import { MONTHS } from '@/lib/constants'
 
 type Result = {
   month: number
@@ -163,7 +159,7 @@ function SearchPageInner() {
                 <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm flex items-start justify-between gap-4">
                   <div className="min-w-0 space-y-1">
                     <p className="text-xs uppercase tracking-widest text-steel">
-                      {MONTHS[r.month]} {r.day}
+                      {MONTHS[r.month - 1]} {r.day}
                     </p>
                     <p className="text-base font-semibold text-charcoal">{r.title}</p>
                     <p className="text-sm text-muted">{r.verse_reference}</p>

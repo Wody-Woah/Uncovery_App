@@ -131,8 +131,10 @@ A mobile-first web app (PWA) and Android app for The Uncovery Devotional book by
 - Member display names fetched via `get_member_display_names()` security definer function
 - Unread message badge on nav bar (sum across all groups) and on each group card (per-group)
 - Badge clears immediately when opening a group (custom `uncovery:group-read` browser event)
-- Long press any message → action sheet with React / Edit (own) / Report (others)
+- Long press any message → action sheet with React / Edit / Delete (own) / Report (others)
 - Message editing inline with Cancel/Save
+- Message delete uses inline confirm step within the action sheet (no separate modal)
+- Users can only delete their own messages; moderators/admins can delete any message in their group
 
 ### Open Community Group
 - Public group (`is_public = true`) discoverable on `/groups` without an invite code

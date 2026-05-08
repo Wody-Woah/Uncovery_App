@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
 import AnimatedCard from '@/components/AnimatedCard'
+import { MONTHS } from '@/lib/constants'
 
 type Status = 'loading' | 'unauthorized' | 'ready'
 
@@ -18,11 +19,6 @@ type Devotion = {
   title: string
   published: boolean
 }
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
 
 export default function ManageDevotionsPage() {
   const router = useRouter()

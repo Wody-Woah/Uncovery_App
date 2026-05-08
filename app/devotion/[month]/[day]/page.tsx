@@ -6,22 +6,8 @@ import { supabase } from '@/lib/supabaseClient'
 import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
 import AnimatedCard from '@/components/AnimatedCard'
-
-type Devotion = {
-  id: string
-  title: string
-  verse_reference: string
-  verse_text: string | null
-  body: string
-  prayer: string
-  month: number
-  day: number
-}
-
-const MONTH_NAMES = [
-  '', 'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
+import { Devotion } from '@/lib/types'
+import { MONTHS } from '@/lib/constants'
 
 export default function DevotionPage() {
   const params = useParams()
@@ -136,7 +122,7 @@ export default function DevotionPage() {
     )
   }
 
-  const monthName = MONTH_NAMES[month] ?? ''
+  const monthName = MONTHS[month - 1] ?? ''
 
   if (notFound || !devotion) {
     return (

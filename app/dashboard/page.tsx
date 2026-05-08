@@ -9,6 +9,7 @@ import Image from 'next/image'
 import MonthlyStreakGrid from '@/components/MonthlyStreakGrid'
 import Avatar from '@/components/Avatar'
 import AnimatedCard from '@/components/AnimatedCard'
+import { MONTHS } from '@/lib/constants'
 import {
   DndContext,
   closestCenter,
@@ -201,11 +202,6 @@ const STREAK_MILESTONES = [
 type Milestone = typeof STREAK_MILESTONES[number]
 
 const MILESTONE_STORAGE_KEY = 'shown_streak_milestones'
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
 
 const DEFAULT_ORDER = ['journey', 'clean-date', 'today', 'author']
 const STORAGE_KEY = 'dashboard_card_order'

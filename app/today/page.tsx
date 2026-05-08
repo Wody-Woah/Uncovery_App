@@ -9,17 +9,7 @@ import { getTodayET, getETDateString } from '@/lib/getTodayET'
 import DevotionCard from '@/components/DevotionCard'
 import AnimatedCard from '@/components/AnimatedCard'
 import DevotionCalendar from '@/components/DevotionCalendar'
-
-type Devotion = {
-  id: string
-  title: string
-  verse_reference: string
-  verse_text: string | null
-  body: string
-  prayer: string
-  month: number
-  day: number
-}
+import { Devotion } from '@/lib/types'
 
 type MonthTheme = {
   month: number
