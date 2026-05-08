@@ -46,6 +46,7 @@ export default function ProfilePage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
 
   // Clean date fields
+  const originalCleanDate = useRef('')
   const [cleanDate, setCleanDate] = useState('')
   const [showCleanDateCard, setShowCleanDateCard] = useState(false)
   const [cleanDateSaving, setCleanDateSaving] = useState(false)
@@ -78,6 +79,7 @@ export default function ProfilePage() {
         setBio(profile.bio ?? '')
         setAvatarUrl(profile.avatar_url ?? null)
         setCleanDate(profile.clean_date ?? '')
+        originalCleanDate.current = profile.clean_date ?? ''
         setShowCleanDateCard(profile.show_clean_date_card ?? false)
       } else {
         const defaultName = user.email?.split('@')[0] ?? 'User'
@@ -206,6 +208,10 @@ export default function ProfilePage() {
     if (error) {
       setCleanDateError(error.message)
     } else {
+      if (cleanDate !== originalCleanDate.current && userId) {
+        localStorage.removeItem(`shown_clean_milestones_${userId}`)
+      }
+      originalCleanDate.current = cleanDate
       setCleanDateSuccess(true)
     }
   }
