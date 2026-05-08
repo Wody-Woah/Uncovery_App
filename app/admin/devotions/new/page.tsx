@@ -6,13 +6,9 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { isAdmin } from '@/lib/isAdmin'
 import AnimatedCard from '@/components/AnimatedCard'
-import { MONTHS } from '@/lib/constants'
+import { MONTHS, daysInMonth } from '@/lib/constants'
 
 type Status = 'loading' | 'unauthorized' | 'ready'
-
-function daysInMonth(month: number) {
-  return new Date(2024, month, 0).getDate()
-}
 
 export default function NewDevotionPage() {
   const router = useRouter()

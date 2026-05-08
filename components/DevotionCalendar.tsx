@@ -1,13 +1,9 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { MONTHS } from '@/lib/constants'
+import { MONTHS, daysInMonth } from '@/lib/constants'
 
 const DAY_HEADERS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-
-function daysInMonth(month: number) {
-  return new Date(2024, month, 0).getDate() // 2024 = leap year, gives Feb 29
-}
 
 function firstWeekday(month: number, year: number) {
   return new Date(year, month - 1, 1).getDay()
