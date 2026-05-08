@@ -203,6 +203,26 @@ type Milestone = typeof STREAK_MILESTONES[number]
 
 const MILESTONE_STORAGE_KEY = 'shown_streak_milestones'
 
+type CleanMilestone = {
+  days: number
+  label: string
+  message: string
+  src: string
+}
+
+const CLEAN_MILESTONES: CleanMilestone[] = [
+  { days: 1,   label: 'Day 1',    src: '/badges/badge-01.png',       message: 'Day 1 — you showed up. That takes more courage than most people know.' },
+  { days: 7,   label: '7 Days',   src: '/badges/badge-07.png',       message: 'One week. Seven mornings you chose to keep going. That matters.' },
+  { days: 30,  label: '30 Days',  src: '/badges/badge-30.png',       message: 'One month clean. Your commitment is becoming your testimony.' },
+  { days: 60,  label: '60 Days',  src: '/badges/badge-60.png',       message: 'Two months of freedom. The life you are building is worth it.' },
+  { days: 90,  label: '90 Days',  src: '/badges/badge-90.png',       message: '90 days. You have proven to yourself that this is possible.' },
+  { days: 180, label: '6 Months', src: '/badges/badge-180.png',      message: 'Six months clean. Half a year of freedom — this is real and it matters.' },
+  { days: 365, label: '1 Year',   src: '/badges/badge-365.png',      message: 'One full year of freedom. 365 days of choosing life. We are so proud of you.' },
+  { days: 730, label: '2 Years',  src: '/badges/badge-multiple.png', message: 'Another year of freedom. Your story is a testament to His grace.' },
+]
+
+const CLEAN_MILESTONE_STORAGE_KEY = 'shown_clean_milestones'
+
 const DEFAULT_ORDER = ['journey', 'clean-date', 'today', 'author']
 const STORAGE_KEY = 'dashboard_card_order'
 const DRAG_HINT_KEY = 'dashboard_drag_hint_seen'
@@ -289,6 +309,7 @@ export default function DashboardPage() {
   const [showJourneyCard, setShowJourneyCard] = useState(true)
   const [cleanDateView, setCleanDateView] = useState<'days' | 'breakdown'>('days')
   const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(null)
+  const [activeCleanMilestone, setActiveCleanMilestone] = useState<CleanMilestone | null>(null)
   const [totalPublishedDevotions, setTotalPublishedDevotions] = useState(0)
   const [thisYearReadCount, setThisYearReadCount] = useState(0)
   const swipeStartX = useRef<number | null>(null)
@@ -419,6 +440,15 @@ export default function DashboardPage() {
         const hit = STREAK_MILESTONES.find(m => m.days === computed.current && !shown.includes(m.days))
         if (hit) setActiveMilestone(hit)
 
+        if (profileRes.data?.clean_date) {
+          const daysCleanVal = computeDaysClean(profileRes.data.clean_date)
+          const cleanKey = `${CLEAN_MILESTONE_STORAGE_KEY}_${user.id}`
+          const shownCleanRaw = localStorage.getItem(cleanKey)
+          const shownClean: number[] = shownCleanRaw ? JSON.parse(shownCleanRaw) : []
+          const cleanHit = CLEAN_MILESTONES.find(m => m.days === daysCleanVal && !shownClean.includes(m.days))
+          if (cleanHit) setActiveCleanMilestone(cleanHit)
+        }
+
         let updatesQuery = supabase
           .from('author_updates')
           .select('id, title, body, published_at, created_at')
@@ -478,6 +508,15 @@ export default function DashboardPage() {
     const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
     localStorage.setItem(milestoneKey, JSON.stringify([...shown, activeMilestone.days]))
     setActiveMilestone(null)
+  }
+
+  function dismissCleanMilestone() {
+    if (!activeCleanMilestone || !userId) return
+    const cleanKey = `${CLEAN_MILESTONE_STORAGE_KEY}_${userId}`
+    const shownRaw = localStorage.getItem(cleanKey)
+    const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
+    localStorage.setItem(cleanKey, JSON.stringify([...shown, activeCleanMilestone.days]))
+    setActiveCleanMilestone(null)
   }
 
   const activeCardOrder = cardOrder.filter((id) => {
@@ -545,7 +584,7 @@ export default function DashboardPage() {
 
                 <p className="text-sm text-white/70">Since {sinceLabel}</p>
 
-                {/* View toggle arrows */}
+                {/* View toggle dots */}
                 <div className="flex items-center justify-center gap-3 pt-1">
                   <button
                     onClick={() => setCleanDateView('days')}
@@ -555,6 +594,19 @@ export default function DashboardPage() {
                     onClick={() => setCleanDateView('breakdown')}
                     className={`w-2 h-2 rounded-full transition-colors ${cleanDateView === 'breakdown' ? 'bg-white' : 'bg-white/30'}`}
                   />
+                </div>
+
+                {/* Clean time badges */}
+                <div className="grid grid-cols-8 gap-1 pt-1">
+                  {CLEAN_MILESTONES.map(({ days, src, label }) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={days}
+                      src={src}
+                      alt={label}
+                      className={`w-full h-auto transition-all duration-300 ${daysClean >= days ? 'opacity-100' : 'opacity-25 grayscale'}`}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
@@ -742,6 +794,35 @@ export default function DashboardPage() {
 
               <button
                 onClick={dismissMilestone}
+                className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors"
+              >
+                Keep Going →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clean time milestone celebration overlay — only shows after streak modal is dismissed */}
+      {!activeMilestone && activeCleanMilestone && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-br from-[#1e3a52] to-[#2a5280] px-6 pt-8 pb-6 text-center space-y-3">
+              <div className="flex justify-center mb-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={activeCleanMilestone.src} alt={activeCleanMilestone.label} width={96} height={96} className="drop-shadow-2xl" />
+              </div>
+              <div className="inline-block rounded-full border border-yellow-300/40 bg-yellow-400/20 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-yellow-200">
+                {activeCleanMilestone.label} Clean
+              </div>
+              <h2 className="font-display text-2xl font-bold text-white">Keep Going</h2>
+            </div>
+            <div className="bg-white px-6 py-6 space-y-5">
+              <div className="rounded-xl bg-canvas border border-steel/15 px-4 py-4 text-center">
+                <p className="text-sm text-charcoal leading-relaxed">{activeCleanMilestone.message}</p>
+              </div>
+              <button
+                onClick={dismissCleanMilestone}
                 className="w-full rounded-xl bg-steel px-4 py-3 text-sm font-medium text-white hover:bg-steel/90 transition-colors"
               >
                 Keep Going →
