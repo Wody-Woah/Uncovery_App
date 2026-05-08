@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL } from '@/lib/constants'
+
 export default function DeleteAccountPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
@@ -12,10 +14,10 @@ export default function DeleteAccountPage() {
             To request the deletion of your account and all associated data, please send an email to:
           </p>
           <a
-            href="mailto:george@rootawakeningfarm.org?subject=Account Deletion Request"
+            href={`mailto:${CONTACT_EMAIL}?subject=Account Deletion Request`}
             className="inline-block bg-white/10 border border-white/20 rounded-xl px-5 py-4 text-white font-medium hover:bg-white/20 transition-colors"
           >
-            george@rootawakeningfarm.org
+            {CONTACT_EMAIL}
           </a>
           <p className="mt-4">
             Please include the email address associated with your account in your message.
@@ -50,8 +52,8 @@ export default function DeleteAccountPage() {
           <h2 className="text-lg font-semibold text-white mb-3">Questions</h2>
           <p>
             If you have any questions about the deletion process, please contact us at{' '}
-            <a href="mailto:george@rootawakeningfarm.org" className="text-blue-400 underline">
-              george@rootawakeningfarm.org
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-blue-400 underline">
+              {CONTACT_EMAIL}
             </a>.
           </p>
         </section>

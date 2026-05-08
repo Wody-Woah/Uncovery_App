@@ -8,8 +8,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { getTodayET } from '@/lib/getTodayET'
 import Avatar from '@/components/Avatar'
 import AnimatedCard from '@/components/AnimatedCard'
-
-const EMOJIS = ['🙏', '❤️', '👍', '🕊️', '✝️', '💙', '🔥']
+import { EMOJIS } from '@/lib/constants'
 
 type Group = {
   id: string
@@ -113,7 +112,7 @@ export default function GroupChatPage() {
       const [groupRes, membersRes, messagesRes, devotionRes] = await Promise.all([
         supabase.from('groups').select('id, name, description, created_by, invite_code, is_public').eq('id', id).single(),
         supabase.from('group_members').select('user_id').eq('group_id', id),
-        supabase.from('group_messages').select('id, user_id, content, created_at, updated_at').eq('group_id', id).order('created_at', { ascending: true }).limit(100),
+        supabase.from('group_messages').select('id, user_id, content, created_at, updated_at').eq('group_id', id).order('created_at', { ascending: false }).limit(100),
         supabase.from('devotions').select('title, verse_reference, month, day').eq('month', month).eq('day', day).eq('published', true).single(),
       ])
 
@@ -138,7 +137,7 @@ export default function GroupChatPage() {
       setAvatars(avatarMap)
       avatarsRef.current = avatarMap
 
-      const mapped: Message[] = (messagesRes.data ?? []).map((m: {
+      const mapped: Message[] = (messagesRes.data ?? []).reverse().map((m: {
         id: string; user_id: string; content: string; created_at: string; updated_at: string | null
       }) => ({ ...m, display_name: nameMap[m.user_id] ?? 'Unknown' }))
       setMessages(mapped)
@@ -733,12 +732,12 @@ export default function GroupChatPage() {
 
                     {/* Emoji picker */}
                     {pickerOpen === msg.id && (
-                      <div className="flex gap-1 p-2 rounded-xl border border-steel/15 bg-white shadow-lg mt-1">
+                      <div className="grid grid-cols-7 gap-1 p-2 rounded-xl border border-steel/15 bg-white shadow-lg mt-1">
                         {EMOJIS.map((e) => (
                           <button
                             key={e}
                             onClick={() => toggleReaction(msg.id, e)}
-                            className="flex-1 text-base flex items-center justify-center py-1 rounded-lg hover:bg-canvas transition-colors"
+                            className="text-lg flex items-center justify-center py-1.5 rounded-lg hover:bg-canvas transition-colors"
                           >
                             {e}
                           </button>

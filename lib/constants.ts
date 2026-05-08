@@ -7,3 +7,7 @@ export const MONTHS = [
 export function daysInMonth(month: number) {
   return new Date(2024, month, 0).getDate()
 }
+
+export const CONTACT_EMAIL = 'george@rootawakeningfarm.org'
+
+export const EMOJIS = ['🙏', '❤️', '👍', '🕊️', '✝️', '💙', '🔥', '🫶', '🙌', '💪', '😊', '😢', '🌿']
