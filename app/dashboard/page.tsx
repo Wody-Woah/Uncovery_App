@@ -386,6 +386,9 @@ export default function DashboardPage() {
           return
         }
 
+        // Fire-and-forget — record today as an active day for DAU tracking
+        void supabase.rpc('record_user_activity').then()
+
         const [devotionRes, themeRes, readsRes, readsCountRes, profileRes, totalDevotionsRes] = await Promise.all([
           supabase
             .from('devotions')

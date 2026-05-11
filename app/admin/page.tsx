@@ -132,6 +132,19 @@ export default function AdminPage() {
             <p className="text-sm text-muted mt-1">Review and act on user reports from group chats.</p>
           </Link>
         </AnimatedCard>
+
+        <AnimatedCard delay={0.32}>
+          <Link
+            href="/admin/analytics"
+            className="block rounded-2xl border border-steel/20 bg-white p-6 shadow-sm hover:border-steel/40 transition-colors group"
+          >
+            <p className="text-xs uppercase tracking-widest text-steel mb-2">Insights</p>
+            <h2 className="text-lg font-semibold text-charcoal group-hover:text-steel transition-colors">
+              Analytics
+            </h2>
+            <p className="text-sm text-muted mt-1">Daily active users, signups, reads, and Google Play tracking.</p>
+          </Link>
+        </AnimatedCard>
       </div>
     </div>
   )
