@@ -7,8 +7,8 @@ import { isAdmin } from '@/lib/isAdmin'
 import AnimatedCard from '@/components/AnimatedCard'
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -93,16 +93,25 @@ export default function AdminAnalyticsPage() {
   const activeMetric = METRICS.find(m => m.key === metric)!
   const chartData = fillDates(data?.[metric] ?? [], range)
   const values = chartData.map(d => d.count)
-  const avg = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0
+  const avg = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length * 10) / 10 : 0
   const peak = values.length ? Math.max(...values) : 0
   const total = values.reduce((a, b) => a + b, 0)
-  const daysOver12 = values.filter(v => v >= 12).length
+
+  // Count consecutive days from today backwards where DAU >= 12 — resets on any day below threshold
+  const consecutiveStreak = (() => {
+    let streak = 0
+    for (let i = chartData.length - 1; i >= 0; i--) {
+      if (chartData[i].count >= 12) streak++
+      else break
+    }
+    return streak
+  })()
 
   const stats = metric === 'dau'
     ? [
-        { label: 'Avg / Day',  value: avg },
-        { label: 'Peak Day',   value: peak },
-        { label: 'Days ≥ 12',  value: daysOver12 },
+        { label: 'Avg / Day', value: avg },
+        { label: 'Peak Day',  value: peak },
+        { label: 'Streak',    value: consecutiveStreak },
       ]
     : [
         { label: 'Avg / Day', value: avg },
@@ -134,10 +143,35 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {metric === 'dau' && (
-        <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm">
-          <p className="text-xs text-white/80 text-shadow-hero">
-            <span className="font-semibold text-white">Google Play target:</span> 12+ daily active users for 14 consecutive days.
-            <span className="ml-2 font-semibold text-white">{daysOver12} of {range} days hit so far.</span>
+        <div className="rounded-2xl border border-white/20 bg-white/10 px-5 py-4 backdrop-blur-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-white/80">Google Play Target</p>
+              <p className="text-sm text-white mt-0.5">12+ daily active users, consecutive</p>
+            </div>
+            <div className="text-right shrink-0 ml-4">
+              <p className="text-2xl font-bold text-white leading-none">
+                {consecutiveStreak}<span className="text-sm font-normal text-white/70"> / 14</span>
+              </p>
+              <p className="text-xs text-white/70 mt-0.5">days</p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            {Array.from({ length: 14 }, (_, i) => (
+              <div
+                key={i}
+                className={`h-2 flex-1 rounded-full transition-colors ${
+                  i < consecutiveStreak ? 'bg-emerald-400' : 'bg-white/20'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-white/75">
+            {consecutiveStreak >= 14
+              ? 'Target reached — ready to submit to Google Play.'
+              : consecutiveStreak === 0
+              ? 'Build a streak of 12+ daily users to qualify.'
+              : `${14 - consecutiveStreak} more consecutive day${14 - consecutiveStreak === 1 ? '' : 's'} needed.`}
           </p>
         </div>
       )}
@@ -145,20 +179,23 @@ export default function AdminAnalyticsPage() {
       <div className="grid grid-cols-3 gap-3">
         {stats.map(({ label, value }, i) => (
           <AnimatedCard key={label} delay={i * 0.05}>
-            <div className="rounded-2xl border border-steel/15 bg-white p-4 text-center shadow-sm">
-              <p className="text-2xl font-bold text-charcoal">{value.toLocaleString()}</p>
-              <p className="text-xs text-muted mt-0.5">{label}</p>
+            <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
+              <div className="h-1 w-full transition-colors duration-300" style={{ backgroundColor: activeMetric.color }} />
+              <div className="p-4 text-center">
+                <p className="text-2xl font-bold text-charcoal">{value.toLocaleString()}</p>
+                <p className="text-xs text-muted mt-0.5">{label}</p>
+              </div>
             </div>
           </AnimatedCard>
         ))}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {METRICS.map(m => (
           <button
             key={m.key}
             onClick={() => setMetric(m.key)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
               metric === m.key ? 'bg-white text-charcoal' : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
@@ -168,7 +205,9 @@ export default function AdminAnalyticsPage() {
       </div>
 
       <AnimatedCard>
-        <div className="rounded-2xl border border-steel/15 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-steel/15 bg-white shadow-sm overflow-hidden">
+          <div className="h-1 w-full transition-colors duration-300" style={{ backgroundColor: activeMetric.color }} />
+          <div className="p-5">
           <p className="text-xs uppercase tracking-widest text-steel mb-4">{activeMetric.label}</p>
           {fetching ? (
             <div className="h-52 flex items-center justify-center">
@@ -176,7 +215,13 @@ export default function AdminAnalyticsPage() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="metricGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={activeMetric.color} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={activeMetric.color} stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
                   dataKey="label"
@@ -204,18 +249,20 @@ export default function AdminAnalyticsPage() {
                     label={{ value: '12', position: 'right', fontSize: 10, fill: '#ef4444' }}
                   />
                 )}
-                <Line
+                <Area
                   type="monotone"
                   dataKey="count"
                   stroke={activeMetric.color}
                   strokeWidth={2}
+                  fill="url(#metricGradient)"
                   dot={{ r: 3, fill: activeMetric.color }}
                   activeDot={{ r: 5 }}
                   name={activeMetric.label}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           )}
+          </div>
         </div>
       </AnimatedCard>
     </div>
