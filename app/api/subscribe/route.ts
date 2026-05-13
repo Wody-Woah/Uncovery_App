@@ -22,12 +22,15 @@ export async function POST(req: NextRequest) {
   const { subscription, reminderHour } = await req.json()
   const { endpoint, keys: { p256dh, auth } } = subscription
 
+  // Delete all existing subscriptions for this user so they only ever receive one notification
+  await adminClient()
+    .from('push_subscriptions')
+    .delete()
+    .eq('user_id', userId)
+
   const { error } = await adminClient()
     .from('push_subscriptions')
-    .upsert(
-      { user_id: userId, endpoint, p256dh, auth, reminder_hour: reminderHour ?? 14 },
-      { onConflict: 'user_id,endpoint' }
-    )
+    .insert({ user_id: userId, endpoint, p256dh, auth, reminder_hour: reminderHour ?? 14 })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

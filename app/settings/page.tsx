@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
@@ -25,6 +25,8 @@ export default function SettingsPage() {
   const [installPrompt, setInstallPrompt] = useState<any>(null)
   const [isInstalled, setIsInstalled] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
+
+  const currentEndpointRef = useRef<string | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -76,15 +78,29 @@ export default function SettingsPage() {
       setNotifEnabled(!!sub)
 
       if (sub) {
+        currentEndpointRef.current = sub.endpoint
         const { data } = await supabase
           .from('push_subscriptions')
           .select('reminder_hour')
           .eq('user_id', userId)
           .eq('endpoint', sub.endpoint)
           .single()
-        if (data) setSelectedLocalHour(utcToLocal(data.reminder_hour))
+        if (data) {
+          setSelectedLocalHour(utcToLocal(data.reminder_hour))
+        } else {
+          // DB row was cleaned up (stale subscription) — silently re-register
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session) {
+            await fetch('/api/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              body: JSON.stringify({ subscription: sub.toJSON(), reminderHour: localToUtc(selectedLocalHour) }),
+            })
+          }
+        }
       }
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
   async function saveField(field: string, value: boolean) {
@@ -107,11 +123,12 @@ export default function SettingsPage() {
 
   async function handleTimeChange(newLocalHour: number) {
     setSelectedLocalHour(newLocalHour)
-    if (!userId) return
+    if (!userId || !currentEndpointRef.current) return
     await supabase
       .from('push_subscriptions')
       .update({ reminder_hour: localToUtc(newLocalHour) })
       .eq('user_id', userId)
+      .eq('endpoint', currentEndpointRef.current)
   }
 
   async function handleNotificationToggle() {
@@ -134,6 +151,7 @@ export default function SettingsPage() {
           })
         }
         setNotifEnabled(false)
+        currentEndpointRef.current = null
       } else {
         const permission = await Notification.requestPermission()
         setNotifPermission(permission)
@@ -150,6 +168,7 @@ export default function SettingsPage() {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
           body: JSON.stringify({ subscription: sub.toJSON(), reminderHour: localToUtc(selectedLocalHour) }),
         })
+        currentEndpointRef.current = sub.endpoint
         setNotifEnabled(true)
       }
     } catch (err) {
