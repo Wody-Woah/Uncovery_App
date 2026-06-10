@@ -203,6 +203,19 @@ type Milestone = typeof STREAK_MILESTONES[number]
 
 const MILESTONE_STORAGE_KEY = 'shown_streak_milestones'
 
+// Shown milestones are scoped to the current streak run (keyed by its start
+// date) so popups fire again after a streak is lost and rebuilt. Legacy
+// plain-array values are treated as stale and reset.
+function readShownMilestones(key: string, streakStart: string | null): number[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) ?? 'null')
+    if (parsed && !Array.isArray(parsed) && parsed.start === streakStart && Array.isArray(parsed.days)) {
+      return parsed.days
+    }
+  } catch {}
+  return []
+}
+
 type CleanMilestone = {
   days: number
   label: string
@@ -309,6 +322,7 @@ export default function DashboardPage() {
   const [showJourneyCard, setShowJourneyCard] = useState(true)
   const [cleanDateView, setCleanDateView] = useState<'days' | 'breakdown'>('days')
   const [activeMilestone, setActiveMilestone] = useState<Milestone | null>(null)
+  const [streakStart, setStreakStart] = useState<string | null>(null)
   const [activeCleanMilestone, setActiveCleanMilestone] = useState<CleanMilestone | null>(null)
   const [totalPublishedDevotions, setTotalPublishedDevotions] = useState(0)
   const [thisYearReadCount, setThisYearReadCount] = useState(0)
@@ -437,9 +451,11 @@ export default function DashboardPage() {
         setTotalPublishedDevotions(totalDevotionsRes.count ?? 0)
         setThisYearReadCount(dates.filter(d => d.startsWith(`${year}-`)).length)
 
+        const uniqueDates = Array.from(new Set(dates)).sort()
+        const start = computed.current > 0 ? uniqueDates[uniqueDates.length - computed.current] : null
+        setStreakStart(start)
         const milestoneKey = `${MILESTONE_STORAGE_KEY}_${user.id}`
-        const shownRaw = localStorage.getItem(milestoneKey)
-        const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
+        const shown = readShownMilestones(milestoneKey, start)
         const hit = STREAK_MILESTONES.find(m => m.days === computed.current && !shown.includes(m.days))
         if (hit) setActiveMilestone(hit)
 
@@ -507,9 +523,8 @@ export default function DashboardPage() {
   function dismissMilestone() {
     if (!activeMilestone || !userId) return
     const milestoneKey = `${MILESTONE_STORAGE_KEY}_${userId}`
-    const shownRaw = localStorage.getItem(milestoneKey)
-    const shown: number[] = shownRaw ? JSON.parse(shownRaw) : []
-    localStorage.setItem(milestoneKey, JSON.stringify([...shown, activeMilestone.days]))
+    const shown = readShownMilestones(milestoneKey, streakStart)
+    localStorage.setItem(milestoneKey, JSON.stringify({ start: streakStart, days: [...shown, activeMilestone.days] }))
     setActiveMilestone(null)
   }
 
